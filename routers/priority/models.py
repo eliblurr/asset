@@ -1,7 +1,9 @@
-from sqlalchemy import Column, String, Boolean, Integer, event, bindparam
-from sqlalchemy.schema import CheckConstraint
+from sqlalchemy import Column, String, Boolean, Integer, event, CheckConstraint
+from sqlalchemy.orm import validates
+from constants import COLOR_HEX
 from mixins import BaseMixin
 from database import Base
+import re
 
 class Priority(BaseMixin, Base):
     '''Priority Model'''
@@ -11,6 +13,11 @@ class Priority(BaseMixin, Base):
     title = Column(String, nullable=False, unique=True)
     default = Column(Boolean, nullable=False, default=False)
     index = Column(Integer, CheckConstraint('index>0'), autoincrement=True, nullable=False, unique=True, index=True)
+
+    @validates('color_hex')
+    def validate_hex(self, key, value):
+        assert re.search(COLOR_HEX, value), 'invalid color hex format for color_hex'
+        return value
 
 def after_create(target, connection, **kw):
     connection.execute(
@@ -27,10 +34,14 @@ event.listen(Priority.__table__, "after_create", after_create)
 @event.listens_for(Priority, 'before_update')
 def check_default_table(mapper, connection, target):
     connection.execute(
-        Priority.__table__.update().where(Priority.__table__.c.default==bindparam('_search')).values({
-            'default': bindparam('default'),
-        }),
-        [
-            {'_search': True, 'default': False},
-        ]
+        Priority.__table__.update().where(Priority.__table__.c.default==True).values(default=False)
     )
+    # from sqlalchemy import bindparam
+    # connection.execute(
+    #     Priority.__table__.update().where(Priority.__table__.c.default==bindparam('_search')).values({
+    #         'default': bindparam('default'),
+    #     }),
+    #     [
+    #         {'_search': True, 'default': False},
+    #     ]
+    # )
