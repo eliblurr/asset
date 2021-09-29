@@ -1,6 +1,7 @@
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from database import SessionLocal
 from config import *
 
 app = FastAPI()
@@ -8,6 +9,19 @@ templates = Jinja2Templates(directory="static/html")
 app.mount(MEDIA_URL, StaticFiles(directory=MEDIA_ROOT), name="media")
 app.mount(STATIC_URL, StaticFiles(directory=STATIC_ROOT), name="static")
 app.mount(DOCUMENT_URL, StaticFiles(directory=DOCUMENT_ROOT), name="documents")
+
+# middleware
+@app.middleware("http")
+async def tenant_session(request:Request, call_next):
+    try:
+        db = SessionLocal()
+        if request.headers.get('tenant_id', None):
+            db.connection(execution_options={"schema_translate_map": {None: request.headers.get('tenant_id')}})
+        request.state.db = db
+        response = await call_next(request)
+    finally:
+        request.state.db.close()
+    return response
 
 from urls import *
 
