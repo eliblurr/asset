@@ -13,9 +13,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 
 class Settings(BaseSettings):
+    ADMIN_EMAIL: str
     DATABASE_URL: str
     APP_NAME: str = "e-Asset api service"
-    ADMIN_EMAIL: str
+    TWILIO_PHONE_NUMBER: str = '+16196584362'
+    TWILIO_AUTH_TOKEN: str = '7b6c506ee07337cc3d02536d5119c4b2'
+    TWILIO_ACCOUNT_SID: str = 'AC959cbde01aced5669b0121ffea2df117'
 
     class Config:
         env_file = ".env"
