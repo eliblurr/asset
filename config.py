@@ -40,21 +40,4 @@ else:
 
     if not os.path.isdir(MEDIA_ROOT):
         os.mkdir(MEDIA_ROOT)
-
-
-# print(BASE_DIR)
-
-# APP_ROOT = Path(__file__).resolve().parent
-
-
-# PROJECT_APP_PATH = os.path.dirname(os.path.abspath(__file__))
-
-
-# PROJECT_APP = os.path.basename(PROJECT_APP_PATH)
-
-# PROJECT_ROOT = BASE_DIR = os.path.dirname(PROJECT_APP_PATH)
-
-# BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-# print(PROJECT_APP_PATH, PROJECT_APP, PROJECT_ROOT, BASE_DIR, APP_ROOT, sep='\n\n')
+  
