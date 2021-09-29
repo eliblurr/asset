@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
 from dependencies import get_db
+from typing import Union, List
 from . import crud, schemas
 
 router = APIRouter()
@@ -15,9 +16,9 @@ async def create(payload:schemas.CreatePriority, db:Session=Depends(get_db)):
 async def read(db:Session=Depends(get_db), **params):
     return await crud.priority.read(params, db)
 
-@router.get('/{id}', description='', response_model=schemas.Priority, name='Priority')
-async def read_by_id(id:str, db:Session=Depends(get_db)):
-    return await crud.priority.read_by_id(id, db)
+@router.get('/{id}', description='', response_model=Union[schemas.Priority, dict], name='Priority')
+async def read_by_id(id:str, fields:List[str]=Query(None, regex=f'^({"|".join([x[0] for x in crud.priority.model.c()])})$'), db:Session=Depends(get_db)):
+    return await crud.priority.read_by_id(id, db, fields)
 
 @router.patch('/{id}', description='', response_model=schemas.Priority, name='Priority')
 async def update(id:str, payload:schemas.UpdatePriority, db:Session=Depends(get_db)):

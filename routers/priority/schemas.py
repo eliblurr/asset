@@ -1,6 +1,6 @@
+from typing import Optional, List, Union
 from pydantic import BaseModel, conint
 import routers.priority.models as m
-from typing import Optional, List
 import datetime
 
 class PriorityBase(BaseModel):
@@ -32,4 +32,4 @@ class Priority(PriorityBase):
 class PriorityList(BaseModel):
     bk_size: int
     pg_size: int
-    data: List[Priority]
+    data: Union[List[Priority], list]
