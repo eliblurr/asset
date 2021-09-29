@@ -1,9 +1,9 @@
 from inspect import Parameter, Signature, signature
+from fastapi import Query, WebSocket
 from sqlalchemy.orm import Session
 from utils import schema_to_model
 from constants import DT_X, Q_X
 from functools import wraps
-from fastapi import Query
 import enum, re, datetime
 from typing import List
 
@@ -114,3 +114,31 @@ class ContentQueryChecker:
             params.extend([Parameter('action', Parameter.KEYWORD_ONLY, annotation=str, default=Query(None))])
         wrapper.__signature__ = Signature(params)
         return wrapper
+
+class SocketConnectionManager:
+    def __init__(self):
+        self.active_connections:List[WebSocket] = []
+
+    async def connect(self, websocket:WebSocket, client_id:int):
+        websocket._cookies['client_id']=client_id
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket:WebSocket):
+        self.active_connections.remove(websocket)
+
+    def client_connection(self, client_id:int):
+        return [websocket for websocket in self.active_connections if websocket._cookies.get('client_id', None) == client_id]
+
+    async def send_personal_message(self, message:(str, dict), client_id:int):
+        client_connections = self.client_connection(client_id)
+        for websocket in client_connections:
+            if isinstance(message, str):
+                return await websocket.send_text(message)
+            return await websocket.send_json(message)
+
+    async def broadcast(self, message: (str, dict)):
+        for websocket in self.active_connections:
+            if isinstance(message, str):
+                return await websocket.send_text(message)
+            return await websocket.send_json(message)

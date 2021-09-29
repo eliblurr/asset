@@ -1,10 +1,12 @@
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from cls import SocketConnectionManager
 from fastapi import FastAPI, Request
 from database import SessionLocal
 from config import *
 
 app = FastAPI()
+socket = SocketConnectionManager()
 templates = Jinja2Templates(directory="static/html")
 app.mount(MEDIA_URL, StaticFiles(directory=MEDIA_ROOT), name="media")
 app.mount(STATIC_URL, StaticFiles(directory=STATIC_ROOT), name="static")
