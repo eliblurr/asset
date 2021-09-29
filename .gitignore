@@ -3,4 +3,6 @@
 *.db
 *.log
 __pycache__/
+media/
+documents/
 .env

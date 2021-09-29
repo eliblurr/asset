@@ -5,7 +5,9 @@ from config import *
 
 app = FastAPI()
 templates = Jinja2Templates(directory="static/html")
+app.mount(MEDIA_URL, StaticFiles(directory=MEDIA_ROOT), name="media")
 app.mount(STATIC_URL, StaticFiles(directory=STATIC_ROOT), name="static")
+app.mount(DOCUMENT_URL, StaticFiles(directory=DOCUMENT_ROOT), name="documents")
 
 from urls import *
 
