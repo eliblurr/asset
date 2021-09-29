@@ -10,7 +10,6 @@ app.mount(MEDIA_URL, StaticFiles(directory=MEDIA_ROOT), name="media")
 app.mount(STATIC_URL, StaticFiles(directory=STATIC_ROOT), name="static")
 app.mount(DOCUMENT_URL, StaticFiles(directory=DOCUMENT_ROOT), name="documents")
 
-# middleware
 @app.middleware("http")
 async def tenant_session(request:Request, call_next):
     try:
@@ -24,22 +23,6 @@ async def tenant_session(request:Request, call_next):
     return response
 
 from urls import *
-
-# from database import engine, Base
-
-# print(
-#     dir(Base.metadata),
-#     len(Base.metadata.tables),
-#     sep='\n\n'
-# )
-
-
-
-# from routers.tenant.models import Base
-
-# @app.post("/init")
-# def init():  
-#     Base.metadata.create_all(bind=engine)
 
 # from babel import Locale
 

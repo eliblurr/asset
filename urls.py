@@ -1,10 +1,15 @@
 from fastapi.responses import HTMLResponse
 from fastapi import FastAPI, Request
+from database import Base, engine
 from main import app, templates
 
 @app.get("/{id}", response_class=HTMLResponse)
 async def read_item(request: Request, id: str):
     return templates.TemplateResponse("test.html", {"request": request, "id": id})
+
+@app.post("/init")
+def init():  
+    Base.metadata.create_all(bind=engine, tables=[table for table in Base.metadata.sorted_tables if table.schema=='public'])
 
 from routers.priority.main import router as priority
 from routers.tenant.main import router as tenant
