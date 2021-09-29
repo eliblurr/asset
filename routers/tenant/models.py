@@ -36,4 +36,6 @@ class Tenant(BaseMixin, Base):
 def create_tenant_schema(mapper, connection, target):
     connection.engine.execute(CreateSchema(target.id))
     connection = engine.connect().execution_options(schema_translate_map={None: target.id,})
-    # Base.metadata.create_all(bind=connection, tables=[table for table in Base.metadata.sorted_tables if table.schema==None])
+    Base.metadata.create_all(bind=connection, tables=[table for table in Base.metadata.sorted_tables if table.schema==None])
+
+# print(Base.metadata.tables.keys())

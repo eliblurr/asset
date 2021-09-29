@@ -25,12 +25,21 @@ async def tenant_session(request:Request, call_next):
 
 from urls import *
 
-from routers.tenant.models import Base
-from database import engine
+# from database import engine, Base
 
-@app.post("/init")
-def init():  
-    Base.metadata.create_all(bind=engine)
+# print(
+#     dir(Base.metadata),
+#     len(Base.metadata.tables),
+#     sep='\n\n'
+# )
+
+
+
+# from routers.tenant.models import Base
+
+# @app.post("/init")
+# def init():  
+#     Base.metadata.create_all(bind=engine)
 
 # from babel import Locale
 

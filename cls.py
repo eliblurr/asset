@@ -1,15 +1,11 @@
 from inspect import Parameter, Signature, signature
 from sqlalchemy.orm import Session
 from utils import schema_to_model
-from functools import wraps
-import re, datetime
-from fastapi import Query
-from typing import List
-
-import enum
-
 from constants import DT_X, Q_X
-
+from functools import wraps
+from fastapi import Query
+import enum, re, datetime
+from typing import List
 
 class CRUD:
     def __init__(self, model):
