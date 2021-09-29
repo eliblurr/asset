@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, UploadFile, Query
 from sqlalchemy.schema import DropSchema
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
 from dependencies import get_db
+from typing import Union, List
 from . import crud, schemas
 from database import engine
 from uuid import uuid4
@@ -19,9 +20,9 @@ async def create(payload:schemas.CreateTenant=Depends(schemas.CreateTenant.as_fo
 async def read(db:Session=Depends(get_db), **params):
     return await crud.tenant.read(params, db)
 
-@router.get('/{id}', description='', response_model=schemas.Tenant, name='Tenant/Organization')
-async def read_by_id(id:int, db:Session=Depends(get_db)):
-    return await crud.tenant.read_by_id(id, db)
+@router.get('/{id}', description='', response_model=Union[schemas.Tenant, dict], name='Tenant/Organization')
+async def read_by_id(id:str, fields:List[str]=Query(None, regex=f'^({"|".join([x[0] for x in crud.tenant.model.c()])})$'), db:Session=Depends(get_db)):
+    return await crud.tenant.read_by_id(id, db, fields)
 
 @router.patch('/{id}', description='', response_model=schemas.Tenant, name='Tenant/Organization')
 async def update(id:int, payload:schemas.UpdateTenant, db:Session=Depends(get_db)):
