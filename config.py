@@ -11,6 +11,8 @@ ALLOWED_METHODS = ["*"]
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
+
+
 class Settings(BaseSettings):
     ADMIN_EMAIL: str
     DATABASE_URL: str
@@ -35,9 +37,14 @@ else:
     DOCUMENT_URL = "/docs/"
     DOCUMENT_ROOT = os.path.join(BASE_DIR, 'documents/')
 
+    LOG_ROOT = os.path.join(BASE_DIR, 'logs/')
+
     if not os.path.isdir(DOCUMENT_ROOT):
         os.mkdir(DOCUMENT_ROOT)
 
     if not os.path.isdir(MEDIA_ROOT):
         os.mkdir(MEDIA_ROOT)
+
+    if not os.path.isdir(LOG_ROOT):
+        os.mkdir(LOG_ROOT)
   

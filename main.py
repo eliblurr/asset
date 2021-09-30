@@ -4,9 +4,11 @@ from cls import SocketConnectionManager
 from fastapi import FastAPI, Request
 from database import SessionLocal
 from config import *
+import logging
 
 app = FastAPI()
 socket = SocketConnectionManager()
+logging.config.fileConfig('logging.conf')
 templates = Jinja2Templates(directory="static/html")
 app.mount(MEDIA_URL, StaticFiles(directory=MEDIA_ROOT), name="media")
 app.mount(STATIC_URL, StaticFiles(directory=STATIC_ROOT), name="static")
@@ -25,6 +27,26 @@ async def tenant_session(request:Request, call_next):
     return response
 
 from urls import *
+
+logger = logging.getLogger("eAsset.main")
+# print(dir(crud), crud.__name__)
+# print(logger)
+
+# print(dir(logging.handlers))
+
+@app.get('/test/logging')
+def a():
+    logger.debug("Program started", exc_info=True)   
+    logger.info("Program started", exc_info=True)
+    logger.warning("Program started") 
+    logger.error("Program started") 
+    logger.critical("Program started") 
+
+# logging.basicConfig(filename="sample.log", level=logging.INFO)
+
+# logging.debug("This is a debug message")
+# logging.info("Informational message")
+# logging.error("An error has happened!")
 
 # from babel import Locale
 
