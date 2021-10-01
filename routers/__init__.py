@@ -1,5 +1,6 @@
 import routers.faqs.models 
 import routers.policy.models 
+import routers.vendor.models
 import routers.priority.models 
 import routers.tenant.models
 
