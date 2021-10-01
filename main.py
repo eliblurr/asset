@@ -1,3 +1,4 @@
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from cls import SocketConnectionManager
@@ -9,7 +10,19 @@ import logging, os
 
 logging.logFile,logging.atTime = os.path.join(LOG_ROOT, f'logs.log'), time()
 
-app = FastAPI()
+app = FastAPI(
+    docs_url=None, 
+    redoc_url=None
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials = True,
+    allow_origins = ALLOWED_ORIGINS,
+    allow_methods = ALLOWED_METHODS,
+    allow_headers = ALLOWED_HEADERS,
+)
+
 socket = SocketConnectionManager()
 logging.config.fileConfig('logging.conf')
 templates = Jinja2Templates(directory="static/html")
@@ -31,19 +44,19 @@ async def tenant_session(request:Request, call_next):
 
 from urls import *
 
-logger = logging.getLogger("eAsset.main")
+# logger = logging.getLogger("eAsset.main")
 # print(dir(crud), crud.__name__)
 # print(logger)
 
 # print(dir(logging.handlers))
 
-@app.get('/test/logging')
-def a():
-    logger.debug("Program started", exc_info=True)   
-    logger.info("Program started", exc_info=True)
-    logger.warning("Program started") 
-    logger.error("Program started") 
-    logger.critical("Program started") 
+# @app.get('/test/logging')
+# def a():
+#     logger.debug("Program started", exc_info=True)   
+#     logger.info("Program started", exc_info=True)
+#     logger.warning("Program started") 
+#     logger.error("Program started") 
+#     logger.critical("Program started") 
 
 # logging.basicConfig(filename="sample.log", level=logging.INFO)
 
