@@ -2,9 +2,12 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from cls import SocketConnectionManager
 from fastapi import FastAPI, Request
+from datetime import time, datetime
 from database import SessionLocal
 from config import *
-import logging
+import logging, os
+
+logging.logFile,logging.atTime = os.path.join(LOG_ROOT, f'logs.log'), time()
 
 app = FastAPI()
 socket = SocketConnectionManager()

@@ -1,7 +1,7 @@
 .history/
 *.pyc
 *.db
-*.log*
+*.log
 logs/
 __pycache__/
 media/
