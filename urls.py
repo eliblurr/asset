@@ -27,12 +27,16 @@ async def websocket_endpoint(websocket:WebSocket, client_id:int):
 from routers.priority.main import router as priority
 from routers.tenant.main import router as tenant
 from routers.policy.main import router as policy
+from routers.vendor.main import router as vendor
 from routers.faqs.main import router as faqs
+from routers.log.main import router as log
 
 app.include_router(faqs, tags=['Frequently Asked Questions'], prefix='/frequently-asked-questions')
 app.include_router(tenant, tags=['Tenants/Organizations'], prefix='/tenants')
 app.include_router(priority, tags=['Priorities'], prefix='/priorities')
 app.include_router(policy, tags=['Policies'], prefix='/policies')
+app.include_router(vendor, tags=['Vendor'], prefix='/vendors')
+app.include_router(log, tags=['Logs'], prefix='/logs')
 
 def custom_openapi():
     openapi_schema = get_openapi(

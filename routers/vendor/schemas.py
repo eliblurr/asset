@@ -1,14 +1,14 @@
 from typing import Optional, List, Union
+from constants import URL, EMAIL, PHONE
 from pydantic import BaseModel, constr
 import routers.vendor.models as m
-from constants import URL
 import datetime
 
 class VendorBase(BaseModel):
     title: str
     email: Optional[constr(regex=EMAIL)]
     website: Optional[constr(regex=URL)]
-    contact: Optional[constr(regex=EMAIL)]
+    contact: Optional[constr(regex=PHONE)]
 
     class Config:
         orm_mode = True
