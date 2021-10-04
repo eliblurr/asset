@@ -1,4 +1,5 @@
 from fastapi.responses import FileResponse
+from datetime import datetime
 from fastapi import APIRouter
 from config import LOG_ROOT
 from pathlib import Path
@@ -6,72 +7,60 @@ from typing import List
 import os
 
 router = APIRouter()
-# , response_class=FileResponse
+path = Path(LOG_ROOT)
 
-@router.get('/files', description='Read logs')
-async def read_sd(file:str=None, ):
-    files = [FileResponse(file) for file in Path(LOG_ROOT).iterdir() if file.is_file()]
-    # print('sd')
-    print(files)
-    return files
+def get_entries(file):
+    DEBUG, INFO, WARNING, ERROR, CRITICAL = 0, 0, 0, 0, 0
+    with open(file, 'r', encoding = 'utf-8') as f:
+        for line in f.readlines():
+            if ' - DEBUG - ' in line:
+                DEBUG+=1
+            if ' - INFO - ' in line:
+                INFO+=1
+            if ' - WARNING - ' in line:
+                WARNING+=1
+            if ' - ERROR - ' in line:
+                ERROR+=1
+            if ' - CRITICAL - ' in line:
+                CRITICAL+=1
+    return {
+        "DEBUG":DEBUG,
+        "INFO":INFO,
+        "WARNING":WARNING,
+        "ERROR":ERROR,
+        "CRITICAL":CRITICAL,
+    }
+
+@router.get('/', description='Read logs')
+@router.get('/{action}', description='Read logs')
+async def read(file:str=None, action:str=None, offset:int=0, limit:int=20):
+    if file:
+        file_path = os.path.join(path, file)
+        if os.path.isfile(file_path):
+            if action=='download':
+                return FileResponse(file_path, media_type='text/plain', filename=f"{file}.log")
+            return FileResponse(file_path, media_type='text/plain', stat_result=os.stat(file_path))
+        else:
+            return "error", {"info":f"File not found"}  
+    files_gen_to_list = list(path.iterdir())
+    files = [
+        {
+            "filename": file.name,
+            "path": file.as_posix(),
+            "entries": get_entries(file)
+        }
+        for file in files_gen_to_list[offset:offset+limit] if file.is_file()
+    ]  
+    return {
+        "bk_size": files_gen_to_list.__len__(),
+        "pg_size": files.__len__(),
+        "data": files
+    }
     
-    # f = []
-    # for file in files:
-    #     if file.is_file():
-    #         f.append(file)
-
-    # print(f)
-    # return f
- 
 @router.delete('/', description='Delete logs')
-async def delete(file:str):
-    pass
-
-# file = Path(LOG_ROOT).iterdir()
-
-# files = Path(LOG_ROOT).iterdir()
-
-# for file in files:
-#     if file.is_file():
-#         print(file.name)
-
-# print(dir(os.listdir(LOG_ROOT)[1]))
-
-    # print(filename.split('.')[-1])
-# filter all filename that correspond to date
-
-# 1. serve log static files
-# 1. serve filter by date
-# for file in os.scandir(LOG_ROOT):
-# print(dir(os.scandir(LOG_ROOT)[2]))
-
-# print(files)
-# for file in files.iterdir():
-#     print(file.name)
-# print(dir(files.iterdir()[4]))
-
-
-
-# from fastapi import FastAPI, File, UploadFile
-
-
-# List all files in a directory using os.listdir
-# basepath = 'my_directory/'
-# for entry in os.listdir(basepath):
-#     if os.path.isfile(os.path.join(basepath, entry)):
-#         print(entry)
-
-# # List all files in a directory using scandir()
-# basepath = 'my_directory/'
-# with os.scandir(basepath) as entries:
-#     for entry in entries:
-#         if entry.is_file():
-#             print(entry.name)
-
-# from pathlib import Path
-
-# basepath = Path('my_directory/')
-# files_in_basepath = basepath.iterdir()
-# for item in files_in_basepath:
-#     if item.is_file():
-#         print(item.name)
+async def delete(files:List[str]):
+    for file in files:
+        file_path = os.path.join(path, file)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    return "success", {"info":f"File(s) no longer exists"}

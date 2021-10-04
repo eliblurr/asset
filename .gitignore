@@ -1,9 +1,9 @@
-.history/
-*.pyc
-*.db
-*.log
-logs/
 __pycache__/
 media/
 documents/
+.history/
+logs/
+*.pyc
+*.db
+*.log
 .env

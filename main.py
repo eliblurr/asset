@@ -8,7 +8,7 @@ from database import SessionLocal
 from config import *
 import logging, os
 
-logging.logFile,logging.atTime = os.path.join(LOG_ROOT, f'logs.log'), time()
+logging.logFile,logging.atTime = os.path.join(LOG_ROOT, f'logs'), time()
 
 app = FastAPI(
     docs_url=None, 
