@@ -6,13 +6,13 @@ from dependencies import get_db
 from typing import Union, List
 from . import crud, schemas
 from database import engine
-from uuid import uuid4
+from utils import gen_hex
 
 router = APIRouter()
 
 @router.post('/', description='', response_model=schemas.Tenant, status_code=201, name='Tenant/Organization')
 async def create(payload:schemas.CreateTenant=Depends(schemas.CreateTenant.as_form), logo:UploadFile=File(...), bg_image:UploadFile=File(...), db:Session=Depends(get_db)):
-    payload.id = f"{uuid4()}"
+    payload.key = gen_hex(payload.sub_domain_id)
     return await crud.tenant.create(payload, db)
 
 @router.get('/', description='', response_model=schemas.TenantList, name='Tenant/Organization')

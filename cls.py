@@ -18,8 +18,8 @@ class CRUD:
         db.add(obj)
         db.commit()
         db.refresh(obj) 
-        return obj  
-
+        return obj
+        
     async def read(self, params, db:Session):
         fields = [getattr(self.model, field.strip()) for field in params["fields"]]  if params["fields"]!=None else [self.model]
 

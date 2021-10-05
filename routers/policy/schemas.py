@@ -27,7 +27,7 @@ class UpdatePolicy(BaseModel):
     index: Optional[conint(gt=0)]
 
 class Policy(PolicyBase):
-    id: str
+    id: int
     created: datetime.datetime
     updated: datetime.datetime
 

@@ -27,7 +27,7 @@ class UpdateFAQ(BaseModel):
     index: Optional[conint(gt=0)]
     
 class FAQ(FAQBase):
-    id: str
+    id: int
     created: datetime.datetime
     updated: datetime.datetime
 

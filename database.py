@@ -10,5 +10,12 @@ else:
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+TenantBase = declarative_base(metadata=MetaData(schema=None))
+Base = declarative_base(metadata=MetaData(schema='public'))
 metadata = MetaData()
+
+# tenant_metadata = MetaData(schema=None)
+
+
+# metadata2 = MetaData(schema='public')
+# Base2 = declarative_base(metadata=metadata2)

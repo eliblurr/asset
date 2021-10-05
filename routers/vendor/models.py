@@ -1,11 +1,11 @@
 from sqlalchemy import Column, String, CheckConstraint
 from sqlalchemy.orm import validates
 from constants import EMAIL, PHONE
+from database import TenantBase
 from mixins import BaseMixin
-from database import Base
 import re
 
-class Vendor(BaseMixin, Base):
+class Vendor(BaseMixin, TenantBase):
     '''Vendor Model'''
     __tablename__ = "vendors"
     __table_args__ = (CheckConstraint('coalesce(contact , email) is not null', name='_email_or_contact_'),)

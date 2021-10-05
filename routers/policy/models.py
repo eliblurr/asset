@@ -5,7 +5,6 @@ from database import Base
 class Policy(BaseMixin, Base):
     '''Policy Model'''
     __tablename__ = "policies"
-    __table_args__ = ({'schema':'public'},)
     
     title = Column(String, nullable=False)
     metatitle = Column(String, nullable=True)

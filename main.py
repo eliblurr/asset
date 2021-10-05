@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from cls import SocketConnectionManager
 from fastapi import FastAPI, Request
 from datetime import time, datetime
-from database import SessionLocal
+from database import SessionLocal, engine
 from config import *
 import logging, os
 
@@ -32,14 +32,14 @@ app.mount(DOCUMENT_URL, StaticFiles(directory=DOCUMENT_ROOT), name="documents")
 
 @app.middleware("http")
 async def tenant_session(request:Request, call_next):
-    try:
-        db = SessionLocal()
-        if request.headers.get('tenant_sub_domain_id', None):
-            db.connection(execution_options={"schema_translate_map": {None: request.headers.get('tenant_sub_domain_id')}})
-        request.state.db = db
-        response = await call_next(request)
-    finally:
-        request.state.db.close()
+    # try:
+    db = SessionLocal()
+    if request.headers.get('tenant_key', None):
+        db = SessionLocal(bind=engine.execution_options(schema_translate_map={None: request.headers.get('tenant_key')}))
+    request.state.db = db
+    response = await call_next(request)
+    # finally:
+    #     request.state.db.close()
     return response
 
 from urls import *

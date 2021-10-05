@@ -1,7 +1,8 @@
-import routers.faqs.models 
+import routers.manufacturer.models 
+import routers.priority.models 
 import routers.policy.models 
 import routers.vendor.models
-import routers.priority.models 
+import routers.faqs.models 
 import routers.tenant.models
 
 '''

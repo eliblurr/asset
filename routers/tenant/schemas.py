@@ -24,7 +24,7 @@ class TenantBase(BaseModel):
 
 @as_form
 class CreateTenant(TenantBase):
-    id: Optional[int]
+    key: Optional[str]
 
 class UpdateTenant(BaseModel):
     title: Optional[str]
@@ -38,7 +38,8 @@ class UpdateTenant(BaseModel):
     phone: Optional[constr(regex=PHONE)]
 
 class Tenant(TenantBase):
-    id: str
+    id: int
+    key: str
     created: datetime
     updated: datetime
 

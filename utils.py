@@ -1,9 +1,14 @@
 from inspect import Parameter, signature
 from secrets import token_urlsafe
 from fastapi import Form
+from hashlib import md5
+import datetime
 
 def gen_code(nbytes=8):
     return token_urlsafe(nbytes)
+
+def gen_hex(data:str=gen_code()):
+    return md5(data.encode()).hexdigest()
 
 def as_form(cls):
     form = [

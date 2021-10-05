@@ -1,11 +1,11 @@
 from sqlalchemy import Column, String, Boolean, Integer, event, CheckConstraint
 from sqlalchemy.orm import validates
 from constants import COLOR_HEX
+from database import TenantBase
 from mixins import BaseMixin
-from database import Base
 import re
 
-class Priority(BaseMixin, Base):
+class Priority(BaseMixin, TenantBase):
     '''Priority Model'''
     __tablename__ = "priorities"
     

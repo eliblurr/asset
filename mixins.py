@@ -1,6 +1,5 @@
-from sqlalchemy import Column, DateTime, Boolean, String
+from sqlalchemy import Column, DateTime, Boolean, Integer
 from datetime import datetime
-from uuid import uuid4
 
 class BaseMethodMixin(object):
     @classmethod
@@ -10,5 +9,5 @@ class BaseMethodMixin(object):
 class BaseMixin(BaseMethodMixin):    
     status = Column(Boolean, default=True)
     created = Column(DateTime, default=datetime.utcnow)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    id = Column(String, primary_key=True, index=True, default=uuid4)

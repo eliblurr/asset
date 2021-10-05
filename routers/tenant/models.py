@@ -2,8 +2,9 @@ from sqlalchemy.schema import CreateSchema, DropSchema
 from sqlalchemy import Column, String, event
 from sqlalchemy.orm import validates
 from constants import PHONE, EMAIL
-from database import Base, engine
+from database import Base, TenantBase, engine
 from mixins import BaseMixin
+from utils import gen_hex
 import re
 
 class Tenant(BaseMixin, Base):
@@ -21,6 +22,7 @@ class Tenant(BaseMixin, Base):
     logo_url = Column(String, nullable=False, unique=True, default='/sdds')
     bg_image_url = Column(String, nullable=False, unique=True, default='/sdds')
     sub_domain_id = Column(String, nullable=False, unique=True)
+    key = Column(String, nullable=False, unique=True, default=gen_hex)
     
     @validates('email')
     def validate_email(self, key, value):
@@ -34,8 +36,6 @@ class Tenant(BaseMixin, Base):
 
 @event.listens_for(Tenant, "after_insert")
 def create_tenant_schema(mapper, connection, target):
-    connection.engine.execute(CreateSchema(target.id))
-    connection = engine.connect().execution_options(schema_translate_map={None: target.id,})
-    Base.metadata.create_all(bind=connection, tables=[table for table in Base.metadata.sorted_tables if table.schema==None])
-
-# print(Base.metadata.tables.keys())
+    connection.engine.execute(CreateSchema(target.key))
+    connection = engine.connect().execution_options(schema_translate_map={None: target.key,})
+    TenantBase.metadata.create_all(bind=connection)

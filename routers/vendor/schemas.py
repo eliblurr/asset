@@ -26,7 +26,7 @@ class UpdateVendor(BaseModel):
     contact: Optional[constr(regex=EMAIL)]
 
 class Vendor(VendorBase):
-    id: str
+    id: int
     status: bool
     created: datetime.datetime
     updated: datetime.datetime

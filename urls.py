@@ -1,9 +1,9 @@
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
 from fastapi import FastAPI, Request, WebSocket
 from fastapi.openapi.utils import get_openapi
+from database import Base, TenantBase, engine
 from fastapi.responses import HTMLResponse
 from main import app, templates, socket
-from database import Base, engine
 from config import settings
 import os
 
@@ -13,7 +13,13 @@ async def read_item(request: Request, id: str):
 
 @app.post("/init")
 def init():  
-    Base.metadata.create_all(bind=engine, tables=[table for table in Base.metadata.sorted_tables if table.schema=='public'])
+    Base.metadata.create_all(bind=engine)
+    # , tables=[table for table in Base.metadata.sorted_tables if table.schema=='public']
+
+    # print(Base.metadata.tables.keys())
+    # print(TenantBase.metadata.tables.keys())
+    # print(TenantBase.metadata.tables)
+    # print(Base.metadata.tables)
 
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket:WebSocket, client_id:int):
@@ -24,6 +30,7 @@ async def websocket_endpoint(websocket:WebSocket, client_id:int):
     except:
         socket.disconnect(websocket)
 
+from routers.manufacturer.main import router as manufacturer
 from routers.priority.main import router as priority
 from routers.tenant.main import router as tenant
 from routers.policy.main import router as policy
@@ -32,6 +39,7 @@ from routers.faqs.main import router as faqs
 from routers.log.main import router as log
 
 app.include_router(faqs, tags=['Frequently Asked Questions'], prefix='/frequently-asked-questions')
+app.include_router(manufacturer, tags=['Manufacturers'], prefix='/manufacturers')
 app.include_router(tenant, tags=['Tenants/Organizations'], prefix='/tenants')
 app.include_router(priority, tags=['Priorities'], prefix='/priorities')
 app.include_router(policy, tags=['Policies'], prefix='/policies')

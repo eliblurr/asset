@@ -24,7 +24,7 @@ class UpdatePriority(BaseModel):
     index: Optional[conint(gt=0)]
 
 class Priority(PriorityBase):
-    id: str
+    id: int
     default: bool
     created: datetime.datetime
     updated: datetime.datetime
