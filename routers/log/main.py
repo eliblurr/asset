@@ -32,12 +32,12 @@ def get_entries(file):
     }
 
 @router.get('/', description='Read logs')
-@router.get('/downloads', description='Read logs')
+@router.get('/download', description='Read logs')
 async def read(request: Request,file:str=None, action:str=None, offset:int=0, limit:int=20):
     if file:
         file_path = os.path.join(path, file)
         if os.path.isfile(file_path):
-            if request.url.path=='/logs/downloads':
+            if request.url.path=='/logs/download':
                 return FileResponse(file_path, media_type='text/plain', filename=f"{file}.log")
             return FileResponse(file_path, media_type='text/plain', stat_result=os.stat(file_path))
         else:
