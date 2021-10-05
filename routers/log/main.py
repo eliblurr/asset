@@ -1,6 +1,6 @@
 from fastapi.responses import FileResponse
+from fastapi import APIRouter, Request
 from datetime import datetime
-from fastapi import APIRouter
 from config import LOG_ROOT
 from pathlib import Path
 from typing import List
@@ -32,12 +32,12 @@ def get_entries(file):
     }
 
 @router.get('/', description='Read logs')
-@router.get('/{action}', description='Read logs')
-async def read(file:str=None, action:str=None, offset:int=0, limit:int=20):
+@router.get('/downloads', description='Read logs')
+async def read(request: Request,file:str=None, action:str=None, offset:int=0, limit:int=20):
     if file:
         file_path = os.path.join(path, file)
         if os.path.isfile(file_path):
-            if action=='download':
+            if request.url.path=='/logs/downloads':
                 return FileResponse(file_path, media_type='text/plain', filename=f"{file}.log")
             return FileResponse(file_path, media_type='text/plain', stat_result=os.stat(file_path))
         else:

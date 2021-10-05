@@ -14,6 +14,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 os.environ['DOC'] = ''
 
 class Settings(BaseSettings):
+    BASE_URL: str
     ADMIN_EMAIL: str
     DATABASE_URL: str
     VERSION: str = '2.0.0'
