@@ -34,8 +34,8 @@ app.mount(DOCUMENT_URL, StaticFiles(directory=DOCUMENT_ROOT), name="documents")
 async def tenant_session(request:Request, call_next):
     try:
         db = SessionLocal()
-        if request.headers.get('tenant_id', None):
-            db.connection(execution_options={"schema_translate_map": {None: request.headers.get('tenant_id')}})
+        if request.headers.get('tenant_sub_domain_id', None):
+            db.connection(execution_options={"schema_translate_map": {None: request.headers.get('tenant_sub_domain_id')}})
         request.state.db = db
         response = await call_next(request)
     finally:
