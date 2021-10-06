@@ -33,7 +33,7 @@ def get_entries(file):
 
 @router.get('/', description='Read logs')
 @router.get('/download', description='Read logs')
-async def read(request: Request,file:str=None, action:str=None, offset:int=0, limit:int=20):
+async def read(request: Request,file:str=None, offset:int=0, limit:int=20):
     if file:
         file_path = os.path.join(path, file)
         if os.path.isfile(file_path):

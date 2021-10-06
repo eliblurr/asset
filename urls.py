@@ -35,10 +35,12 @@ from routers.priority.main import router as priority
 from routers.tenant.main import router as tenant
 from routers.policy.main import router as policy
 from routers.vendor.main import router as vendor
+from routers.config.main import router as config
 from routers.faqs.main import router as faqs
 from routers.log.main import router as log
 
 app.include_router(faqs, tags=['Frequently Asked Questions'], prefix='/frequently-asked-questions')
+app.include_router(config, tags=['Environment Configuration'], prefix='/settings')
 app.include_router(manufacturer, tags=['Manufacturers'], prefix='/manufacturers')
 app.include_router(tenant, tags=['Tenants/Organizations'], prefix='/tenants')
 app.include_router(priority, tags=['Priorities'], prefix='/priorities')
