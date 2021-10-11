@@ -31,6 +31,7 @@ async def websocket_endpoint(websocket:WebSocket, client_id:int):
         socket.disconnect(websocket)
 
 from routers.manufacturer.main import router as manufacturer
+from routers.user.account.main import router as user
 from routers.priority.main import router as priority
 from routers.tenant.main import router as tenant
 from routers.policy.main import router as policy
@@ -45,6 +46,7 @@ app.include_router(manufacturer, tags=['Manufacturers'], prefix='/manufacturers'
 app.include_router(tenant, tags=['Tenants/Organizations'], prefix='/tenants')
 app.include_router(priority, tags=['Priorities'], prefix='/priorities')
 app.include_router(policy, tags=['Policies'], prefix='/policies')
+app.include_router(user, tags=['User Accounts'], prefix='/users', )
 app.include_router(vendor, tags=['Vendor'], prefix='/vendors')
 app.include_router(log, tags=['Logs'], prefix='/logs')
 

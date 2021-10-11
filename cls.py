@@ -61,10 +61,19 @@ class CRUD:
         return db.query(*fields).filter(self.model.id==id).first()
 
     async def update(self, id, payload, db:Session, images=None):
-        rows = db.query(self.model).filter(self.model.id==id).delete(synchronize_session=False)
+        # rows = db.execute(
+        #     self.model.__table__.update().where(self.model.__table__.c.id==id).values(**payload.dict(exclude_unset=True))
+        # )
+        # print(dir(db))
+        # print(rows.fetchmany())
+        
+        # connection.execute(
+        #     Priority.__table__.update().where(Priority.__table__.c.default==True).values(default=False)
+        # )   
+        rows = db.query(self.model).filter(self.model.id==id).update(payload.dict(exclude_unset=True))
         db.commit()
         return "success", {"info":f"{rows} row(s) updated"}
-
+      
     async def delete(self, id, db:Session):
         rows = db.query(self.model).filter(self.model.id==id).delete(synchronize_session=False)
         db.commit()
@@ -73,7 +82,7 @@ class CRUD:
     async def bk_create(self, payload, db:Session):
         db.add_all([self.model(**schema_to_model(payload)) for payload in payload])
         db.commit()
-        return "success", {"info":f"row(s) created"}
+        return "success", {"info":f"{self.model.__tablename__} row(s) created"}
 
     async def bk_update(self, payload, db:Session, **kwargs):
         rows = db.query(self.model).filter_by(**kwargs).update(payload.dict(exclude_unset=True), synchronize_session="fetch")

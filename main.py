@@ -64,9 +64,9 @@ from urls import *
 # logging.info("Informational message")
 # logging.error("An error has happened!")
 
-# from babel import Locale
+from babel import Locale
 
-# locale = Locale('en', 'US') # en, US specifies language, territory respectives
+locale = Locale('en', 'US') # en, US specifies language, territory respectives
 
 # for k,v in locale.territories.items():
 #     print(f'{k} : {v}')

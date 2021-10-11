@@ -13,7 +13,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 os.environ['DOC'] = ''
 
+JWT_ALGORITHM = 'HS256'
+
 class Settings(BaseSettings):
+    API_KEY: str
     BASE_URL: str
     ADMIN_EMAIL: str
     DATABASE_URL: str
@@ -27,9 +30,13 @@ class Settings(BaseSettings):
     APP_DESCRIPTION: str = """eAsset API Documentation developed by Eli for Some Organization"""
     APP_DOC_DESC: str = f"{APP_DESCRIPTION}\n\n <a href='/' style='color:hotpink;cursor:help'>see official API docs</a>"
     APP_REDOC_DESC: str = f"{APP_DESCRIPTION}\n\n <a href='/docs' style='color:hotpink;cursor:help'>Interactive Swagger docs</a>"
-    
+    ACCESS_TOKEN_DURATION_IN_MINUTES: float = 60
+    REFRESH_TOKEN_DURATION_IN_MINUTES: float = 60
+    ACTIVATION_TOKEN_DURATION_IN_MINUTES: float = 3.2
+
     class Config:
         env_file = ".env"
+        secrets_dir = BASE_DIR
 
 settings = Settings()
 

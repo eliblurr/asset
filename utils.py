@@ -1,8 +1,17 @@
+from config import JWT_ALGORITHM, settings
 from inspect import Parameter, signature
+from datetime import timedelta, datetime
 from secrets import token_urlsafe
 from fastapi import Form
 from hashlib import md5
-import datetime
+import jwt
+
+def create_jwt(data:dict, exp:timedelta=None):
+    data.update({"exp": datetime.utcnow()+exp if exp else datetime.utcnow()+timedelta(seconds=settings.ACCESS_TOKEN_DURATION_IN_MINUTES)})
+    return jwt.encode(data, settings.SECRET, algorithm=JWT_ALGORITHM)
+
+def decode_jwt(token):
+    return jwt.decode(token, settings.SECRET, JWT_ALGORITHM)
 
 def gen_code(nbytes=8):
     return token_urlsafe(nbytes)
@@ -46,3 +55,13 @@ def schema_to_model(schema, exclude_unset=False):
         parsed_schema = {k: v for k, v in parsed_schema.items() if v is not None}
     
     return parsed_schema
+
+def http_exception_detail(loc=None, msg=None, type=None):
+    detail = {}
+    if loc:
+        detail.update({"loc":loc if loc.__class__ in [list, set, tuple] else [loc]})
+    if msg:
+        detail.update({"msg":msg})
+    if msg:
+        detail.update({"type":type})
+    return [detail]

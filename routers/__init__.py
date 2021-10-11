@@ -1,4 +1,5 @@
 import routers.manufacturer.models 
+import routers.user.account.models 
 import routers.priority.models 
 import routers.policy.models 
 import routers.vendor.models

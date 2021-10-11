@@ -3,6 +3,7 @@ from pydantic import BaseModel, constr
 from typing import Optional
 
 class UpdateSettings(BaseModel):
+    API_KEY: Optional[str]
     BASE_URL: Optional[constr(regex=URL)]
     ADMIN_EMAIL: Optional[constr(regex=EMAIL)]
     DATABASE_URL: Optional[str]

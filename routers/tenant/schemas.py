@@ -1,7 +1,7 @@
 from pydantic import BaseModel, constr
 from constants import PHONE, EMAIL
 import routers.tenant.models as m
-from typing import Optional, List
+from typing import Optional, List, Union
 from datetime import datetime
 from utils import as_form
 
@@ -24,10 +24,12 @@ class TenantBase(BaseModel):
 
 @as_form
 class CreateTenant(TenantBase):
-    key: Optional[str]
+    # key: Optional[str]
+    password: Optional[str]
 
 class UpdateTenant(BaseModel):
     title: Optional[str]
+    password: Optional[str]
     metatitle: Optional[str]
     description: Optional[str]
     sub_domain_id: Optional[str]
@@ -46,4 +48,4 @@ class Tenant(TenantBase):
 class TenantList(BaseModel):
     bk_size: int
     pg_size: int
-    data: List[Tenant]
+    data: Union[List[Tenant], list]

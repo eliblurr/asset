@@ -1,6 +1,6 @@
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy import Column, String, event
 from constants import EMAIL, PHONE, URL
-from sqlalchemy import Column, String
 from database import Base, TenantBase
 from sqlalchemy.orm import validates
 from mixins import BaseMixin
@@ -41,3 +41,17 @@ class Manufacturer(ManufacturerMixin, BaseMixin, TenantBase):
 
 class ManufacturerView():
     pass
+
+@event.listens_for(Manufacturer, 'before_insert')
+# @event.listens_for(Manufacturer, 'before_update')
+def hash_password(mapper, connection, target):
+    if connection.get_execution_options().get('schema_translate_map', None):
+        print('tenant')
+    # print(
+    #     dir(connection),
+    #     connection.get_execution_options(),
+    #     sep='\n\n'
+    # )
+    # print(target.password)
+    # if target.password:
+    #     target.password = target.generate_hash(target.password)
