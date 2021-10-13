@@ -24,8 +24,7 @@ class TenantBase(BaseModel):
 
 @as_form
 class CreateTenant(TenantBase):
-    # key: Optional[str]
-    password: Optional[str]
+    pass
 
 class UpdateTenant(BaseModel):
     title: Optional[str]
