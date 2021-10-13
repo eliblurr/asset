@@ -1,5 +1,6 @@
 from pydantic import BaseSettings
 from pathlib import Path
+from babel import Locale
 import os
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -59,4 +60,5 @@ else:
 
     if not os.path.isdir(LOG_ROOT):
         os.mkdir(LOG_ROOT)
-  
+
+locale = Locale('en', 'US')

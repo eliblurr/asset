@@ -1,9 +1,9 @@
 from sqlalchemy.schema import CreateSchema, DropSchema
 from sqlalchemy import Column, String, event, Boolean
-from sqlalchemy.orm import validates
-from constants import PHONE, EMAIL
 from database import Base, TenantBase, engine
 from mixins import BaseMixin, HashMethodMixin
+from sqlalchemy.orm import validates
+from constants import PHONE, EMAIL
 from utils import gen_hex
 from passlib import pwd
 import re
@@ -15,6 +15,7 @@ class Tenant(BaseMixin, HashMethodMixin, Base):
     email = Column(String, nullable=False)
     phone = Column(String, nullable=False)
     metatitle = Column(String, nullable=True)
+    is_active = Column(Boolean, default=False)
     description = Column(String, nullable=True)
     street_address = Column(String, nullable=True)
     postal_address = Column(String, nullable=True)
@@ -25,9 +26,6 @@ class Tenant(BaseMixin, HashMethodMixin, Base):
     sub_domain_id = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=False, default=pwd.genword)
     key = Column(String, nullable=False, unique=True, default=gen_hex)
-    is_active = Column(Boolean, default=False)
-    # country
-    # lang
     
     @validates('email')
     def validate_email(self, key, value):
@@ -41,15 +39,10 @@ class Tenant(BaseMixin, HashMethodMixin, Base):
 
 @event.listens_for(Tenant, "after_insert")
 def create_tenant_schema(mapper, connection, target):
-    schema = gen_hex()
-    connection.engine.execute(CreateSchema(schema))
-    connection = engine.connect().execution_options(schema_translate_map={None: schema,})
+    connection.engine.execute(CreateSchema(target.key))
+    connection = engine.connect().execution_options(schema_translate_map={None: target.key,})
     TenantBase.metadata.create_all(bind=connection)
-
-@event.listens_for(Tenant, 'before_insert')
-def deactivate_account(mapper, connection, target):
-    if target.password == None:
-        target.status, target.is_active = False, False
+    connection.close()
 
 @event.listens_for(Tenant, 'before_insert')
 @event.listens_for(Tenant, 'before_update')
@@ -60,3 +53,4 @@ def hash_password(mapper, connection, target):
 @event.listens_for(Tenant, 'after_delete')
 def receive_after_delete(mapper, connection, target):
     connection.engine.execute(DropSchema(target.key, cascade=True))
+    connection.close()

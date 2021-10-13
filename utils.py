@@ -3,7 +3,8 @@ from inspect import Parameter, signature
 from datetime import timedelta, datetime
 from secrets import token_urlsafe
 from fastapi import Form
-from hashlib import md5
+
+from passlib import pwd
 import jwt
 
 def create_jwt(data:dict, exp:timedelta=None):
@@ -16,8 +17,12 @@ def decode_jwt(token):
 def gen_code(nbytes=8):
     return token_urlsafe(nbytes)
 
-def gen_hex(data:str=gen_code()):
-    return md5(data.encode()).hexdigest()
+def gen_hex():
+    return pwd.genword(entropy=128, charset="hex")
+
+# from hashlib import md5
+# def encode_to_hex(data:str=gen_code()):
+#     return md5(data.encode()).hexdigest()
 
 def as_form(cls):
     form = [

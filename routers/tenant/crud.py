@@ -12,8 +12,9 @@ async def delete(id, db):
         db.commit()        
     return "success", {"info":f"{cnt} row(s) deleted"}
 
-async def update():
+async def update_password(id, password, db):
     '''Update approach that works with mapper event after delete'''
-    pass
+    obj = await tenant.read_by_id(id, db)
+    obj.password = password
 
 tenant.delete = delete

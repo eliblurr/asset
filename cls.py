@@ -12,13 +12,16 @@ class CRUD:
         self.model = model
 
     async def create(self, payload, db:Session, images=None):
-        obj = self.model(**schema_to_model(payload))
-        if images:
-            pass
-        db.add(obj)
-        db.commit()
-        db.refresh(obj) 
-        return obj
+        try:
+            obj = self.model(**schema_to_model(payload))
+            if images:
+                pass
+            db.add(obj)
+            db.commit()
+            db.refresh(obj) 
+            return obj
+        except Exception as e:
+            print(e)
         
     async def read(self, params, db:Session):
         fields = [getattr(self.model, field.strip()) for field in params["fields"]]  if params["fields"]!=None else [self.model]
@@ -61,18 +64,9 @@ class CRUD:
         return db.query(*fields).filter(self.model.id==id).first()
 
     async def update(self, id, payload, db:Session, images=None):
-        # rows = db.execute(
-        #     self.model.__table__.update().where(self.model.__table__.c.id==id).values(**payload.dict(exclude_unset=True))
-        # )
-        # print(dir(db))
-        # print(rows.fetchmany())
-        
-        # connection.execute(
-        #     Priority.__table__.update().where(Priority.__table__.c.default==True).values(default=False)
-        # )   
-        rows = db.query(self.model).filter(self.model.id==id).update(payload.dict(exclude_unset=True))
+        rows = db.execute(self.model.__table__.update().returning(self.model).where(self.model.__table__.c.id==id).values(**payload.dict(exclude_unset=True)))
         db.commit()
-        return "success", {"info":f"{rows} row(s) updated"}
+        return rows.first()
       
     async def delete(self, id, db:Session):
         rows = db.query(self.model).filter(self.model.id==id).delete(synchronize_session=False)

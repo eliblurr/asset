@@ -1,12 +1,10 @@
 from fastapi import APIRouter, Depends, File, UploadFile, Query
-from sqlalchemy.schema import DropSchema
-from utils import gen_hex, create_jwt
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
 from dependencies import get_db
 from typing import Union, List
+from utils import create_jwt
 from . import crud, schemas
-from database import engine
 from config import settings
 import datetime
 
@@ -22,7 +20,6 @@ async def create(payload:schemas.CreateTenant=Depends(schemas.CreateTenant.as_fo
                 seconds=settings.ACTIVATION_TOKEN_DURATION_IN_MINUTES
             )
         )
-        print(token)
     return tenant
 
 @router.get('/', description='', response_model=schemas.TenantList, name='Tenant/Organization')
@@ -36,14 +33,10 @@ async def read_by_id(id:str, fields:List[str]=Query(None, regex=f'({"|".join([x[
 
 @router.patch('/{id}', description='', response_model=schemas.Tenant, name='Tenant/Organization')
 async def update(id:int, payload:schemas.UpdateTenant, db:Session=Depends(get_db)):
-    return await crud.tenant.update(id, payload, db)
-
+    if payload.password:
+        await crud.update_password(id, payload.password, db)
+    return await crud.tenant.update(id, payload.copy(exclude={'password'}), db)
+   
 @router.delete('/{id}', description='', name='Tenant/Organization')
 async def delete(id:str, db:Session=Depends(get_db)):
     return await crud.tenant.delete(id, db)
-    
-# try:
-#     pass
-#     # return res
-# except Exception as e:
-#     print(e)
