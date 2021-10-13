@@ -3,12 +3,11 @@ from inspect import Parameter, signature
 from datetime import timedelta, datetime
 from secrets import token_urlsafe
 from fastapi import Form
-
 from passlib import pwd
 import jwt
 
 def create_jwt(data:dict, exp:timedelta=None):
-    data.update({"exp": datetime.utcnow()+exp if exp else datetime.utcnow()+timedelta(seconds=settings.ACCESS_TOKEN_DURATION_IN_MINUTES)})
+    data.update({"exp": datetime.utcnow()+exp if exp else datetime.utcnow()+timedelta(minutes=settings.DEFAULT_TOKEN_DURATION_IN_MINUTES)})
     return jwt.encode(data, settings.SECRET, algorithm=JWT_ALGORITHM)
 
 def decode_jwt(token):
@@ -65,8 +64,8 @@ def http_exception_detail(loc=None, msg=None, type=None):
     detail = {}
     if loc:
         detail.update({"loc":loc if loc.__class__ in [list, set, tuple] else [loc]})
+    if type:
+        detail.update({"type":type})
     if msg:
         detail.update({"msg":msg})
-    if msg:
-        detail.update({"type":type})
     return [detail]

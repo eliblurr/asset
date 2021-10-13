@@ -1,9 +1,8 @@
 from sqlalchemy import Column, String, Boolean, event
+from mixins import BaseMixin, HashMethodMixin
 from database import Base, TenantBase
 from sqlalchemy.orm import validates
-from mixins import BaseMixin, HashMethodMixin
 from constants import EMAIL
-from utils import gen_code
 import re
 
 from passlib import pwd
@@ -12,9 +11,10 @@ class User(BaseMixin, HashMethodMixin, Base):
     '''User Model'''
     __tablename__ = "users"
 
+    is_active = Column(Boolean, default=False)
     email = Column(String, unique=True, index=True)
     password = Column(String, nullable=False, default=pwd.genword)
-    # password = Column(String, nullable=False, default=gen_code)
+    status = 1
     
     @validates('email')
     def validate_email(self, key, value):
@@ -28,21 +28,7 @@ class User(BaseMixin, HashMethodMixin, Base):
             return value
 
 @event.listens_for(User, 'before_insert')
-def deactivate_account(mapper, connection, target):
-    if target.password == None:
-        target.status = False
-
-# from sqlalchemy.orm import Session
-
-@event.listens_for(User, 'before_insert')
 @event.listens_for(User, 'before_update')
-def hash_password(mapper, connection, target):
-    # session = Session.object_session(target)
-    # if session.is_modified(target, include_collections=False):
-    #     print('update detected')
-    print('sdds')
-    print(target.password)
+def deactivate_account(mapper, connection, target):
     if target.password:
         target.password = target.generate_hash(target.password)
-
-# event.listen(User, 'before_update', hash_password)

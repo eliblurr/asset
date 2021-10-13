@@ -14,10 +14,10 @@ class UserBase(BaseModel):
         model = m.User
       
 class CreateUser(UserBase):
-    password: Optional[constr(min_length=8)]
+    pass
     
 class UpdateUser(BaseModel):
-    status: Optional[bool]
+    is_active: Optional[bool]
     password: Optional[constr(min_length=8)]
     
     class Meta:

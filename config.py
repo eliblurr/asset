@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     APP_REDOC_DESC: str = f"{APP_DESCRIPTION}\n\n <a href='/docs' style='color:hotpink;cursor:help'>Interactive Swagger docs</a>"
     ACCESS_TOKEN_DURATION_IN_MINUTES: float = 60
     REFRESH_TOKEN_DURATION_IN_MINUTES: float = 60
+    DEFAULT_TOKEN_DURATION_IN_MINUTES: float = 15
     ACTIVATION_TOKEN_DURATION_IN_MINUTES: float = 3.2
 
     class Config:

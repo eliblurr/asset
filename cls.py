@@ -64,7 +64,7 @@ class CRUD:
         return db.query(*fields).filter(self.model.id==id).first()
 
     async def update(self, id, payload, db:Session, images=None):
-        rows = db.execute(self.model.__table__.update().returning(self.model).where(self.model.__table__.c.id==id).values(**payload.dict(exclude_unset=True)))
+        rows = db.execute(self.model.__table__.update().returning(self.model).where(self.model.__table__.c.id==id).values(**schema_to_model(payload,exclude_unset=True)))
         db.commit()
         return rows.first()
       
@@ -74,9 +74,22 @@ class CRUD:
         return "success", {"info":f"{rows} row(s) deleted"}
 
     async def bk_create(self, payload, db:Session):
-        db.add_all([self.model(**schema_to_model(payload)) for payload in payload])
-        db.commit()
-        return "success", {"info":f"{self.model.__tablename__} row(s) created"}
+        try:
+            rows = db.execute(self.model.__table__.insert().returning(self.model).values([payload.dict() for payload in payload]))
+            # db.add_all([self.model(**schema_to_model(payload)) for payload in payload])
+            db.commit()
+            return rows.fetchall()
+            # print(
+            #     [payload.dict() for payload in payload],
+            #     [schema_to_model(payload) for payload in payload],
+            #     [self.model(**payload.dict()) for payload in payload],
+            #     [self.model(**schema_to_model(payload)) for payload in payload],
+            #     sep='\n'
+            # )
+            # return
+            # return "success", {"info":f"{self.model.__tablename__} row(s) created"}
+        except Exception as e:
+            print(e)
 
     async def bk_update(self, payload, db:Session, **kwargs):
         rows = db.query(self.model).filter_by(**kwargs).update(payload.dict(exclude_unset=True), synchronize_session="fetch")
