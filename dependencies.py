@@ -1,5 +1,10 @@
-from fastapi import Request, Header, HTTPException
+from fastapi import Request, Header, HTTPException, Depends
+from routers.user.auth.crud import is_token_blacklisted
+from utils import http_exception_detail, decode_jwt
+from main import oauth2_scheme
 from config import settings
+
+from exceptions import BlacklistedToken
 
 def get_db(request:Request):
     try:
@@ -13,3 +18,16 @@ async def verify_key(x_key: str = Header(...)):
     if x_key != settings.API_KEY:
         raise HTTPException(status_code=400, detail="X-Key header invalid")
     return x_key
+
+from jwt.exceptions import ExpiredSignatureError, DecodeError
+async def validate_bearer(token:str=Depends(oauth2_scheme), db=Depends(get_db)):
+    try:
+        # if await is_token_blacklisted(token, db):
+        #     raise BlacklistedToken('token blacklisted')  
+        return token, decode_jwt(token)
+    except Exception as e:
+        raise HTTPException(
+            status_code=401 if isinstance(e, ExpiredSignatureError) else 500, 
+            detail=http_exception_detail(loc="Bearer <token>", msg=f"{e}", type=f"{e.__class__}"), 
+            headers={"WWW-Authenticate": "Bearer"}
+        )

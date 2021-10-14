@@ -1,4 +1,5 @@
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from database import SessionLocal, engine
@@ -26,6 +27,7 @@ app.add_middleware(
 socket = SocketConnectionManager()
 logging.config.fileConfig('logging.conf')
 templates = Jinja2Templates(directory="static/html")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 app.mount(MEDIA_URL, StaticFiles(directory=MEDIA_ROOT), name="media")
 app.mount(STATIC_URL, StaticFiles(directory=STATIC_ROOT), name="static")
 app.mount(DOCUMENT_URL, StaticFiles(directory=DOCUMENT_ROOT), name="documents")

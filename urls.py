@@ -31,9 +31,9 @@ async def websocket_endpoint(websocket:WebSocket, client_id:int):
         socket.disconnect(websocket)
 
 from routers.manufacturer.main import router as manufacturer
-from routers.user.authentication.main import router as auth
 from routers.user.account.main import router as user
 from routers.priority.main import router as priority
+from routers.user.auth.main import router as auth
 from routers.tenant.main import router as tenant
 from routers.policy.main import router as policy
 from routers.vendor.main import router as vendor

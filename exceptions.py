@@ -1,0 +1,2 @@
+class BlacklistedToken(Exception):
+    pass

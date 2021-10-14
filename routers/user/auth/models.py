@@ -13,7 +13,7 @@ from database import Base
 #     def generate_code():
 #         return gen_code(9)
 
-# class RevokedToken(BaseMixin, Base):
-#     __tablename__ = 'revoked_tokens'
+class RevokedToken(BaseMixin, Base):
+    __tablename__ = 'revoked_tokens'
 
-#     jti = Column(String)
+    token = Column(String)
