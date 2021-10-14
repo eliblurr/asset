@@ -1,11 +1,23 @@
 from typing import Optional, List, Union
 import routers.user.account.models as m
 from pydantic import BaseModel, constr
-from constants import EMAIL
+from constants import EMAIL, PHONE
 import datetime
+
+# phone = Column(String, nullable=True)
+# is_active = Column(Boolean, default=False)
+# last_name = Column(String, nullable=False)
+# middle_name = Column(String, nullable=True)
+# first_name = Column(String, nullable=False)
+# email = Column(String, unique=True, index=True)
+# password = Column(String, nullable=False, default=pwd.genword)
 
 class UserBase(BaseModel):
     email: constr(regex=EMAIL)
+    phone: Optional[constr(regex=PHONE)]
+    last_name: Optional[str]
+    first_name: Optional[str]
+    middle_name: Optional[str]
    
     class Config:
         orm_mode = True
@@ -17,7 +29,11 @@ class CreateUser(UserBase):
     pass
     
 class UpdateUser(BaseModel):
+    last_name: Optional[str]
+    first_name: Optional[str]
     is_active: Optional[bool]
+    middle_name: Optional[str]
+    phone: Optional[constr(regex=PHONE)]
     password: Optional[constr(min_length=8)]
     
     class Meta:

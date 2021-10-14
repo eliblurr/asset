@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Query
+from typing import Union, List, Union
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
 from dependencies import get_db
-from typing import Union, List, Union
 from . import crud, schemas
 
 router = APIRouter()

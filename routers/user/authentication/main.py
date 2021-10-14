@@ -9,6 +9,8 @@ router = APIRouter()
 from utils import create_jwt
 import jwt
 
+from config import settings
+
 token = create_jwt(
     data={'id':'tenant.id'}
 )
@@ -21,8 +23,8 @@ token = create_jwt(
 # current-user
 # activate?activation_token=aksjdniajdsaudsbadu
 @router.post('/login')
-async def authenticate(token:str):
-    pass
+async def authenticate():
+    return settings.BASE_URL
 
 @router.post('/logout')
 async def logout(token:str):
