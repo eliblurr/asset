@@ -25,8 +25,17 @@ async def read_by_id(id:int, fields:List[str]=Query(None, regex=f'({"|".join([x[
 @router.patch('/{id}', description='', response_model=schemas.User, name='User Account')
 async def update(id:int, payload:schemas.UpdateUser, db:Session=Depends(get_db)):
     if payload.password:
-        await crud.update_password(id, payload.password, db)
-    return await crud.user.update(id, payload.copy(exclude={'password'}), db)
+        print(payload.password.password)
+        # and verify code
+        # await crud.update_password(id, payload.password.password, db)
+    # return await crud.user.update(id, payload.copy(exclude={'password'}), db)
+
+# @router.patch('/{id}', description='', response_model=schemas.User, name='User Account')
+# async def update(id:int, payload:schemas.UpdateUser, db:Session=Depends(get_db)):
+#     if payload.password:
+#         # and verify code
+#         await crud.update_password(id, payload.password, db)
+#     return await crud.user.update(id, payload.copy(exclude={'password'}), db)
 
 @router.delete('/{id}', description='', name='User Account')
 async def delete(id:int, db:Session=Depends(get_db)):

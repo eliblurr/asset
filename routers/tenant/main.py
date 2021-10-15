@@ -34,6 +34,7 @@ async def read_by_id(id:str, fields:List[str]=Query(None, regex=f'({"|".join([x[
 @router.patch('/{id}', description='', response_model=schemas.Tenant, name='Tenant/Organization')
 async def update(id:int, payload:schemas.UpdateTenant, db:Session=Depends(get_db)):
     if payload.password:
+        # verify code
         await crud.update_password(id, payload.password, db)
     return await crud.tenant.update(id, payload.copy(exclude={'password'}), db)
    

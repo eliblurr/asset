@@ -27,6 +27,10 @@ class UserBase(BaseModel):
       
 class CreateUser(UserBase):
     pass
+
+class UpdatePassword(BaseModel):
+    code: str
+    password: constr(min_length=8)
     
 class UpdateUser(BaseModel):
     last_name: Optional[str]
@@ -34,7 +38,7 @@ class UpdateUser(BaseModel):
     is_active: Optional[bool]
     middle_name: Optional[str]
     phone: Optional[constr(regex=PHONE)]
-    password: Optional[constr(min_length=8)]
+    password: Optional[UpdatePassword]
     
     class Meta:
         model = m.User

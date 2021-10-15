@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from . import models, schemas
 from cls import CRUD
 
-# user = CRUD(models.User)
+password_reset_code = CRUD(models.PasswordResetCode)
 
 async def read_user_by_id(id, _type, db):
     return await user.read_by_id(id, db) if _type.value=='users' else await tenant.read_by_id(id, db)
@@ -20,6 +20,12 @@ async def verify_user(payload, _type, db):
     if not user.verify_hash(payload.password, user.password):
         raise HTTPException(status_code=401, detail=http_exception_detail(loc="password", msg="could not verify password", type="Unauthorized"))
     return user
+
+async def activate_user(id, _type, db):
+    model = User if _type.value=='users' else Tenant
+    db.query(model).filter_by(id=id).update({"is_active":True})
+    db.commit()
+    return "success", {"info":"account successfully activated"}
 
 async def revoke_token(payload:schemas.Logout, db):
     db.add_all([models.RevokedToken(token=token) for token in payload.dict().values()])

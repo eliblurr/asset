@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.post('/login', description='', response_model=schemas.LoginResponse, name='Login')
 async def authenticate(payload:schemas.Login, userType:schemas.UserType, db:Session=Depends(get_db)):
-    data = {"user":await crud.verify_user(payload, db)}
+    data = {"user":await crud.verify_user(payload, db), "userType":userType.value}
     return {
         "access_token": create_jwt(data=data, exp=timedelta(minutes=settings.ACCESS_TOKEN_DURATION_IN_MINUTES)),
         "refresh_token": create_jwt(data=data, exp=timedelta(minutes=settings.REFRESH_TOKEN_DURATION_IN_MINUTES)),
@@ -28,33 +28,19 @@ async def refresh_token(token:str=Depends(validate_bearer), db:Session=Depends(g
         "access_token":create_jwt(data=token[1], exp=timedelta(minutes=settings.ACCESS_TOKEN_DURATION_IN_MINUTES)),
         "refresh_token":create_jwt(data=token[1], exp=timedelta(minutes=settings.REFRESH_TOKEN_DURATION_IN_MINUTES)),
     }
-
-@router.get('/api-user', description='', response_model=schemas.Users, name='Get Current User')
-async def get_current_user(userType:schemas.UserType, token:str=Depends(validate_bearer), db:Session=Depends(get_db)):
-    return await crud.read_user_by_id(token[1].get('id'), userType, db)
     
-@router.get('/forgot-pass')
-async def pass_reset_code(token:str):
-    pass
-
 @router.post('/activate')
-async def activate(token:str):
-    # reset password and change is_active to True on creation
-    try:
-        res = decode_jwt(token)
-        return res
-    except Exception as e:
-        print(e)
-        raise HTTPException(status_code=401, detail=http_exception_detail(loc=['token', 'Query Parameter'], type=f'{e.__class__}', msg=f'{e}'))
+async def activate(token:str=Depends(validate_bearer), db:Session=Depends(get_db)):
+    return await crud.activate_user(token[1].get('user').id, token[1].get('userType'), db)
+    
+@router.post('/forgot-password')
+async def pass_reset_code(token:str=Depends(validate_bearer), db:Session=Depends(get_db)):
+    code = await crud.password_reset_code.create(schemas.Email(email=token[1].get("user").email), db)
+    if code:
+        # schedule delete and send code
+        pass
+    return 'success' if code else 'failed', {'info': 'password reset verification code sent' if code else 'could not generate password reset verification code'}
 
-
-
-
-token = create_jwt(
-    data={'id':'tenant.id'}
-)
-
-# 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6InRlbmFudC5pZCIsImV4cCI6MTYzNDIxMDY2OX0.1aXwCXgQnGjaerK5r7hJmGl7_6aOG_GU9eem_9CtEm8'
-# print(token)
-# request-password-reset-code or forgot-password or reset-pass
-# activate?activation_token=aksjdniajdsaudsbadu
+@router.get('/api-user', description='', response_model=schemas.Users, name='Get Current API User')
+async def get_current_user(userType:schemas.UserType, token:str=Depends(validate_bearer), db:Session=Depends(get_db)):
+    return await crud.read_user_by_id(token[1].get('user').id, userType, db)
