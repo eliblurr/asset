@@ -18,7 +18,7 @@ async def read(db:Session=Depends(get_db), **params):
 
 @router.get('/{id}', description='', response_model=Union[schemas.Policy, dict], name='Policy')
 async def read_by_id(id:str, fields:List[str]=Query(None, regex=f'^({"|".join([x[0] for x in crud.policy.model.c()])})$'), db:Session=Depends(get_db)):
-    return await crud.policy.read_by_id(id, db)
+    return await crud.policy.read_by_id(id, db, fields)
 
 @router.patch('/{id}', description='', response_model=schemas.Policy, name='Policy')
 async def update(id:str, payload:schemas.UpdatePolicy, db:Session=Depends(get_db)):

@@ -34,6 +34,7 @@ from routers.manufacturer.main import router as manufacturer
 from routers.user.account.main import router as user
 from routers.priority.main import router as priority
 from routers.user.auth.main import router as auth
+from routers.branch.main import router as branch
 from routers.tenant.main import router as tenant
 from routers.policy.main import router as policy
 from routers.vendor.main import router as vendor
@@ -42,6 +43,7 @@ from routers.faqs.main import router as faqs
 from routers.log.main import router as log
 
 app.include_router(faqs, tags=['Frequently Asked Questions'], prefix='/frequently-asked-questions')
+app.include_router(branch, tags=['Tenant/Organization Branch'], prefix='/branches')
 app.include_router(config, tags=['Environment Configuration'], prefix='/settings')
 app.include_router(manufacturer, tags=['Manufacturers'], prefix='/manufacturers')
 app.include_router(tenant, tags=['Tenants/Organizations'], prefix='/tenants')

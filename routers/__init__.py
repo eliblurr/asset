@@ -1,8 +1,10 @@
 import routers.manufacturer.models 
 import routers.user.account.models 
+import routers.department.models 
 import routers.priority.models 
 import routers.policy.models 
 import routers.vendor.models
+import routers.branch.models 
 import routers.faqs.models 
 import routers.tenant.models
 
