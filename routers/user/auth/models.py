@@ -3,16 +3,6 @@ from mixins import BaseMixin
 from database import Base
 from passlib import pwd
 
-# class PasswordResetCode(BaseMixin, Base):
-#     __tablename__ = 'password_reset_codes'
-
-#     code = Column(String, unique=True)
-#     user_id = Column(Integer, unique=True)
-
-#     @staticmethod
-#     def generate_code():
-#         return gen_code(9)
-
 class RevokedToken(BaseMixin, Base):
     __tablename__ = 'revoked_tokens'
 

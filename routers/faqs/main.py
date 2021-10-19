@@ -17,13 +17,13 @@ async def read(db:Session=Depends(get_db), **params):
     return await crud.faq.read(params, db)
 
 @router.get('/{id}', description='', response_model=Union[schemas.FAQ, dict], name='FAQ')
-async def read_by_id(id:str, fields:List[str]=Query(None, regex=f'^({"|".join([x[0] for x in crud.faq.model.c()])})$'), db:Session=Depends(get_db)):
+async def read_by_id(id:int, fields:List[str]=Query(None, regex=f'({"|".join([x[0] for x in crud.faq.model.c()])})$'), db:Session=Depends(get_db)):
     return await crud.faq.read_by_id(id, db, fields)
 
 @router.patch('/{id}', description='', response_model=schemas.FAQ, name='FAQ')
-async def update(id:str, payload:schemas.UpdateFAQ, db:Session=Depends(get_db)):
+async def update(id:int, payload:schemas.UpdateFAQ, db:Session=Depends(get_db)):
     return await crud.faq.update(id, payload, db)
 
 @router.delete('/{id}', description='', name='FAQ')
-async def delete(id:str, db:Session=Depends(get_db)):
+async def delete(id:int, db:Session=Depends(get_db)):
     return await crud.faq.delete(id, db)

@@ -1,6 +1,7 @@
 from config import JWT_ALGORITHM, settings
 from inspect import Parameter, signature
 from datetime import timedelta, datetime
+from math import ceil, floor, log2
 from secrets import token_urlsafe
 from fastapi import Form
 from passlib import pwd
@@ -18,10 +19,6 @@ def gen_code(nbytes=8):
 
 def gen_hex():
     return pwd.genword(entropy=128, charset="hex")
-
-# from hashlib import md5
-# def encode_to_hex(data:str=gen_code()):
-#     return md5(data.encode()).hexdigest()
 
 def as_form(cls):
     form = [
@@ -69,3 +66,9 @@ def http_exception_detail(loc=None, msg=None, type=None):
     if msg:
         detail.update({"msg":msg})
     return [detail]
+
+def v_2n(n):
+    assert ceil(log2(n)) == floor(log2(n)), f'{n} is not a power 2'
+    return n
+
+sum_ls = lambda ls : sum(ls)

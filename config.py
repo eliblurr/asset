@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str
     DATABASE_URL: str
     VERSION: str = '2.0.0'
+    RESET_PASSWORD_PATH: str
+    ACCOUNT_ACTIVATION_PATH: str
     MEDIA_FILE_BUCKET: str = None
     APP_NAME: str = "e-Asset api service"
     TWILIO_PHONE_NUMBER: str = '+16196584362'
@@ -34,7 +36,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_DURATION_IN_MINUTES: float = 60
     REFRESH_TOKEN_DURATION_IN_MINUTES: float = 60
     DEFAULT_TOKEN_DURATION_IN_MINUTES: float = 15
-    ACTIVATION_TOKEN_DURATION_IN_MINUTES: float = 3.2
+    RESET_TOKEN_DURATION_IN_MINUTES: float = 15
+    ACTIVATION_TOKEN_DURATION_IN_MINUTES: float = 15
 
     class Config:
         env_file = ".env"

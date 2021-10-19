@@ -42,7 +42,6 @@ def create_tenant_schema(mapper, connection, target):
     connection.engine.execute(CreateSchema(target.key))
     connection = engine.connect().execution_options(schema_translate_map={None: target.key,})
     TenantBase.metadata.create_all(bind=connection)
-    connection.close()
 
 @event.listens_for(Tenant, 'before_insert')
 @event.listens_for(Tenant, 'before_update')
@@ -53,4 +52,3 @@ def hash_password(mapper, connection, target):
 @event.listens_for(Tenant, 'after_delete')
 def receive_after_delete(mapper, connection, target):
     connection.engine.execute(DropSchema(target.key, cascade=True))
-    connection.close()

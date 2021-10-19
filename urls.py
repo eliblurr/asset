@@ -13,7 +13,10 @@ async def read_item(request: Request, id: str):
 
 @app.post("/init")
 def init():  
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(e)
     # , tables=[table for table in Base.metadata.sorted_tables if table.schema=='public']
 
     # print(Base.metadata.tables.keys())
@@ -33,6 +36,7 @@ async def websocket_endpoint(websocket:WebSocket, client_id:int):
 from routers.manufacturer.main import router as manufacturer
 from routers.user.account.main import router as user
 from routers.priority.main import router as priority
+from routers.user.role.main import router as role
 from routers.user.auth.main import router as auth
 from routers.branch.main import router as branch
 from routers.tenant.main import router as tenant
@@ -51,6 +55,7 @@ app.include_router(priority, tags=['Priorities'], prefix='/priorities')
 app.include_router(policy, tags=['Policies'], prefix='/policies')
 app.include_router(user, tags=['User Accounts'], prefix='/users')
 app.include_router(vendor, tags=['Vendor'], prefix='/vendors')
+app.include_router(role, tags=['Roles'], prefix='/roles')
 app.include_router(log, tags=['Logs'], prefix='/logs')
 app.include_router(auth, tags=['Authentication'])
 

@@ -43,6 +43,38 @@ async def tenant_session(request:Request, call_next):
 
 from urls import *
 
+# from fastapi import Request
+# from babel import Locale
+# import babel
+
+# from gettext import gettext as _
+
+# string = _("This is a translatable string.")
+# # print(string)
+
+# local = Locale('en', 'US')
+
+# print(dir(Locale))
+# c = Locale.negotiate(['de_AT'], ['de', 'en'])
+# a = babel.negotiate_locale(['en'], ['de', 'en', 'DE'])
+# b = Locale.negotiate(['de'], ['de', 'en', 'DE'])
+# # print(local)
+
+# languages = list(local.languages.keys())
+# territories = list(local.territories.keys())
+# currencies = list(local.currencies.keys())
+
+# s = babel.core.get_global('zone_territories')
+
+# j = babel.core.get_global('territory_currencies')['GH']
+# # print(s)
+
+# @app.get('/babel')
+# def local(request:Request):
+#     # lang = request.headers['accept-language'] if request.headers.get('accept-language', None) else 'en-US'
+#     # local = babel.core.negotiate(lang, )
+#     return request.headers['accept-language'] if request.headers.get('accept-language', None) else 'en-US'
+
 # from typing import Optional
 
 # from fastapi import APIRouter, FastAPI
@@ -118,23 +150,3 @@ from urls import *
 # logging.debug("This is a debug message")
 # logging.info("Informational message")
 # logging.error("An error has happened!")
-
-
-
-# locale = Locale('en', 'US') # en, US specifies language, territory respectives
-
-# for k,v in locale.territories.items():
-#     print(f'{k} : {v}')
-
-# for k,v in locale.currencies.items():
-#     print(f'{k} : {v}')
-
-# from babel.numbers import format_currency
-
-# print( format_currency(45678987654.98, 'GHS', locale='en_GH') )
-
-# print(
-#     dir(Locale.currencies),
-#     locale.currencies['GHS'],
-#     sep='\n\n'
-# )

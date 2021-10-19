@@ -17,13 +17,13 @@ async def read(db:Session=Depends(get_db), **params):
     return await crud.priority.read(params, db)
 
 @router.get('/{id}', description='', response_model=Union[schemas.Priority, dict], name='Priority')
-async def read_by_id(id:str, fields:List[str]=Query(None, regex=f'^({"|".join([x[0] for x in crud.priority.model.c()])})$'), db:Session=Depends(get_db)):
+async def read_by_id(id:int, fields:List[str]=Query(None, regex=f'({"|".join([x[0] for x in crud.priority.model.c()])})$'), db:Session=Depends(get_db)):
     return await crud.priority.read_by_id(id, db, fields)
 
 @router.patch('/{id}', description='', response_model=schemas.Priority, name='Priority')
-async def update(id:str, payload:schemas.UpdatePriority, db:Session=Depends(get_db)):
+async def update(id:int, payload:schemas.UpdatePriority, db:Session=Depends(get_db)):
     return await crud.priority.update(id, payload, db)
 
 @router.delete('/{id}', description='', name='Priority')
-async def delete(id:str, db:Session=Depends(get_db)):
+async def delete(id:int, db:Session=Depends(get_db)):
     return await crud.priority.delete(id, db)

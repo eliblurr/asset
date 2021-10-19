@@ -7,13 +7,17 @@ from fastapi import HTTPException
 from . import models, schemas
 from cls import CRUD
 
-password_reset_code = CRUD(models.PasswordResetCode)
+# password_reset_code = CRUD(models.PasswordResetCode)
 
 async def read_user_by_id(id, _type, db):
-    return await user.read_by_id(id, db) if _type.value=='users' else await tenant.read_by_id(id, db)
+    return await user.read_by_id(id, db) if _type=='users' else await tenant.read_by_id(id, db)
+
+async def read_user(payload, userType, db):
+    model = User if userType=='users' else Tenant
+    return db.query(model).filter_by(**payload.dict()).first()
 
 async def verify_user(payload, _type, db):
-    model = User if _type.value=='users' else Tenant
+    model = User if _type=='users' else Tenant
     user = db.query(model).filter_by(email=payload.email).first()
     if not user:
         raise HTTPException(status_code=404, detail=http_exception_detail(loc="email", msg="user not found", type="NotFound"))
@@ -21,9 +25,9 @@ async def verify_user(payload, _type, db):
         raise HTTPException(status_code=401, detail=http_exception_detail(loc="password", msg="could not verify password", type="Unauthorized"))
     return user
 
-async def activate_user(id, _type, db):
-    model = User if _type.value=='users' else Tenant
-    db.query(model).filter_by(id=id).update({"is_active":True})
+async def activate_user(id, _type, password, db):
+    model = User if _type=='users' else Tenant
+    db.query(model).filter_by(id=id).update({"is_active":True, "password":password})
     db.commit()
     return "success", {"info":"account successfully activated"}
 

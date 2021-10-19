@@ -1,5 +1,5 @@
+from typing import Optional, List, Union
 from pydantic import BaseModel, conint
-from typing import Optional, List
 import routers.policy.models as m
 import datetime
 
@@ -34,4 +34,4 @@ class Policy(PolicyBase):
 class PolicyList(BaseModel):
     bk_size: int
     pg_size: int
-    data: List[Policy]
+    data: Union[List[Policy], list]

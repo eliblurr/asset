@@ -5,12 +5,12 @@ tenant = CRUD(models.Tenant)
 
 async def delete(id, db):
     '''Delete approach that works with mapper event after delete'''
-    obj, cnt = await tenant.read_by_id(id, db), 0
+    obj, cnt = db.query(models.Tenant).get(id), 0
     if obj:
         db.delete(obj)
+        db.commit()
         cnt += 1
-        db.commit()        
-    return "success", {"info":f"{cnt} row(s) deleted"}
+    return "success", {"info":f"{cnt} tenant(s) deleted"}
 
 async def update_password(id, password, db):
     '''Update approach that works with mapper event after delete'''

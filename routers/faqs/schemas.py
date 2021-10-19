@@ -1,5 +1,5 @@
 from pydantic import BaseModel, conint
-from typing import Optional, List
+from typing import Optional, List, Union
 import routers.faqs.models as m
 import datetime
 
@@ -34,4 +34,4 @@ class FAQ(FAQBase):
 class FAQList(BaseModel):
     bk_size: int
     pg_size: int
-    data: List[FAQ]
+    data:  Union[List[FAQ], list]

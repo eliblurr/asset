@@ -30,17 +30,3 @@ class Token(BaseModel):
     refresh_token: str
 
 class Logout(Token):pass
-    
-
-# class AccessToken(BaseModel):
-#     access_token: str
-
-# class RefreshToken(BaseModel):
-#     refresh_token: str
-
-
-# class AccessToken(BaseModel):
-#     access_token: str
-
-# class RefreshToken(BaseModel):
-#     refresh_token: str
