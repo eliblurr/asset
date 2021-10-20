@@ -76,18 +76,8 @@ class CRUD:
     async def bk_create(self, payload, db:Session):
         try:
             rows = db.execute(self.model.__table__.insert().returning(self.model).values([payload.dict() for payload in payload]))
-            # db.add_all([self.model(**schema_to_model(payload)) for payload in payload])
             db.commit()
             return rows.fetchall()
-            # print(
-            #     [payload.dict() for payload in payload],
-            #     [schema_to_model(payload) for payload in payload],
-            #     [self.model(**payload.dict()) for payload in payload],
-            #     [self.model(**schema_to_model(payload)) for payload in payload],
-            #     sep='\n'
-            # )
-            # return
-            # return "success", {"info":f"{self.model.__tablename__} row(s) created"}
         except Exception as e:
             print(e)
 

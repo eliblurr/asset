@@ -21,10 +21,10 @@ class Settings(BaseSettings):
     BASE_URL: str
     ADMIN_EMAIL: str
     DATABASE_URL: str
+    USE_S3: bool = False
     VERSION: str = '2.0.0'
     RESET_PASSWORD_PATH: str
     ACCOUNT_ACTIVATION_PATH: str
-    MEDIA_FILE_BUCKET: str = None
     APP_NAME: str = "e-Asset api service"
     TWILIO_PHONE_NUMBER: str = '+16196584362'
     TWILIO_AUTH_TOKEN: str = '7b6c506ee07337cc3d02536d5119c4b2'
@@ -45,7 +45,54 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-if settings.MEDIA_FILE_BUCKET:
+# USE_S3 = os.getenv('USE_S3') == 'TRUE'
+USE_S3 = os.getenv('USE_S3') == 'TRUE'
+
+# if USE_S3:
+#     # aws settings
+#     AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+#     AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+#     AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME') asset-dev-1990
+#     AWS_DEFAULT_ACL = None
+#     AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+#     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+#     # s3 static settings
+#     STATIC_LOCATION = 'static'
+#     STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{STATIC_LOCATION}/'
+#     STATICFILES_STORAGE = 'hello_django.storage_backends.StaticStorage'
+#     # s3 public media settings
+#     PUBLIC_MEDIA_LOCATION = 'media'
+#     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{PUBLIC_MEDIA_LOCATION}/'
+#     DEFAULT_FILE_STORAGE = 'hello_django.storage_backends.PublicMediaStorage'
+#     # s3 private media settings
+#     PRIVATE_MEDIA_LOCATION = 'private'
+#     PRIVATE_FILE_STORAGE = 'hello_django.storage_backends.PrivateMediaStorage'
+# else:
+#     STATIC_URL = '/staticfiles/'
+#     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+#     MEDIA_URL = '/mediafiles/'
+#     MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
+
+# STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
+
+# def image_upload(request):
+#     if request.method == 'POST':
+#         image_file = request.FILES['image_file']
+#         image_type = request.POST['image_type']
+#         if settings.USE_S3:
+#             upload = Upload(file=image_file)
+#             upload.save()
+#             image_url = upload.file.url
+#         else:
+#             fs = FileSystemStorage()
+#             filename = fs.save(image_file.name, image_file)
+#             image_url = fs.url(filename)
+#         return render(request, 'upload.html', {
+#             'image_url': image_url
+#         })
+#     return render(request, 'upload.html')
+
+if settings.USE_S3:
     pass
 else:
     MEDIA_URL = "/media/"

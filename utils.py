@@ -72,3 +72,5 @@ def v_2n(n):
     return n
 
 sum_ls = lambda ls : sum(ls)
+
+act_url = lambda base_url, id, userType: f"""{base_url}{settings.ACCOUNT_ACTIVATION_PATH}?token={create_jwt(data={'id':id, "userType":userType},exp=timedelta(minutes=settings.ACTIVATION_TOKEN_DURATION_IN_MINUTES))}"""

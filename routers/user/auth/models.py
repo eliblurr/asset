@@ -8,6 +8,9 @@ class RevokedToken(BaseMixin, Base):
 
     token = Column(String)
 
+'''
+password_reset_code = CRUD(models.PasswordResetCode)
+
 class PasswordResetCode(Base):
     __tablename__ = 'password_reset_codes'
 
@@ -17,3 +20,4 @@ class PasswordResetCode(Base):
 @event.listens_for(PasswordResetCode, 'before_insert')
 def delete_existing_value(mapper, connection, target):
     connection.execute("""DELETE FROM :table WHERE email=:email;""",{'table':PasswordResetCode.__tablename__, 'email':target.email})
+'''

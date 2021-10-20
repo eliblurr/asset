@@ -7,8 +7,6 @@ from fastapi import HTTPException
 from . import models, schemas
 from cls import CRUD
 
-# password_reset_code = CRUD(models.PasswordResetCode)
-
 async def read_user_by_id(id, _type, db):
     return await user.read_by_id(id, db) if _type=='users' else await tenant.read_by_id(id, db)
 

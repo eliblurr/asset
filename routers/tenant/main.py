@@ -3,10 +3,8 @@ from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
 from dependencies import get_db
 from typing import Union, List
-from utils import create_jwt
 from . import crud, schemas
-from config import settings
-import datetime
+from utils import act_url
 
 router = APIRouter()
 
@@ -14,9 +12,7 @@ router = APIRouter()
 async def create(request:Request, payload:schemas.CreateTenant=Depends(schemas.CreateTenant.as_form), logo:UploadFile=File(None), bg_image:UploadFile=File(None), db:Session=Depends(get_db)):
     tenant = await crud.tenant.create(payload, db)
     if tenant: 
-        url = f"""{request.base_url}{settings.ACCOUNT_ACTIVATION_PATH}?token={create_jwt(
-                data={'id':tenant.id, "userType":"tenants"},
-                exp=datetime.timedelta(minutes=settings.ACTIVATION_TOKEN_DURATION_IN_MINUTES))}"""
+        url = act_url(request.base_url, tenant.id, "tenants")
         print(url)
     return tenant
 

@@ -36,6 +36,7 @@ app.mount(DOCUMENT_URL, StaticFiles(directory=DOCUMENT_ROOT), name="documents")
 async def tenant_session(request:Request, call_next):
     db = SessionLocal()
     if request.headers.get('tenant_key', None):
+        # check if tenant exist else throw 400 no tenant with key available
         db = SessionLocal(bind=engine.execution_options(schema_translate_map={None: request.headers.get('tenant_key')}))
     request.state.db = db
     response = await call_next(request)

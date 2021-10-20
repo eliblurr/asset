@@ -10,8 +10,9 @@ router = APIRouter()
 
 @router.post('/login', description='', response_model=schemas.LoginResponse, name='Login')
 async def authenticate(payload:schemas.Login, userType:schemas.UserType, db:Session=Depends(get_db)):
-    # make sure user is_active=True
     data = {"user":await crud.verify_user(payload, db), "userType":userType.value}
+    if not data["user"].is_active:
+        raise HTTPException(status_code=401, detail=http_exception_detail(loc="user", msg="user account is not active", type="InactiveUser"))
     return {
         "access_token": create_jwt(data=data, exp=timedelta(minutes=settings.ACCESS_TOKEN_DURATION_IN_MINUTES)),
         "refresh_token": create_jwt(data=data, exp=timedelta(minutes=settings.REFRESH_TOKEN_DURATION_IN_MINUTES)),
