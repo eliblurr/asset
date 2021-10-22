@@ -37,6 +37,16 @@ class Tenant(BaseMixin, HashMethodMixin, Base):
         assert re.search(PHONE, value), 'invalid phone format for phone'
         return value
 
+#     _email = Column("email", String)
+
+#     @hybrid_property
+#     def email(self):
+#         return self._email
+
+#     @email.setter
+#     def email(self, email):
+#         self._email = email
+
 @event.listens_for(Tenant, "after_insert")
 def create_tenant_schema(mapper, connection, target):
     connection.engine.execute(CreateSchema(target.key))
