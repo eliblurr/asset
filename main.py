@@ -15,7 +15,6 @@ app = FastAPI(
     docs_url=None, 
     redoc_url=None
 )
-# test
 
 app.add_middleware(
     CORSMiddleware,
