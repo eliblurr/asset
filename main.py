@@ -1,10 +1,10 @@
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from database import SessionLocal, engine
 from cls import SocketConnectionManager
-from fastapi import FastAPI, Request
 from datetime import time, datetime
 from config import *
 import logging, os
@@ -34,10 +34,10 @@ app.mount(DOCUMENT_URL, StaticFiles(directory=DOCUMENT_ROOT), name="documents")
 
 @app.middleware("http")
 async def tenant_session(request:Request, call_next):
-    db = SessionLocal()
-    if request.headers.get('tenant_key', None):
-        # check if tenant exist else throw 400 no tenant with key available
-        db = SessionLocal(bind=engine.execution_options(schema_translate_map={None: request.headers.get('tenant_key')}))
+    # db = SessionLocal()
+    # if request.headers.get('tenant_key', None):
+    #     db = SessionLocal(bind=engine.execution_options(schema_translate_map={None: request.headers.get('tenant_key')}))
+    db = SessionLocal(bind=engine.execution_options(schema_translate_map={None: request.headers.get('tenant_key')})) if request.headers.get('tenant_key', None) else SessionLocal()
     request.state.db = db
     response = await call_next(request)
     return response
