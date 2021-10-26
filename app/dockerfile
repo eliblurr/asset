@@ -1,0 +1,16 @@
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE 1
+RUN mkdir -p /home/app
+ENV APP_HOME=/home/app/web
+RUN mkdir $APP_HOME
+RUN mkdir $APP_HOME/media
+RUN mkdir $APP_HOME/static
+WORKDIR $APP_HOME
+COPY . $APP_HOME
+RUN chmod +x $APP_HOME/wait-for-it.sh
+RUN python3 -m pip install -r $APP_HOME/requirements.txt
+# EXPOSE 8080
+
+CMD [ "uvicorn", "main:app", "--workers" ,"3","--host", "0.0.0.0", "--port", "8080"]
+# CMD [ "./wait-for-it.sh", "postgres:5432", "--",  "gunicorn", "-b" , "0.0.0.0:8080", "main:app", "-w", "8", "-k", "uvicorn.workers.UvicornWorker" ]

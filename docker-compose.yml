@@ -1,0 +1,81 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: ./app
+      dockerfile: dockerfile
+    container_name: e-asset-app
+    restart: always
+    env_file: .env
+    networks: 
+      - e-asset-network
+    volumes:
+      - upload_data:/home/app/web/media
+      - static_data:/home/app/web/static
+    expose:
+      - 8080
+    depends_on:
+      - postgres
+
+  postgres:
+    build:
+      context: ./postgres
+      dockerfile: dockerfile
+    container_name: e-asset-postgres
+    restart: always
+    networks: 
+      - e-asset-network
+    expose:
+      - 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment: 
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: postgres
+    
+  pgadmin:
+    build:
+      context: ./pgadmin
+      dockerfile: dockerfile
+    container_name: e-asset-pgadmin
+    restart: always
+    expose:
+      - 80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks: 
+      - e-asset-network
+    depends_on: 
+      - postgres
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: dockerfile
+    ports:
+      - ${WEB_PORT}:8181
+      - ${PGADMIN_PORT}:8282
+    networks: 
+      - e-asset-network
+    depends_on:
+      - app
+    volumes_from: 
+      - app:rw
+
+volumes:
+  static_data:
+  upload_data:
+  celery_data:
+  pgadmin_data:
+  postgres_data:
+  rabbitmq_data:
+    driver: local
+
+networks:
+  e-asset-network:
+    driver: bridge
