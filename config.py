@@ -38,6 +38,17 @@ class Settings(BaseSettings):
     DEFAULT_TOKEN_DURATION_IN_MINUTES: float = 15
     RESET_TOKEN_DURATION_IN_MINUTES: float = 15
     ACTIVATION_TOKEN_DURATION_IN_MINUTES: float = 15
+    MAIL_USERNAME: str = "a9f521690f65a4"
+    MAIL_PASSWORD: str = "11480b2eec8121"
+    MAIL_FROM: str = "elisegb-49cabc@inbox.mailtrap.io"
+    MAIL_PORT: int = 2525
+    MAIL_SERVER: str = "smtp.mailtrap.io"
+    MAIL_FROM_NAME: str = "eAsset"
+    MAIL_TLS: bool = False
+    MAIL_SSL: bool = False
+    USE_CREDENTIALS: bool = True
+    VALIDATE_CERTS: bool = True
+    DEFAULT_MAIL_SUBJECT: str = "SOME DEFAULT SUBJECT HERE"
 
     class Config:
         env_file = ".env"
