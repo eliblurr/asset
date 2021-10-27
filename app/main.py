@@ -9,13 +9,13 @@ from datetime import time, datetime
 from config import *
 import logging, os
 
-logging.logFile,logging.atTime = os.path.join(LOG_ROOT, f'logs'), time()
+logging.logFile,logging.atTime, logging.MAIL_FROM, logging.ADMIN_EMAIL = os.path.join(LOG_ROOT, f'logs'), time(), settings.MAIL_FROM, settings.ADMIN_EMAIL
+logging.MAIL_SERVER, logging.MAIL_PORT, logging.MAIL_USERNAME, logging.MAIL_PASSWORD = settings.MAIL_SERVER, settings.MAIL_PORT, settings.MAIL_USERNAME, settings.MAIL_PASSWORD
 
 app = FastAPI(
     docs_url=None, 
     redoc_url=None
 )
-# test
 
 app.add_middleware(
     CORSMiddleware,
@@ -134,6 +134,8 @@ from urls import *
 
 
 # logger = logging.getLogger("eAsset.main")
+# logger.critical("Program started") 
+# print()
 # print(dir(crud), crud.__name__)
 # print(logger)
 

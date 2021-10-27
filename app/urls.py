@@ -13,16 +13,7 @@ async def read_item(request: Request, id: str):
 
 @app.post("/init")
 def init():  
-    try:
-        Base.metadata.create_all(bind=engine)
-    except Exception as e:
-        print(e)
-    # , tables=[table for table in Base.metadata.sorted_tables if table.schema=='public']
-
-    # print(Base.metadata.tables.keys())
-    # print(TenantBase.metadata.tables.keys())
-    # print(TenantBase.metadata.tables)
-    # print(Base.metadata.tables)
+    Base.metadata.create_all(bind=engine)
 
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket:WebSocket, client_id:int):
@@ -95,3 +86,63 @@ async def custom_swagger_ui_html():
         swagger_css_url="/static/css/swagger-ui.css",
         swagger_favicon_url="/static/images/logo.png",
     )
+
+
+from services.email import email, Mail
+
+id={'id':11}
+
+mail = Mail(
+    subject='Some Sub',
+    recipients=['a@a.com', 'b@b.com'],
+    template_name="emailtest.html",
+    body=id, 
+)
+
+@app.post('/email') 
+async def send_email():
+    try:
+        await email(mail)
+    except Exception as e:
+        print(e)
+
+'''/////////////////////'''
+
+
+from sqlalchemy import Column, String, Integer, CheckConstraint
+from dependencies import get_db
+from mixins import BaseMixin
+from fastapi import Depends
+from database import Base
+from cls import FileField
+
+class TestDB(BaseMixin, Base):
+    '''TestDB Model'''
+    __tablename__ = "test_db"
+    
+    file = FileField(upload_to='/some_path')
+
+print(
+    # dir(TestDB),
+    # [(c.name, c.type.python_type) for c in TestDB.__table__.columns],
+    # TestDB.__table__.columns,
+    # TestDB.__mapper__.c['file'],
+    sep='\n'
+)
+# return [(c.name, c.type.python_type) if c.name!='__ts_vector__' else (c.name, None) for c in cls.__table__.columns]
+# TableB.__mapper__.c['common_column'].excel_column_name
+
+Base.metadata.create_all(bind=engine)
+
+# TestDB.file()
+
+# obj = TestDB(file=TestDB.file())
+# obj()
+# print(dir(obj))
+
+@app.post('/custom-field')
+def custom_field(db=Depends(get_db)):
+    obj = TestDB(file='sdsds')
+    db.add(obj)
+    db.commit()
+    pass
