@@ -97,21 +97,28 @@ async def custom_swagger_ui_html():
 
 from services.email import email, Mail
 
-id={'id':11}
+id={'id':234243423}
 
 mail = Mail(
     subject='Some Sub',
     recipients=['a@a.com', 'b@b.com'],
-    template_name="emailtest.html",
+    template_name="email.html",
     body=id, 
 )
 
 @app.post('/email') 
 async def send_email():
     try:
-        await email(mail)
+        await email(mail.dict())
     except Exception as e:
         print(e)
+
+# from clry import add, email
+
+# print(mail.json())
+
+# add.delay()
+# email.delay(mail.dict())
 
 # logger = logging.getLogger("eAsset.main")
 

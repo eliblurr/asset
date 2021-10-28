@@ -57,7 +57,6 @@ class Settings(BaseSettings):
 settings = Settings()
 
 # USE_S3 = os.getenv('USE_S3') == 'TRUE'
-USE_S3 = os.getenv('USE_S3') == 'TRUE'
 
 # if USE_S3:
 #     # aws settings
