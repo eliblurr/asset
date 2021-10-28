@@ -113,12 +113,12 @@ async def send_email():
     except Exception as e:
         print(e)
 
-# from clry import add, email
+from clry import add, email
 
 # print(mail.json())
 
 # add.delay()
-# email.delay(mail.dict())
+email.delay(mail.dict())
 
 # logger = logging.getLogger("eAsset.main")
 
