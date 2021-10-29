@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     USE_CREDENTIALS: bool = True
     VALIDATE_CERTS: bool = True
     DEFAULT_MAIL_SUBJECT: str = "SOME DEFAULT SUBJECT HERE"
+    APS_MISFIRE_GRACE_TIME: int = 4
 
     class Config:
         env_file = ".env"
