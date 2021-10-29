@@ -1,6 +1,6 @@
 import asyncio, logging, celery as C
 from services.email import email
-from clry import app
+from .celery import app
 
 logger = logging.getLogger("eAsset.main")
 

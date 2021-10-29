@@ -45,19 +45,31 @@ async def tenant_session(request:Request, call_next):
 @app.on_event("startup")
 async def startup_event():
     print('startup', app.title)
-    try:
-        scheduler.start()
-    except Exception as e:
-        logger.critical(f"Scheduler could not start: {e.__class__}: {e}", exc_info=True) 
+    # try:
+    #     scheduler.start()
+    # except Exception as e:
+    #     logger.critical(f"Scheduler could not start: {e.__class__}: {e}", exc_info=True) 
     
 @app.on_event("shutdown")
 def shutdown_event():
-    try:
-        scheduler.shutdown(wait=False)
-    except Exception as e:
-        logger.critical(f"Scheduler could not shutdown: {e.__class__}: {e}", exc_info=True) 
+    pass
+    # try:
+    #     scheduler.shutdown(wait=False)
+    # except Exception as e:
+    #     logger.critical(f"Scheduler could not shutdown: {e.__class__}: {e}", exc_info=True) 
 
 from urls import *
+
+from clry import event
+event.start_listener()
+
+# @app.post("/evemt")
+# def ass():
+#     try:
+#         event.emit("broadcast", "Custom message from event")
+#         pass
+#     except Exception as e:
+#         print(e)
 
 # from fastapi import Request
 # from babel import Locale
