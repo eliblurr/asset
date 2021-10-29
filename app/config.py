@@ -49,6 +49,9 @@ class Settings(BaseSettings):
     USE_CREDENTIALS: bool = True
     VALIDATE_CERTS: bool = True
     DEFAULT_MAIL_SUBJECT: str = "SOME DEFAULT SUBJECT HERE"
+    APS_MISFIRE_GRACE_TIME: int = 4
+    APS_THREAD_POOL_MAX_WORKERS: int = 20
+    APS_PROCESS_POOL_MAX_WORKERS: int = 5
 
     class Config:
         env_file = ".env"
@@ -57,7 +60,6 @@ class Settings(BaseSettings):
 settings = Settings()
 
 # USE_S3 = os.getenv('USE_S3') == 'TRUE'
-USE_S3 = os.getenv('USE_S3') == 'TRUE'
 
 # if USE_S3:
 #     # aws settings

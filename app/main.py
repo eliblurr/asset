@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from database import SessionLocal, engine
 from cls import SocketConnectionManager
 from datetime import time, datetime
+from scheduler import scheduler
 from config import *
 import logging, os
 
@@ -35,13 +36,19 @@ app.mount(DOCUMENT_URL, StaticFiles(directory=DOCUMENT_ROOT), name="documents")
 
 @app.middleware("http")
 async def tenant_session(request:Request, call_next):
-    # db = SessionLocal()
-    # if request.headers.get('tenant_key', None):
-    #     db = SessionLocal(bind=engine.execution_options(schema_translate_map={None: request.headers.get('tenant_key')}))
     db = SessionLocal(bind=engine.execution_options(schema_translate_map={None: request.headers.get('tenant_key')})) if request.headers.get('tenant_key', None) else SessionLocal()
     request.state.db = db
     response = await call_next(request)
     return response
+
+@app.on_event("startup")
+async def startup_event():
+    print('startup', app.title)
+    scheduler.start()
+    
+@app.on_event("shutdown")
+def shutdown_event():
+    scheduler.shutdown(wait=False)
 
 from urls import *
 
