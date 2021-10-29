@@ -31,8 +31,9 @@ class Mail(BaseModel):
         if isinstance(v, dict) and not values["template_name"]:
             raise ValueError('body should be of type dict')
         return v
-    
-async def email(mail:Mail, *args, **kwargs):
+        
+async def email(mail:Union[Mail, dict], *args, **kwargs):
+    mail = Mail.parse_obj(mail) if isinstance(mail, dict) else mail
     message = MessageSchema(
         subject=mail.subject,
         recipients=mail.recipients, 

@@ -239,103 +239,99 @@ class SocketConnectionManager:
                 return await websocket.send_text(message)
             return await websocket.send_json(message)
 
-from sqlalchemy.schema import Column
-from sqlalchemy import Integer, String
+# from sqlalchemy.schema import Column
+# from sqlalchemy import Integer, String
 
-
-# print(dir(Column))
-# data = x
-
-class FileField(Column):
-    def __init__(self, *args, upload_to, **kwargs):
-        super(FileField, self).__init__(type_=String, default='some', *args, **kwargs)
-        # self.__call__()
-        # self._value_map = None
-        # self.value_map = None
-        # self._excel_column_name = None
-        # self.excel_column_name = 'some'
+# class FileField(Column):
+#     def __init__(self, *args, upload_to, **kwargs):
+#         super(FileField, self).__init__(type_=String, default='some', *args, **kwargs)
+#         # self.__call__()
+#         # self._value_map = None
+#         # self.value_map = None
+#         # self._excel_column_name = None
+#         # self.excel_column_name = 'some'
         
-    def __call__(self):
-        print('ds')
-    # @property
-    # def excel_column_name(self):
-    #     if self._excel_column_name is None:
-    #         return self.name
-    #     else:
-    #         return self._excel_column_name
+#     def __call__(self):
+#         print('ds')
+#     # @property
+#     # def excel_column_name(self):
+#     #     if self._excel_column_name is None:
+#     #         return self.name
+#     #     else:
+#     #         return self._excel_column_name
 
-    # @excel_column_name.setter
-    # def excel_column_name(self, n):
-    #     self._excel_column_name = n
+#     # @excel_column_name.setter
+#     # def excel_column_name(self, n):
+#     #     self._excel_column_name = n
 
-    @property
-    def value_map(self):
-        return (lambda x: x+'some_data') if self._value_map is None else self._value_map
+#     @property
+#     def value_map(self):
+#         return (lambda x: x+'some_data') if self._value_map is None else self._value_map
 
-    @value_map.setter
-    def value_map(self, fn):
-        # print(fn)
-        if callable(fn) or fn is None:
-            self._value_map = fn
-        else:
-            raise ValueError('ExcelColumn.value_map must be callable.')
+#     @value_map.setter
+#     def value_map(self, fn):
+#         # print(fn)
+#         if callable(fn) or fn is None:
+#             self._value_map = fn
+#         else:
+#             raise ValueError('ExcelColumn.value_map must be callable.')
 
-class Storage(str, enum.Enum):
-    s3 = 's3'
-    fs = 'fs'
+# class Storage(str, enum.Enum):
+#     s3 = 's3'
+#     fs = 'fs'
 
-class Upload:
-    def __init__(self, loc, extension_allowed, name, ext):
-        self.loc = loc
-        self.ext = ext
-        self.name = name
-        # content_type, mimetype
-        # self.storage = storage -> storage:Storage,
-        self.extension_allowed = extension_allowed
+# class Upload:
+#     def __init__(self, loc, extension_allowed, name, ext):
+#         self.loc = loc
+#         self.ext = ext
+#         self.name = name
+#         # content_type, mimetype
+#         # self.storage = storage -> storage:Storage,
+#         self.extension_allowed = extension_allowed
         
-    def path(self, filename):
-        '''This returns the absolute path of a file uploaded to this set. It doesn’t actually check whether said file exists.
-        Parameters:	
-        filename – The filename to return the path for.
-        '''
+#     def path(self, filename):
+#         '''This returns the absolute path of a file uploaded to this set. It doesn’t actually check whether said file exists.
+#         Parameters:	
+#         filename – The filename to return the path for.
+#         '''
 
-    def resolve_conflict(self,):
-        '''If a file with the selected name already exists in the target folder, this method is called to resolve the conflict. It should return a new basename for the file.
+#     def resolve_conflict(self,):
+#         '''If a file with the selected name already exists in the target folder, this method is called to resolve the conflict. It should return a new basename for the file.
 
-        The default implementation splits the name and extension and adds a suffix to the name consisting of an underscore and a number, and tries that until it finds one that doesn’t exist.
+#         The default implementation splits the name and extension and adds a suffix to the name consisting of an underscore and a number, and tries that until it finds one that doesn’t exist.
 
-        Parameters:	
-        target_folder – The absolute path to the target.
-        basename – The file’s original basename.'''
-        pass
+#         Parameters:	
+#         target_folder – The absolute path to the target.
+#         basename – The file’s original basename.'''
+#         pass
 
-    def url(self, filename):
-        '''This function gets the URL a file uploaded to this set would be accessed at. It doesn’t check whether said file exists.
-        Parameters:	
-        filename – The filename to return the URL for.
-        '''
-        pass
+#     def url(self, filename):
+#         '''This function gets the URL a file uploaded to this set would be accessed at. It doesn’t check whether said file exists.
+#         Parameters:	
+#         filename – The filename to return the URL for.
+#         '''
+#         pass
 
-    def save(self, storage:Storage, folder=None, name=None):
-        '''This saves a werkzeug.FileStorage into this upload set. If the upload is not allowed, an UploadNotAllowed error will be raised. 
-        Otherwise, the file will be saved and its name (including the folder) will be returned.
-        Parameters:	
-        storage – The uploaded file to save.
-        folder – The subfolder within the upload set to save to.
-        name – The name to save the file as. If it ends with a dot, the file’s extension will be appended to the end.'''
-        pass
+#     def save(self, storage:Storage, folder=None, name=None):
+#         '''This saves a werkzeug.FileStorage into this upload set. If the upload is not allowed, an UploadNotAllowed error will be raised. 
+#         Otherwise, the file will be saved and its name (including the folder) will be returned.
+#         Parameters:	
+#         storage – The uploaded file to save.
+#         folder – The subfolder within the upload set to save to.
+#         name – The name to save the file as. If it ends with a dot, the file’s extension will be appended to the end.'''
+#         pass
 
-    def file_allowed(storage, basename):
-        '''This tells whether a file is allowed. It should return True if the given werkzeug.FileStorage object can be saved with the given basename, and False if it can’t. 
-        The default implementation just checks the extension, so you can override this if you want.
+#     def file_allowed(storage, basename):
+#         '''This tells whether a file is allowed. It should return True if the given werkzeug.FileStorage object can be saved with the given basename, and False if it can’t. 
+#         The default implementation just checks the extension, so you can override this if you want.
 
-        Parameters:	
-        storage – The werkzeug.FileStorage to check.
-        basename – The basename it will be saved under.'''
+#         Parameters:	
+#         storage – The werkzeug.FileStorage to check.
+#         basename – The basename it will be saved under.'''
 
-    def extension_allowed(self, ext):
-        '''This determines whether a specific extension is allowed. It is called by file_allowed, so if you override that but still want to check extensions, 
-        call back into this.
+#     def extension_allowed(self, ext):
+#         '''This determines whether a specific extension is allowed. It is called by file_allowed, so if you override that but still want to check extensions, 
+#         call back into this.
 
-        Parameters:	
-        ext – The extension to check, without the dot.'''
+#         Parameters:	
+#         ext – The extension to check, without the dot.'''
