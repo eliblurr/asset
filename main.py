@@ -43,11 +43,12 @@ async def tenant_session(request:Request, call_next):
 
 @app.on_event("startup")
 async def startup_event():
+    print('startup', app.title)
     scheduler.start()
-
+    
 @app.on_event("shutdown")
-async def shutdown_event():
-    scheduler.shutdown()
+def shutdown_event():
+    scheduler.shutdown(wait=False)
 
 from urls import *
 

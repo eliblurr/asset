@@ -50,6 +50,8 @@ class Settings(BaseSettings):
     VALIDATE_CERTS: bool = True
     DEFAULT_MAIL_SUBJECT: str = "SOME DEFAULT SUBJECT HERE"
     APS_MISFIRE_GRACE_TIME: int = 4
+    APS_THREAD_POOL_MAX_WORKERS: int = 20
+    APS_PROCESS_POOL_MAX_WORKERS: int = 5
 
     class Config:
         env_file = ".env"
