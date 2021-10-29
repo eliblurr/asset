@@ -28,6 +28,7 @@ app.add_middleware(
 
 socket = SocketConnectionManager()
 logging.config.fileConfig('logging.conf')
+logger = logging.getLogger('eAsset.main')
 templates = Jinja2Templates(directory="static/html")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 app.mount(MEDIA_URL, StaticFiles(directory=MEDIA_ROOT), name="media")
@@ -44,11 +45,17 @@ async def tenant_session(request:Request, call_next):
 @app.on_event("startup")
 async def startup_event():
     print('startup', app.title)
-    scheduler.start()
+    try:
+        scheduler.start()
+    except Exception as e:
+        logger.critical(f"Scheduler could not running: {e.__class__}: {e}", exc_info=True) 
     
 @app.on_event("shutdown")
 def shutdown_event():
-    scheduler.shutdown(wait=False)
+    try:
+        scheduler.shutdown(wait=False)
+    except Exception as e:
+        logger.critical(f"Scheduler could not running: {e.__class__}: {e}", exc_info=True) 
 
 from urls import *
 
@@ -161,3 +168,9 @@ from urls import *
 # logging.debug("This is a debug message")
 # logging.info("Informational message")
 # logging.error("An error has happened!")
+items = {}
+items["foo"] = {"name": "Fighters"}
+items["bar"] = {"name": "Tenders"}
+@app.get("/items/{item_id}")
+async def read_items(item_id: str):
+    return items[item_id]
