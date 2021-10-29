@@ -48,14 +48,14 @@ async def startup_event():
     try:
         scheduler.start()
     except Exception as e:
-        logger.critical(f"Scheduler could not running: {e.__class__}: {e}", exc_info=True) 
+        logger.critical(f"Scheduler could not start: {e.__class__}: {e}", exc_info=True) 
     
 @app.on_event("shutdown")
 def shutdown_event():
     try:
         scheduler.shutdown(wait=False)
     except Exception as e:
-        logger.critical(f"Scheduler could not running: {e.__class__}: {e}", exc_info=True) 
+        logger.critical(f"Scheduler could not shutdown: {e.__class__}: {e}", exc_info=True) 
 
 from urls import *
 
