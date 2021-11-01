@@ -245,6 +245,49 @@ class ConnectionManager:
     async def on_verify(self, client_id:int):
         pass
 
+import pathlib, pandas as pd, numpy as np, io
+from pydantic import BaseModel
+from constants import SUPPORTED_EXT
+from exceptions import FileNotSupported
+
+class FileReader:
+    def __init__(self, supported_extensions:list=[]):
+        self._supported_ext = SUPPORTED_EXT
+        self._supported_ext.extend(supported_extensions)
+        self._supported_ext = list(set(self._supported_ext))
+
+    def _ext(self, file):
+        return pathlib.Path(file.filename).suffix
+
+    def _csv(self, file, header, to_dict:bool=True):
+        df = pd.read_csv(file.file, usecols=header)[header]
+        return self.validate_rows(df, header, to_dict)
+       
+    def _excel(self, file, header, to_dict:bool=True):
+        
+        df = pd.read_excel(file.file, usecols=header)[header]
+        return self.validate_rows(df, header, to_dict)
+    
+    def verify_ext(self, file):
+        return self._ext(file) in self._supported_ext
+
+    def validate_rows(self, df, header, to_dict:bool=True):
+        if to_dict:
+            return [*df.to_dict(orient="index").values()]
+        return np.array(df[header].replace(np.nan, None).drop_duplicates())
+
+    async def read(self, file, header, to_dict:bool=True):
+        try:
+            if not self.verify_ext(file):
+                raise FileNotSupported('file extension not supported')
+            if self._ext(file) in [".csv",".CSV"]:
+                rows = self._csv(file, header, to_dict)
+            else:
+                rows = self._excel(file, header, to_dict)
+            return rows
+        finally:
+            await file.close()
+
 # from starlette.endpoints import WebSocketEndpoint
 
 # class App(WebSocketEndpoint):
