@@ -268,7 +268,7 @@ class FileReader:
 
     def validate_rows(self, df, header, to_dict:bool=True):
         if to_dict:
-            return [*df.to_dict(orient="index").values()]
+            return list(df.to_dict(orient="index").values())
         return np.array(df[header].replace(np.nan, None).drop_duplicates())
 
     async def read(self, file, header, to_dict:bool=True):
