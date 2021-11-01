@@ -211,7 +211,7 @@ class ContentQueryChecker:
         wrapper.__signature__ = Signature(params)
         return wrapper
 
-class SocketConnectionManager:
+class ConnectionManager:
     def __init__(self):
         self.active_connections:List[WebSocket] = []
 
@@ -219,6 +219,7 @@ class SocketConnectionManager:
         websocket._cookies['client_id']=client_id
         await websocket.accept()
         self.active_connections.append(websocket)
+        # check if any pending messages then send
 
     def disconnect(self, websocket:WebSocket):
         self.active_connections.remove(websocket)
@@ -227,6 +228,7 @@ class SocketConnectionManager:
         return [websocket for websocket in self.active_connections if websocket._cookies.get('client_id', None) == client_id]
 
     async def send_personal_message(self, message:(str, dict), client_id:int):
+        # if websocket not in client_connections save message
         client_connections = self.client_connection(client_id)
         for websocket in client_connections:
             if isinstance(message, str):
@@ -234,10 +236,28 @@ class SocketConnectionManager:
             return await websocket.send_json(message)
 
     async def broadcast(self, message: (str, dict)):
+        # if websocket not in client_connections save message
         for websocket in self.active_connections:
             if isinstance(message, str):
                 return await websocket.send_text(message)
             return await websocket.send_json(message)
+
+    async def on_verify(self, client_id:int):
+        pass
+
+# from starlette.endpoints import WebSocketEndpoint
+
+# class App(WebSocketEndpoint):
+#     encoding = 'bytes'
+
+#     async def on_connect(self, websocket):
+#         await websocket.accept()
+
+#     async def on_receive(self, websocket, data):
+#         await websocket.send_bytes(b"Message: " + data)
+
+#     async def on_disconnect(self, websocket, close_code):
+#         pass
 
 # from sqlalchemy.schema import Column
 # from sqlalchemy import Integer, String

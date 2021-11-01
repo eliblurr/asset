@@ -4,8 +4,8 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from database import SessionLocal, engine
-from cls import SocketConnectionManager
 from datetime import time, datetime
+from cls import ConnectionManager
 from scheduler import scheduler
 from config import *
 import logging, os
@@ -26,7 +26,7 @@ app.add_middleware(
     allow_headers = ALLOWED_HEADERS,
 )
 
-socket = SocketConnectionManager()
+socket = ConnectionManager()
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger('eAsset.main')
 templates = Jinja2Templates(directory="static/html")
