@@ -1,13 +1,13 @@
 from sqlalchemy.exc import ProgrammingError, IntegrityError
 from utils import schema_to_model, http_exception_detail
 from inspect import Parameter, Signature, signature
+import enum, re, datetime, pathlib, pandas as pd, numpy as np
+from exceptions import MaxOccurrenceError, FileNotSupported
 from fastapi import Query, WebSocket, HTTPException
+from constants import DT_X, Q_X, SUPPORTED_EXT
 from psycopg2.errors import UndefinedTable
-from exceptions import MaxOccurrenceError
 from sqlalchemy.orm import Session
-from constants import DT_X, Q_X
 from functools import wraps
-import enum, re, datetime
 from typing import List
 
 class CRUD:
@@ -244,11 +244,6 @@ class ConnectionManager:
 
     async def on_verify(self, client_id:int):
         pass
-
-import pathlib, pandas as pd, numpy as np, io
-from pydantic import BaseModel
-from constants import SUPPORTED_EXT
-from exceptions import FileNotSupported
 
 class FileReader:
     def __init__(self, supported_extensions:list=[]):
