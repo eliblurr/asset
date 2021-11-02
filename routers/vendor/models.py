@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, CheckConstraint
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import validates, relationship
 from constants import EMAIL, PHONE
 from database import TenantBase
 from mixins import BaseMixin
@@ -14,6 +14,7 @@ class Vendor(BaseMixin, TenantBase):
     website = Column(String, nullable=True)
     email = Column(String, unique=True, index=True)
     contact = Column(String, unique=True, nullable=True)
+    assets_sold = relationship("Asset", back_populates="vendor")
 
     @validates('email')
     def validate_email(self, key, address):

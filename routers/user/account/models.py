@@ -21,6 +21,9 @@ class User(BaseMixin, HashMethodMixin, TenantBase):
     role_id  = Column(Integer, ForeignKey('roles.id'))
     role = relationship('Role', back_populates="users")
     password = Column(String, nullable=False, default=pwd.genword)
+    proposals = relationship("Proposal", back_populates="author")
+    branch = relationship("Branch", back_populates="staff")
+    branch_id = Column(Integer, ForeignKey('branches.id'))
     status = 1
 
     @validates('email')

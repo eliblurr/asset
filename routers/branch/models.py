@@ -17,6 +17,11 @@ class Branch(BaseMixin, TenantBase):
     street_address = Column(String, nullable=True)
     digital_address = Column(String, nullable=True)
     title = Column(String, nullable=False, unique=True)
-    departments = relationship('Department', back_populates="branch", uselist=True, cascade="all, delete", lazy='dynamic')
-    # users = relationship('User', back_populates="branch", uselist=True, cascade="all, delete", lazy='dynamic')
+    staff = relationship("User", back_populates="branch")
+    inventories = relationship('Inventory', back_populates="branch", cascade="all, delete", lazy='dynamic') # include join through departements
+    departments = relationship('Department', back_populates="branch", cascade="all, delete", lazy='dynamic')
     # inventories = relationship('Inventory', back_populates="branch", uselist=True, cascade="all, delete", lazy='dynamic')
+    # boston_addresses = relationship("Address",
+    #                 primaryjoin="and_(User.id==Address.user_id, "
+    #                     "Address.city=='Boston')")
+    # inventories = relationship("Address", primaryjoin="and_(Branch.id==Inventory.branch_id, Department.branch_id==Branch.id)")
