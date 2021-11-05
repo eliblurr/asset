@@ -99,6 +99,7 @@ from database import Base, SessionLocal
 from dependencies import get_db
 from mixins import BaseMixin
 from datetime import date
+from services.aws import s3_upload
 today = date.today()
 
 class TestDB(BaseMixin, Base):
@@ -112,9 +113,10 @@ Base.metadata.create_all(bind=engine)
 @app.post('/custom-file')
 def fi(file:UploadFile=F(None), db=Depends(get_db)):
     try:
-        obj = TestDB(file=file)
-        db.add(obj)
-        db.commit()
+        s3_upload(file)
+        # obj = TestDB(file=file)
+        # db.add(obj)
+        # db.commit()
     except Exception as e:
         print(e)
 

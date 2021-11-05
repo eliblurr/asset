@@ -61,6 +61,11 @@ class Settings(BaseSettings):
     APS_MISFIRE_GRACE_TIME: int = 4
     APS_THREAD_POOL_MAX_WORKERS: int = 20
     APS_PROCESS_POOL_MAX_WORKERS: int = 5
+    AWS_ACCESS_KEY_ID: str = "AKIAQFCNVCREKTZTA2V2"
+    AWS_SECRET_ACCESS_KEY: str = "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"
+    AWS_DEFAULT_ACL: str = "public-read"
+    AWS_STORAGE_BUCKET_NAME: str = "asset-dev-1990"
+    AWS_S3_OBJECT_CACHE_CONTROL: str = "max-age=86400"
 
     class Config:
         env_file = ".env"
@@ -69,7 +74,15 @@ class Settings(BaseSettings):
 settings = Settings()
 
 if settings.USE_S3:
-    pass
+    AWS_S3_CUSTOM_DOMAIN = f'{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+    AWS_S3_OBJECT_PARAMETERS = {'CacheControl': settings.AWS_S3_OBJECT_CACHE_CONTROL}
+    UPLOAD_ROOT = 'uploads'
+    MEDIA_ROOT = f'{UPLOAD_ROOT}/media'
+    DOCUMENT_ROOT = f'{UPLOAD_ROOT}/documents'
+    UPLOAD_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{UPLOAD_ROOT}/"
+    
+    # DEFAULT_FILE_STORAGE = 'hello_django.storage_backends.PublicMediaStorage'
+
 else:
     UPLOAD_URL = "/uploads/"
     UPLOAD_ROOT = os.path.join(BASE_DIR, 'uploads/')
@@ -78,38 +91,13 @@ else:
     
     if not os.path.isdir(UPLOAD_ROOT):
         os.mkdir(UPLOAD_ROOT)
-        # os.makedirs(UPLOAD_ROOT, mode=0o777)
 
     LOG_ROOT = os.path.join(BASE_DIR, 'logs/')
 
     if not os.path.isdir(LOG_ROOT):
         os.mkdir(LOG_ROOT)
-        # os.makedirs(name, mode=0o777, exist_ok=False)
 
 locale = Locale('en', 'US')
-
-'''
-/uploads
-
-/media/product/2021/10/20/no-logo.png
-
-/uploads/media/audio/date_path/some_file
-/uploads/media/images/date_path/some_file
-/uploads/media/videos/date_path/some_file
-
-/uploads/docs/date_path/some_file
-
-'''
-
-# MEDIA_URL = "/media/"
-# DOCUMENT_URL = "/docs/"
-
-# if not os.path.isdir(DOCUMENT_ROOT):
-#     os.mkdir(DOCUMENT_ROOT)
-
-# if not os.path.isdir(MEDIA_ROOT):
-#     os.mkdir(MEDIA_ROOT)
-
 
 # USE_S3 = os.getenv('USE_S3') == 'TRUE'
 
