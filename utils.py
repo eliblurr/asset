@@ -5,7 +5,7 @@ from math import ceil, floor, log2
 from secrets import token_urlsafe
 from fastapi import Form
 from passlib import pwd
-import jwt
+import jwt, shutil
 
 def create_jwt(data:dict, exp:timedelta=None):
     data.update({"exp": datetime.utcnow()+exp if exp else datetime.utcnow()+timedelta(minutes=settings.DEFAULT_TOKEN_DURATION_IN_MINUTES)})
@@ -70,6 +70,13 @@ def http_exception_detail(loc=None, msg=None, type=None):
 def v_2n(n):
     assert ceil(log2(n)) == floor(log2(n)), f'{n} is not a power 2'
     return n
+
+def delete_file_or_folder(path):
+    try:
+        shutil.rmtree(mydir)
+    except OSError as e:
+        print ("Error: %s - %s." % (e.filename, e.strerror))
+    pass
 
 sum_ls = lambda ls : sum(ls)
 

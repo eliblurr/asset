@@ -5,12 +5,13 @@ from cls import Upload
 class File(types.TypeDecorator):
     impl = types.String
 
-    def __init__(self,  *args, upload_to, **kwargs):
+    def __init__(self,  *args, upload_to, size, **kwargs):
         super(File, self).__init__(*args, **kwargs)
         self.upload_to = upload_to
+        self.size = size
 
     def process_bind_param(self, value, dialect):
-        file = Upload(value, upload_to=self.upload_to)
+        file = Upload(value, upload_to=self.upload_to, size=self.size)
         url = file.save()
         return url
 

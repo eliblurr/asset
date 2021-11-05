@@ -292,9 +292,10 @@ class FileReader:
             await file.close()
 
 class Upload:
-    def __init__(self, file, upload_to):
+    def __init__(self, file, upload_to, size=None):
         self.file = file
         self.upload_to = upload_to
+        self.size = size
 
     def _ext(self):
         return pathlib.Path(self.file.filename).suffix
@@ -332,11 +333,11 @@ class Upload:
     def path(self):
         self._path()
 
-    def _image(self, size=None):
+    def _image(self):
         url = self._url()
         try:
             with Image.open(BytesIO(self.file.file.read())) as im:
-                im.thumbnail(size if size else im.size)
+                im.thumbnail(self.size if self.size else im.size)
                 im.save(url)
         finally:
             self.file.file.close()
