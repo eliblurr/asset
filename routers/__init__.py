@@ -1,11 +1,16 @@
+import routers.asset.models
 import routers.manufacturer.models 
 import routers.user.account.models 
 import routers.department.models 
+import routers.inventory.models
+import routers.proposal.models
 import routers.priority.models 
+import routers.request.models
 import routers.policy.models 
 import routers.vendor.models
 import routers.branch.models 
 import routers.faqs.models 
+
 import routers.tenant.models
 
 '''

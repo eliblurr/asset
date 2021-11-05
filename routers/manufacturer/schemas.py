@@ -39,7 +39,7 @@ class Manufacturer(ManufacturerBase):
     created: datetime.datetime
     updated: datetime.datetime
 
-class MAnufacturerList(BaseModel):
+class ManufacturerList(BaseModel):
     bk_size: int
     pg_size: int
     data: Union[List[Manufacturer], list]

@@ -92,6 +92,45 @@ async def custom_swagger_ui_html():
         swagger_favicon_url="/static/images/logo.png",
     )
 
+from ctypes import File
+from sqlalchemy import Column
+from fastapi import Depends, File as F, UploadFile
+from database import Base, SessionLocal
+from dependencies import get_db
+from mixins import BaseMixin
+from datetime import date
+today = date.today()
+
+class TestDB(BaseMixin, Base):
+    '''TestDB Model'''
+    __tablename__ = "test_db"
+
+    file = Column(File(upload_to=f'{today.strftime("%Y/%m/%d")}/images/'))
+
+Base.metadata.create_all(bind=engine)
+
+@app.post('/custom-file')
+def fi(file:UploadFile=F(None), db=Depends(get_db)):
+    try:
+        obj = TestDB(file=file)
+        db.add(obj)
+        db.commit()
+    except Exception as e:
+        print(e)
+
+# obj = TestDB(some_str=24)
+
+# print(obj.some_str)
+
+# db = SessionLocal()
+
+# db.add(obj)
+# db.commit()
+
+# res = [res.file for res in db.query(TestDB).all()]
+
+# print(res)
+
 # from fastapi import File, UploadFile
 # from cls import FileReader
 # from constants import SUPPORTED_EXT
@@ -119,59 +158,59 @@ async def custom_swagger_ui_html():
 #         manager.disconnect(websocket)
 # from typing import List
 
-from fastapi import FastAPI, WebSocket
-from fastapi.responses import HTMLResponse
+# from fastapi import FastAPI, WebSocket
+# from fastapi.responses import HTMLResponse
 
-# app = FastAPI()
+# # app = FastAPI()
 
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Chat</title>
-    </head>
-    <body>
-        <h1>WebSocket Chat</h1>
-        <form action="" onsubmit="sendMessage(event)">
-            <input type="text" id="messageText" autocomplete="off"/>
-            <button>Send</button>
-        </form>
-        <ul id='messages'>
-        </ul>
-        <script>
-            var ws = new WebSocket("ws://localhost:8000/ws");
-            ws.onmessage = function(event) {
-                var messages = document.getElementById('messages')
-                var message = document.createElement('li')
-                var content = document.createTextNode(event.data)
-                message.appendChild(content)
-                messages.appendChild(message)
-            };
-            function sendMessage(event) {
-                var input = document.getElementById("messageText")
-                ws.send(input.value)
-                input.value = ''
-                event.preventDefault()
-            }
-        </script>
-    </body>
-</html>
-"""
-
-
-@app.get("/socket")
-async def get():
-    return HTMLResponse(html)
+# html = """
+# <!DOCTYPE html>
+# <html>
+#     <head>
+#         <title>Chat</title>
+#     </head>
+#     <body>
+#         <h1>WebSocket Chat</h1>
+#         <form action="" onsubmit="sendMessage(event)">
+#             <input type="text" id="messageText" autocomplete="off"/>
+#             <button>Send</button>
+#         </form>
+#         <ul id='messages'>
+#         </ul>
+#         <script>
+#             var ws = new WebSocket("ws://localhost:8000/ws");
+#             ws.onmessage = function(event) {
+#                 var messages = document.getElementById('messages')
+#                 var message = document.createElement('li')
+#                 var content = document.createTextNode(event.data)
+#                 message.appendChild(content)
+#                 messages.appendChild(message)
+#             };
+#             function sendMessage(event) {
+#                 var input = document.getElementById("messageText")
+#                 ws.send(input.value)
+#                 input.value = ''
+#                 event.preventDefault()
+#             }
+#         </script>
+#     </body>
+# </html>
+# """
 
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    # for message in websocket.iter_text():
-    #     print(message)
-    await websocket.accept()
-    while True:
-        data = await websocket.receive_text()
-        await websocket.send_text(f"Message text was: {data}")
+# @app.get("/socket")
+# async def get():
+#     return HTMLResponse(html)
+
+
+# @app.websocket("/ws")
+# async def websocket_endpoint(websocket: WebSocket):
+#     # for message in websocket.iter_text():
+#     #     print(message)
+#     await websocket.accept()
+#     while True:
+#         data = await websocket.receive_text()
+#         await websocket.send_text(f"Message text was: {data}")
 
 # send_email
 
@@ -208,15 +247,12 @@ async def websocket_endpoint(websocket: WebSocket):
 # '''/////////////////////'''
 
 # from sqlalchemy import Column, String, Integer, CheckConstraint
+# from fastapi import Depends, File as F, UploadFile
+# from database import Base, SessionLocal
 # from dependencies import get_db
 # from mixins import BaseMixin
-# from fastapi import Depends
-# from database import Base
-# from cls import FileField
+# from cls import File 
 
-# class TestDB(BaseMixin, Base):
-#     '''TestDB Model'''
-#     __tablename__ = "test_db"
     
 #     file = FileField(upload_to='/some_path')
 
@@ -241,6 +277,6 @@ async def websocket_endpoint(websocket: WebSocket):
 # @app.post('/custom-field')
 # def custom_field(db=Depends(get_db)):
 #     obj = TestDB(file='sdsds')
-#     db.add(obj)
-#     db.commit()
+    # db.add(obj)
+    # db.commit()
 #     pass

@@ -42,11 +42,26 @@ class Manufacturer(ManufacturerMixin, BaseMixin, TenantBase):
 class ManufacturerView():
     pass
 
+
+from sqlalchemy import MetaData
+    
+def merge_metadata(*original_metadata) -> MetaData:
+    merged = MetaData()
+
+    for original_metadatum in original_metadata:
+        for table in original_metadatum.tables.values():
+            table.to_metadata(merged)
+    
+    return merged
+
+print(merge_metadata(TenantBase.metadata, Base.metadata).tables.keys())
+
 @event.listens_for(Manufacturer, 'before_insert')
-# @event.listens_for(Manufacturer, 'before_update')
-def hash_password(mapper, connection, target):
-    if connection.get_execution_options().get('schema_translate_map', None):
-        print('tenant')
+@event.listens_for(Manufacturer, 'before_update')
+def ensure_unique(mapper, connection, target):
+    pass
+#     if connection.get_execution_options().get('schema_translate_map', None):
+#         print('tenant')
     # print(
     #     dir(connection),
     #     connection.get_execution_options(),

@@ -1,14 +1,19 @@
+import enum, re, datetime, pathlib, pandas as pd, numpy as np, os, asyncio
+from exceptions import MaxOccurrenceError, FileNotSupported, UploadNotAllowed
 from sqlalchemy.exc import ProgrammingError, IntegrityError
 from utils import schema_to_model, http_exception_detail
 from inspect import Parameter, Signature, signature
-import enum, re, datetime, pathlib, pandas as pd, numpy as np
-from exceptions import MaxOccurrenceError, FileNotSupported
 from fastapi import Query, WebSocket, HTTPException
 from constants import DT_X, Q_X, SUPPORTED_EXT
 from psycopg2.errors import UndefinedTable
 from sqlalchemy.orm import Session
 from functools import wraps
+from pathlib import Path
 from typing import List
+from passlib import pwd
+from io import BytesIO
+from PIL import Image
+from config import *
 
 class CRUD:
     def __init__(self, model):
@@ -25,10 +30,11 @@ class CRUD:
             return obj
         except Exception as e:
             # log here
+            print(e)
             raise HTTPException(
-                status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e.orig, UndefinedTable) or isinstance(e, AssertionError) else 500, 
+                status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e, UndefinedTable) or isinstance(e, AssertionError) else 500, 
                 detail=http_exception_detail(
-                    msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e.orig, UndefinedTable) else  e.orig}", 
+                    msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e, UndefinedTable) else  e}", 
                     type=f"{e.__class__}"
                 ),
             )
@@ -72,9 +78,9 @@ class CRUD:
         except Exception as e:
             # log here
             raise HTTPException(
-                status_code=400 if isinstance(e.orig, UndefinedTable) else 500, 
+                status_code=400 if isinstance(e.__class__, UndefinedTable) else 500, 
                 detail=http_exception_detail(
-                    msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e.orig, UndefinedTable) else  e.orig}", 
+                    msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e.__class__, UndefinedTable) else  e}", 
                     type=f"{e.__class__}"
                 ),
             )
@@ -283,6 +289,68 @@ class FileReader:
         finally:
             await file.close()
 
+class Upload:
+    def __init__(self, file, upload_to):
+        self.file = file
+        self.upload_to = upload_to
+
+    def _ext(self):
+        return pathlib.Path(self.file.filename).suffix
+
+    def file_allowed(self, ext=None):
+        ext=ext if ext else self._ext()
+        if ext in UPLOAD_EXTENSIONS["IMAGE"]:
+            return True, "images/"
+        elif ext in UPLOAD_EXTENSIONS["AUDIO"]:
+            return True, "audio/"
+        elif ext in UPLOAD_EXTENSIONS["VIDEO"]:
+            return True, "videos/"
+        elif ext in UPLOAD_EXTENSIONS["DOCUMENT"]:
+            return True, "documents/"
+        raise UploadNotAllowed('Unsupported file extension')
+    
+    def _path(self):
+        _, url = self.file_allowed()
+        root = DOCUMENT_ROOT if url=='documents/' else MEDIA_ROOT
+        path = os.path.join(root, f'{self.upload_to}')
+                
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        return path
+        
+    def _url(self):
+        url = os.path.join(self._path(), f'{self.file.filename}')
+        while Path(url).exists():
+            filename = f"{pwd.genword()}{self._ext()}"
+            url = os.path.join(self._path(), f'{filename}')
+        return url
+    
+    def path(self):
+        self._path()
+
+    def _image(self, size=None):
+        try:
+            url = self._url()
+            with Image.open(BytesIO(self.file.file.read())) as im:
+                im.thumbnail(size if size else im.size)
+                im.save(url)
+                return url
+        finally:
+            asyncio.run(self.file.close())
+
+    def _save_file(self):
+        return "LD:/some_dummy_path"
+
+    def save(self, *args, **kwargs):
+        # if settings.USE_S3:
+        #     if self.file.content_type.split("/")[0]=="image":
+        #         pass
+        #     # check mimetype
+        #     pass
+        url = self._image() if  self.file.content_type.split("/")[0]=="image" else self._save_file()
+        url = '/'+os.path.relpath(url, BASE_DIR) 
+        return f"S3:{url}" if settings.USE_S3 else f"LD:{url}"
+
 # from starlette.endpoints import WebSocketEndpoint
 
 # class App(WebSocketEndpoint):
@@ -297,20 +365,40 @@ class FileReader:
 #     async def on_disconnect(self, websocket, close_code):
 #         pass
 
+
+
+# class MyCustomStringType(types.TypeDecorator):
+#     impl = types.String
+
+#     def __init__(self,  *args, upload_to, **kwargs):
+#         print(upload_to)
+#         super(MyCustomStringType, self).__init__(*args, **kwargs)
+#         # pass
+#     # super(FileField, self).__init__(type_=String, default='some', *args, **kwargs)
+
+#     def process_bind_param(self, value, dialect):
+#         # do file processing here
+#         return "PREFIX:" + str(value)
+
+#     def process_result_value(self, value, dialect):
+#         # add app url prefix here
+#         return value[7:]
+#         # 
+
 # from sqlalchemy.schema import Column
 # from sqlalchemy import Integer, String
 
 # class FileField(Column):
 #     def __init__(self, *args, upload_to, **kwargs):
 #         super(FileField, self).__init__(type_=String, default='some', *args, **kwargs)
-#         # self.__call__()
+        # self.__call__()
 #         # self._value_map = None
 #         # self.value_map = None
 #         # self._excel_column_name = None
 #         # self.excel_column_name = 'some'
         
-#     def __call__(self):
-#         print('ds')
+    # def __call__(self):
+    #     print('ds')
 #     # @property
 #     # def excel_column_name(self):
 #     #     if self._excel_column_name is None:
@@ -337,59 +425,3 @@ class FileReader:
 # class Storage(str, enum.Enum):
 #     s3 = 's3'
 #     fs = 'fs'
-
-# class Upload:
-#     def __init__(self, loc, extension_allowed, name, ext):
-#         self.loc = loc
-#         self.ext = ext
-#         self.name = name
-#         # content_type, mimetype
-#         # self.storage = storage -> storage:Storage,
-#         self.extension_allowed = extension_allowed
-        
-#     def path(self, filename):
-#         '''This returns the absolute path of a file uploaded to this set. It doesn’t actually check whether said file exists.
-#         Parameters:	
-#         filename – The filename to return the path for.
-#         '''
-
-#     def resolve_conflict(self,):
-#         '''If a file with the selected name already exists in the target folder, this method is called to resolve the conflict. It should return a new basename for the file.
-
-#         The default implementation splits the name and extension and adds a suffix to the name consisting of an underscore and a number, and tries that until it finds one that doesn’t exist.
-
-#         Parameters:	
-#         target_folder – The absolute path to the target.
-#         basename – The file’s original basename.'''
-#         pass
-
-#     def url(self, filename):
-#         '''This function gets the URL a file uploaded to this set would be accessed at. It doesn’t check whether said file exists.
-#         Parameters:	
-#         filename – The filename to return the URL for.
-#         '''
-#         pass
-
-#     def save(self, storage:Storage, folder=None, name=None):
-#         '''This saves a werkzeug.FileStorage into this upload set. If the upload is not allowed, an UploadNotAllowed error will be raised. 
-#         Otherwise, the file will be saved and its name (including the folder) will be returned.
-#         Parameters:	
-#         storage – The uploaded file to save.
-#         folder – The subfolder within the upload set to save to.
-#         name – The name to save the file as. If it ends with a dot, the file’s extension will be appended to the end.'''
-#         pass
-
-#     def file_allowed(storage, basename):
-#         '''This tells whether a file is allowed. It should return True if the given werkzeug.FileStorage object can be saved with the given basename, and False if it can’t. 
-#         The default implementation just checks the extension, so you can override this if you want.
-
-#         Parameters:	
-#         storage – The werkzeug.FileStorage to check.
-#         basename – The basename it will be saved under.'''
-
-#     def extension_allowed(self, ext):
-#         '''This determines whether a specific extension is allowed. It is called by file_allowed, so if you override that but still want to check extensions, 
-#         call back into this.
-
-#         Parameters:	
-#         ext – The extension to check, without the dot.'''

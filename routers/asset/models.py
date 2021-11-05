@@ -1,8 +1,15 @@
-from sqlalchemy import Column, String, Integer, CheckConstraint, Boolean, Float
+# from __future__ import annotations
+from sqlalchemy import Column, String, Integer, CheckConstraint, Boolean, Float, DateTime, Enum, ForeignKey
 from sqlalchemy.ext.hybrid import hybrid_property
 from dateutil.relativedelta import relativedelta
+from sqlalchemy.orm import relationship
+
+# from ..department.models import Department
+# from routers.department import Department
+# from routers import Department
+# from routers.department.models import Department
+from database import TenantBase
 from mixins import BaseMixin
-from database import Base
 from passlib import pwd
 import enum, datetime
 
@@ -10,7 +17,7 @@ class DepreciationAlgorithm(enum.Enum):
     straight_line_depreciation = 'straight_line_depreciation'
     declining_balance_depreciation = 'declining_balance_depreciation'
 
-class Asset(BaseMixin, Base):
+class Asset(BaseMixin, TenantBase):
     '''Asset Model'''
     __tablename__ = "assets"
     __table_args__ = (

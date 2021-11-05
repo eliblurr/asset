@@ -10,11 +10,14 @@ router = APIRouter()
 
 @router.post('/', description='', response_model=schemas.Tenant, status_code=201, name='Tenant/Organization')
 async def create(request:Request, payload:schemas.CreateTenant=Depends(schemas.CreateTenant.as_form), logo:UploadFile=File(None), bg_image:UploadFile=File(None), db:Session=Depends(get_db)):
+    # try:
     tenant = await crud.tenant.create(payload, db)
     if tenant: 
         url = act_url(request.base_url, tenant.id, "tenants")
         print(url)
     return tenant
+    # except Exception as e: 
+    #     print(e)
 
 @router.get('/', description='', response_model=schemas.TenantList, name='Tenant/Organization')
 @ContentQueryChecker(crud.tenant.model.c(), None)

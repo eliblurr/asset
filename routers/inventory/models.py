@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, Integer, CheckConstraint
+from sqlalchemy import Column, String, Integer, CheckConstraint, ForeignKey
+from sqlalchemy.orm import relationship
 from database import TenantBase
 from mixins import BaseMixin
 

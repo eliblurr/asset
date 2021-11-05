@@ -6,3 +6,6 @@ class MaxOccurrenceError(Exception):
 
 class FileNotSupported(Exception):
     pass
+
+class UploadNotAllowed(Exception):
+    pass

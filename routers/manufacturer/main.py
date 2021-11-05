@@ -11,7 +11,7 @@ router = APIRouter()
 async def create(payload:schemas.CreateManufacturer, db:Session=Depends(get_db)):
     return await crud.manufacturer.create(payload, db)
 
-@router.get('/', description='', response_model=schemas.MAnufacturerList, name='Manufacturer')
+@router.get('/', description='', response_model=schemas.ManufacturerList, name='Manufacturer')
 @ContentQueryChecker(crud.manufacturer.model.c(), None)
 async def read(db:Session=Depends(get_db), **params):
     return await crud.manufacturer.read(params, db)

@@ -16,6 +16,13 @@ os.environ['DOC'] = ''
 
 JWT_ALGORITHM = 'HS256'
 
+UPLOAD_EXTENSIONS = {
+    "IMAGE":[".jpeg", ".jpg", ".bmp", ".gif"],
+    "VIDEO":[".mp4", ".avi", ".mpeg"],
+    "AUDIO":[".mp3", ".aac", ".png", ".wav"],
+    "DOCUMENT":[".pdf", ".csv", ".doc", ".docx", ".eot", ".txt", ".xls", ".xlsx"],
+}
+
 class Settings(BaseSettings):
     API_KEY: str
     BASE_URL: str
@@ -60,6 +67,49 @@ class Settings(BaseSettings):
         secrets_dir = BASE_DIR
 
 settings = Settings()
+
+if settings.USE_S3:
+    pass
+else:
+    UPLOAD_URL = "/uploads/"
+    UPLOAD_ROOT = os.path.join(BASE_DIR, 'uploads/')
+    MEDIA_ROOT = os.path.join(UPLOAD_ROOT, 'media/')
+    DOCUMENT_ROOT = os.path.join(UPLOAD_ROOT, 'documents/')
+    
+    if not os.path.isdir(UPLOAD_ROOT):
+        os.mkdir(UPLOAD_ROOT)
+        # os.makedirs(UPLOAD_ROOT, mode=0o777)
+
+    LOG_ROOT = os.path.join(BASE_DIR, 'logs/')
+
+    if not os.path.isdir(LOG_ROOT):
+        os.mkdir(LOG_ROOT)
+        # os.makedirs(name, mode=0o777, exist_ok=False)
+
+locale = Locale('en', 'US')
+
+'''
+/uploads
+
+/media/product/2021/10/20/no-logo.png
+
+/uploads/media/audio/date_path/some_file
+/uploads/media/images/date_path/some_file
+/uploads/media/videos/date_path/some_file
+
+/uploads/docs/date_path/some_file
+
+'''
+
+# MEDIA_URL = "/media/"
+# DOCUMENT_URL = "/docs/"
+
+# if not os.path.isdir(DOCUMENT_ROOT):
+#     os.mkdir(DOCUMENT_ROOT)
+
+# if not os.path.isdir(MEDIA_ROOT):
+#     os.mkdir(MEDIA_ROOT)
+
 
 # USE_S3 = os.getenv('USE_S3') == 'TRUE'
 
@@ -106,25 +156,3 @@ settings = Settings()
 #             'image_url': image_url
 #         })
 #     return render(request, 'upload.html')
-
-if settings.USE_S3:
-    pass
-else:
-    MEDIA_URL = "/media/"
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
-
-    DOCUMENT_URL = "/docs/"
-    DOCUMENT_ROOT = os.path.join(BASE_DIR, 'documents/')
-
-    LOG_ROOT = os.path.join(BASE_DIR, 'logs/')
-
-    if not os.path.isdir(DOCUMENT_ROOT):
-        os.mkdir(DOCUMENT_ROOT)
-
-    if not os.path.isdir(MEDIA_ROOT):
-        os.mkdir(MEDIA_ROOT)
-
-    if not os.path.isdir(LOG_ROOT):
-        os.mkdir(LOG_ROOT)
-
-locale = Locale('en', 'US')
