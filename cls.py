@@ -15,6 +15,8 @@ from io import BytesIO
 from PIL import Image
 from config import *
 
+from services.aws import s3_upload
+
 class CRUD:
     def __init__(self, model):
         self.model = model
@@ -350,11 +352,10 @@ class Upload:
             return url
 
     def save(self, *args, **kwargs):
-        # if settings.USE_S3:
-        #     if self.file.content_type.split("/")[0]=="image":
-        #         pass
-        #     # check mimetype
-        #     pass
-        url = self._image() if  self.file.content_type.split("/")[0]=="image" else self._save_file()
-        url = '/'+os.path.relpath(url, BASE_DIR) 
+        if settings.USE_S3:
+            url = '/'+os.path.relpath(self._url(), BASE_DIR) 
+            s3_upload(self.file, object_name=url) # push to celery to upload
+        else:
+            url = self._image() if self.file.content_type.split("/")[0]=="image" else self._save_file()
+            url = '/'+os.path.relpath(url, BASE_DIR) 
         return f"S3:{url}" if settings.USE_S3 else f"LD:{url}"

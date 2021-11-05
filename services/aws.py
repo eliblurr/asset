@@ -1,6 +1,8 @@
 from botocore.exceptions import ClientError
-from config import settings
+from config import settings, UPLOAD_ROOT
 import boto3, logging, os
+
+logger = logging.getLogger("eAsset.main")
 
 def s3():
     return boto3.client(
@@ -9,39 +11,32 @@ def s3():
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
     )
 
-def s3_upload(file, bucket=settings.AWS_STORAGE_BUCKET_NAME, object_name=None, aws_location=None):
-    """Upload a file to an S3 bucket
-
-    :param file: File to upload
-    :param bucket: Bucket to upload to
-    :param object_name: S3 object name. If not specified then file is used
-    :return: True if file was uploaded, else False
-    """
-
-
-    # If S3 object_name was not specified, use file
+def s3_upload(file, bucket=settings.AWS_STORAGE_BUCKET_NAME, object_name=None, **kwargs):
     if object_name is None:
         object_name = os.path.basename(file.filename)
-
-        # print(object_name)
-
-    # return
-
-    # Upload the file
     s3_client = s3()
-    # print(s3_client.upload_file.__annotations__)
-    # return
-    try:
-        # response = s3_client.upload_file(Fileobj=file, bucket_name=bucket)
-        f = file.file.read()
-        # response = s3_client.upload_fileobj(f, bucket, object_name)
-        with open(file.file.read(), "rb") as f:
-            response = s3_client.upload_fileobj(f, bucket, object_name)
-        print(response)
+
+    obj = file.file if self.file.content_type.split("/")[0]=="image" else file.file 
+    #  BytesIO(self.image_optimize_from_buffer(file, width, height, make_thumb, make_cover))
+
+    try:        
+        response = s3_client.upload_fileobj(
+            onj, 
+            bucket, 
+            object_name,
+            ExtraArgs={
+                'ACL': settings.AWS_DEFAULT_ACL,
+                "CacheControl": settings.AWS_S3_OBJECT_CACHE_CONTROL,
+                'ContentType': file.content_type.split('/')[0]
+            }
+        )
     except ClientError as e:
-        logging.error(e)
+        logger.error(e)
         return False
-    return True
+    return f'https://{bucket}.s3.amazonaws.com/{object_name}'
+
+def s3_delete(path):
+    pass
 
     # Fileobj=obj, Key=file_path,ExtraArgs={"ACL": "public-read", "ContentType": file.content_type})
 

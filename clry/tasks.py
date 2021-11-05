@@ -1,4 +1,5 @@
 import asyncio, logging, celery as C
+from services.aws import s3_upload
 from services.email import email
 from .celery import app
 
@@ -16,3 +17,7 @@ def add(self):
 @app.task(name='email', base=TaskManager, bind=True, acks_late=True, task_time_limit=120, task_soft_time_limit=120, default_retry_delay=10 * 60, retry_backoff=True, retry_kwargs={'max_retries': 2, 'countdown': 2}) 
 def send_email(self, *args, **kwargs):
     asyncio.run(email(*args, **kwargs))
+
+@app.task(name='s3_upload', base=TaskManager, bind=True, acks_late=True, task_time_limit=200, task_soft_time_limit=200, default_retry_delay=10 * 60, retry_backoff=True, retry_kwargs={'max_retries': 2, 'countdown': 2}) 
+def s3_upload_bg(self, *args, **kwargs):
+    s3_upload(*args, **kwargs)

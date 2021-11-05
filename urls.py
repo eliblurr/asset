@@ -108,15 +108,15 @@ class TestDB(BaseMixin, Base):
 
     file = Column(File(upload_to=f'{today.strftime("%Y/%m/%d")}/images/'))
 
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 @app.post('/custom-file')
 def fi(file:UploadFile=F(None), db=Depends(get_db)):
     try:
-        s3_upload(file)
-        # obj = TestDB(file=file)
-        # db.add(obj)
-        # db.commit()
+        # s3_upload(file, object_name='uploads')
+        obj = TestDB(file=file)
+        db.add(obj)
+        db.commit()
     except Exception as e:
         print(e)
 
@@ -124,14 +124,14 @@ def fi(file:UploadFile=F(None), db=Depends(get_db)):
 
 # print(obj.some_str)
 
-# db = SessionLocal()
+db = SessionLocal()
 
 # db.add(obj)
 # db.commit()
 
-# res = [res.file for res in db.query(TestDB).all()]
+res = [res.file for res in db.query(TestDB).all()]
 
-# print(res)
+print(res)
 
 # from fastapi import File, UploadFile
 # from cls import FileReader
