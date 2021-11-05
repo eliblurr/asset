@@ -1,4 +1,4 @@
-import enum, re, datetime, pathlib, pandas as pd, numpy as np, os, asyncio
+import enum, re, datetime, pathlib, pandas as pd, numpy as np, os, asyncio, shutil
 from exceptions import MaxOccurrenceError, FileNotSupported, UploadNotAllowed
 from sqlalchemy.exc import ProgrammingError, IntegrityError
 from utils import schema_to_model, http_exception_detail
@@ -319,27 +319,35 @@ class Upload:
         return path
         
     def _url(self):
+        name, cnt = os.path.splitext(self.file.filename)[0], 1
         url = os.path.join(self._path(), f'{self.file.filename}')
         while Path(url).exists():
-            filename = f"{pwd.genword()}{self._ext()}"
+            filename = f"{name}_{cnt}{self._ext()}"
             url = os.path.join(self._path(), f'{filename}')
+            cnt+=1
         return url
     
     def path(self):
         self._path()
 
     def _image(self, size=None):
+        url = self._url()
         try:
-            url = self._url()
             with Image.open(BytesIO(self.file.file.read())) as im:
                 im.thumbnail(size if size else im.size)
                 im.save(url)
-                return url
         finally:
-            asyncio.run(self.file.close())
+            self.file.file.close()
+            return url
 
     def _save_file(self):
-        return "LD:/some_dummy_path"
+        url = self._url()
+        try:
+            with open(url, "wb") as buffer:
+                shutil.copyfileobj(self.file.file, buffer)
+        finally:
+            self.file.file.close()
+            return url
 
     def save(self, *args, **kwargs):
         # if settings.USE_S3:
@@ -350,78 +358,3 @@ class Upload:
         url = self._image() if  self.file.content_type.split("/")[0]=="image" else self._save_file()
         url = '/'+os.path.relpath(url, BASE_DIR) 
         return f"S3:{url}" if settings.USE_S3 else f"LD:{url}"
-
-# from starlette.endpoints import WebSocketEndpoint
-
-# class App(WebSocketEndpoint):
-#     encoding = 'bytes'
-
-#     async def on_connect(self, websocket):
-#         await websocket.accept()
-
-#     async def on_receive(self, websocket, data):
-#         await websocket.send_bytes(b"Message: " + data)
-
-#     async def on_disconnect(self, websocket, close_code):
-#         pass
-
-
-
-# class MyCustomStringType(types.TypeDecorator):
-#     impl = types.String
-
-#     def __init__(self,  *args, upload_to, **kwargs):
-#         print(upload_to)
-#         super(MyCustomStringType, self).__init__(*args, **kwargs)
-#         # pass
-#     # super(FileField, self).__init__(type_=String, default='some', *args, **kwargs)
-
-#     def process_bind_param(self, value, dialect):
-#         # do file processing here
-#         return "PREFIX:" + str(value)
-
-#     def process_result_value(self, value, dialect):
-#         # add app url prefix here
-#         return value[7:]
-#         # 
-
-# from sqlalchemy.schema import Column
-# from sqlalchemy import Integer, String
-
-# class FileField(Column):
-#     def __init__(self, *args, upload_to, **kwargs):
-#         super(FileField, self).__init__(type_=String, default='some', *args, **kwargs)
-        # self.__call__()
-#         # self._value_map = None
-#         # self.value_map = None
-#         # self._excel_column_name = None
-#         # self.excel_column_name = 'some'
-        
-    # def __call__(self):
-    #     print('ds')
-#     # @property
-#     # def excel_column_name(self):
-#     #     if self._excel_column_name is None:
-#     #         return self.name
-#     #     else:
-#     #         return self._excel_column_name
-
-#     # @excel_column_name.setter
-#     # def excel_column_name(self, n):
-#     #     self._excel_column_name = n
-
-#     @property
-#     def value_map(self):
-#         return (lambda x: x+'some_data') if self._value_map is None else self._value_map
-
-#     @value_map.setter
-#     def value_map(self, fn):
-#         # print(fn)
-#         if callable(fn) or fn is None:
-#             self._value_map = fn
-#         else:
-#             raise ValueError('ExcelColumn.value_map must be callable.')
-
-# class Storage(str, enum.Enum):
-#     s3 = 's3'
-#     fs = 'fs'

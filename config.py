@@ -17,9 +17,9 @@ os.environ['DOC'] = ''
 JWT_ALGORITHM = 'HS256'
 
 UPLOAD_EXTENSIONS = {
-    "IMAGE":[".jpeg", ".jpg", ".bmp", ".gif"],
+    "IMAGE":[".jpeg", ".jpg", ".bmp", ".gif", ".png", ".JPEG", ".JPG", ".BMP", ".GIF", ".PNG",],
     "VIDEO":[".mp4", ".avi", ".mpeg"],
-    "AUDIO":[".mp3", ".aac", ".png", ".wav"],
+    "AUDIO":[".mp3", ".aac", ".wav"],
     "DOCUMENT":[".pdf", ".csv", ".doc", ".docx", ".eot", ".txt", ".xls", ".xlsx"],
 }
 

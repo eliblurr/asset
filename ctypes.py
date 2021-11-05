@@ -1,4 +1,5 @@
 import sqlalchemy.types as types
+from config import settings
 from cls import Upload
 
 class File(types.TypeDecorator):
