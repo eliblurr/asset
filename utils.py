@@ -3,9 +3,9 @@ from inspect import Parameter, signature
 from datetime import timedelta, datetime
 from math import ceil, floor, log2
 from secrets import token_urlsafe
+import jwt, shutil, logging
 from fastapi import Form
 from passlib import pwd
-import jwt, shutil
 
 def create_jwt(data:dict, exp:timedelta=None):
     data.update({"exp": datetime.utcnow()+exp if exp else datetime.utcnow()+timedelta(minutes=settings.DEFAULT_TOKEN_DURATION_IN_MINUTES)})
@@ -71,12 +71,15 @@ def v_2n(n):
     assert ceil(log2(n)) == floor(log2(n)), f'{n} is not a power 2'
     return n
 
-def delete_file_or_folder(path):
+def delete_path(path):
     try:
-        shutil.rmtree(mydir)
+        if os.path.isfile(path):
+            os.remove(path)
+        elif os.path.isdir(path):
+            shutil.rmtree(path)
     except OSError as e:
-        print ("Error: %s - %s." % (e.filename, e.strerror))
-    pass
+        logger = logging.getLogger("eAsset.main")
+        logger.error("Error: %s - %s." % (e.filename, e.strerror))
 
 sum_ls = lambda ls : sum(ls)
 
