@@ -15,14 +15,6 @@ async def create(request:Request, payload:Union[schemas.CreateUser, List[schemas
     if obj:
         urls = [act_url(request.base_url, user.id, "users") for user in obj] if isinstance(obj, list) else act_url(request.base_url, obj.id, "users")
     return obj
-
-# @router.post('/files', description='create users from file', response_model=Union[schemas.User, List[schemas.User], list], status_code=201, name='User Account')
-# async def create_from_file(request:Request, file:UploadFile=File(...), db:Session=Depends(get_db)):
-#     rows = await FileReader(file, ['email', 'password']).read()
-#     obj = await crud.bk_create(rows, db)
-#     if obj:
-#         urls = [act_url(request.base_url, user.id, "users") for user in obj] if isinstance(obj, list) else act_url(request.base_url, obj.id, "users")
-#     return obj
         
 @router.get('/', description='', response_model=schemas.UserList, name='User Account')
 @ContentQueryChecker(crud.user.model.c(), None)
