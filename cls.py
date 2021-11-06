@@ -6,6 +6,7 @@ from inspect import Parameter, Signature, signature
 from fastapi import Query, WebSocket, HTTPException
 from constants import DT_X, Q_X, SUPPORTED_EXT
 from psycopg2.errors import UndefinedTable
+from services.aws import s3_upload
 from sqlalchemy.orm import Session
 from functools import wraps
 from pathlib import Path
@@ -15,17 +16,13 @@ from io import BytesIO
 from PIL import Image
 from config import *
 
-from services.aws import s3_upload
-
 class CRUD:
     def __init__(self, model):
         self.model = model
 
-    async def create(self, payload, db:Session, images=None):
+    async def create(self, payload, db:Session, **kw):
         try:
-            obj = self.model(**schema_to_model(payload))
-            if images:
-                pass
+            obj = self.model(**schema_to_model(payload), **kw)
             db.add(obj)
             db.commit()
             db.refresh(obj) 
@@ -202,7 +199,7 @@ class ContentQueryChecker:
         params = list(sig._parameters.values())
         del params[-1]
         sort_str = "|".join([f"{x[0]}|-{x[0]}" for x in self._cols]) if self._cols else None
-        q_str = "|".join([x[0] for x in self._cols]) if self._cols else None
+        q_str = "|".join([x[0] for x in self._cols if x[0]!='password']) if self._cols else None
         if self._cols:
             params.extend([Parameter(param[0], Parameter.KEYWORD_ONLY, annotation=param[1], default=Query(None)) for param in self._cols if param[1]!=datetime.datetime])
             params.extend([
@@ -254,39 +251,40 @@ class ConnectionManager:
         pass
 
 class FileReader:
-    def __init__(self, supported_extensions:list=[]):
+    def __init__(self, file, header, supported_extensions:list=[]):
+        self.file=file
+        self.header = header
         self._supported_ext = SUPPORTED_EXT
         self._supported_ext.extend(supported_extensions)
         self._supported_ext = list(set(self._supported_ext))
 
-    def _ext(self, file):
-        return pathlib.Path(file.filename).suffix
+    def _ext(self):
+        return pathlib.Path(self.file.filename).suffix
 
-    def _csv(self, file, header, to_dict:bool=True):
-        df = pd.read_csv(file.file, usecols=header)[header]
-        return self.validate_rows(df, header, to_dict)
+    def _csv(self, to_dict:bool=True):
+        df = pd.read_csv(self.file.file, usecols=self.header)[self.header]
+        return self.validate_rows(df, to_dict)
        
-    def _excel(self, file, header, to_dict:bool=True):
-        
-        df = pd.read_excel(file.file, usecols=header)[header]
-        return self.validate_rows(df, header, to_dict)
+    def _excel(self, to_dict:bool=True):
+        df = pd.read_excel(self.file.file, usecols=self.header)[self.header]
+        return self.validate_rows(df, to_dict)
     
-    def verify_ext(self, file):
-        return self._ext(file) in self._supported_ext
+    def verify_ext(self):
+        return self._ext() in self._supported_ext
 
-    def validate_rows(self, df, header, to_dict:bool=True):
+    def validate_rows(self, df, to_dict:bool=True):
         if to_dict:
             return list(df.to_dict(orient="index").values())
-        return np.array(df[header].replace(np.nan, None).drop_duplicates())
+        return np.array(df[self.header].replace(np.nan, None).drop_duplicates())
 
-    async def read(self, file, header, to_dict:bool=True):
+    async def read(self, to_dict:bool=True):
         try:
-            if not self.verify_ext(file):
+            if not self.verify_ext():
                 raise FileNotSupported('file extension not supported')
-            if self._ext(file) in [".csv",".CSV"]:
-                rows = self._csv(file, header, to_dict)
+            if self._ext() in [".csv",".CSV"]:
+                rows = self._csv(to_dict)
             else:
-                rows = self._excel(file, header, to_dict)
+                rows = self._excel(to_dict)
             return rows
         finally:
             await file.close()

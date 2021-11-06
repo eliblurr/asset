@@ -3,9 +3,10 @@ from sqlalchemy import Column, String, event, Boolean
 from database import Base, TenantBase, engine
 from mixins import BaseMixin, HashMethodMixin
 from sqlalchemy.orm import validates
+from utils import gen_hex, today_str
 from constants import PHONE, EMAIL
-from utils import gen_hex
 from passlib import pwd
+from ctypes import File
 import re
 
 class Tenant(BaseMixin, HashMethodMixin, Base):
@@ -21,11 +22,11 @@ class Tenant(BaseMixin, HashMethodMixin, Base):
     postal_address = Column(String, nullable=True)
     digital_address = Column(String, nullable=True)
     title = Column(String, nullable=False, unique=True)
-    logo_url = Column(String, nullable=False, unique=True, default=pwd.genword)
-    bg_image_url = Column(String, nullable=False, unique=True, default=pwd.genword)
     sub_domain_id = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=False, default=pwd.genword)
     key = Column(String, nullable=False, unique=True, default=gen_hex)
+    bg_image = Column(File(upload_to=f'tenants/{today_str()}/images/background/'))
+    logo = Column(File(upload_to=f'tenants/{today_str()}/images/logo/', size=(100,100)))
     
     @validates('email')
     def validate_email(self, key, value):
@@ -36,16 +37,6 @@ class Tenant(BaseMixin, HashMethodMixin, Base):
     def validate_phone(self, key, value):
         assert re.search(PHONE, value), 'invalid phone format for phone'
         return value
-
-#     _email = Column("email", String)
-
-#     @hybrid_property
-#     def email(self):
-#         return self._email
-
-#     @email.setter
-#     def email(self, email):
-#         self._email = email
 
 @event.listens_for(Tenant, "after_insert")
 def create_tenant_schema(mapper, connection, target):
@@ -62,3 +53,6 @@ def hash_password(mapper, connection, target):
 @event.listens_for(Tenant, 'after_delete')
 def receive_after_delete(mapper, connection, target):
     connection.engine.execute(DropSchema(target.key, cascade=True))
+    if target.url[:3]=='S3:':
+        s3_delete.delay(target.url[3:])
+    _delete_path(target.url[3:])

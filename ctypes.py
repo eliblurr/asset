@@ -5,7 +5,7 @@ from cls import Upload
 class File(types.TypeDecorator):
     impl = types.String
 
-    def __init__(self,  *args, upload_to, size, **kwargs):
+    def __init__(self,  *args, upload_to, size=None, **kwargs):
         super(File, self).__init__(*args, **kwargs)
         self.upload_to = upload_to
         self.size = size

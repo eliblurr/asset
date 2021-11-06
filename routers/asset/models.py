@@ -1,16 +1,13 @@
-# from __future__ import annotations
-from sqlalchemy import Column, String, Integer, CheckConstraint, Boolean, Float, DateTime, Enum, ForeignKey
+from sqlalchemy import Column, String, Integer, CheckConstraint, Boolean, Float, DateTime, Enum, ForeignKey, event
+from clry.tasks import s3_delete_bg, _delete_path
 from sqlalchemy.ext.hybrid import hybrid_property
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import relationship
-
-# from ..department.models import Department
-# from routers.department import Department
-# from routers import Department
-# from routers.department.models import Department
 from database import TenantBase
 from mixins import BaseMixin
+from utils import today_str
 from passlib import pwd
+from ctypes import File
 import enum, datetime
 
 class DepreciationAlgorithm(enum.Enum):
@@ -22,9 +19,9 @@ class Asset(BaseMixin, TenantBase):
     __tablename__ = "assets"
     __table_args__ = (
         CheckConstraint('salvage_price<=price', name='_price_salvage_price_'),
-        CheckConstraint('decommission id TRUE AND decommission_justification IS NOT NULL'),
+        CheckConstraint('decommission is TRUE AND decommission_justification IS NOT NULL'),
         CheckConstraint('numerable is TRUE AND quantity IS NOT NULL', name='_quantity_numerable_'),
-        CheckConstraint('depreciation_algorithm="declining_balance_depreciation" AND dep_factor IS NOT NULL'),
+        CheckConstraint("depreciation_algorithm='declining_balance_depreciation' AND dep_factor IS NOT NULL", name='_verify_dpa_'),
     )
 
     make = Column(String, nullable=False)
@@ -48,6 +45,8 @@ class Asset(BaseMixin, TenantBase):
     decommission = Column(Boolean, default=False, nullable=False)
     code = Column(String, nullable=False, unique=True, default=pwd.genword)
     depreciation_algorithm = Column(Enum(DepreciationAlgorithm), nullable=True)
+    documents = relationship("AssetDocument", uselist=True, cascade="all, delete")
+    images = relationship("AssetImage", uselist=True, cascade="all, delete")
     department = relationship("Department", back_populates="assets")
     inventory = relationship("Inventory", back_populates="assets")
     vendor = relationship("Vendor", back_populates="assets_sold")
@@ -78,17 +77,27 @@ class Asset(BaseMixin, TenantBase):
         
         return {'percentage':percentage, 'amount':amount}
 
+class AssetImage(BaseMixin, TenantBase):
+    '''Asset Images Model'''
+    __tablename__ = "asset_images"
 
-#     folder = Column(String, nullable=True)
-#     images = relationship('ItemImage', backref="item", uselist=True, cascade="all, delete")
-#     documents
+    url = Column(File(upload_to=f'{today_str()}/images/'))
+    asset_id = Column(Integer, ForeignKey('assets.id'))
 
-# class ItemImage(BaseMixin, Base):
-#     '''Item Images Model'''
-#     __tablename__ = "item_images"
+class AssetDocument(BaseMixin, TenantBase):
+    __tablename__ = "asset_documents"
 
-#     item_id = Column(Integer, ForeignKey('items.id'), primary_key=True)
-#     small = Column(String, nullable=True)
-#     detail = Column(String, nullable=True)
-#     listquad = Column(String, nullable=True)
-#     thumbnail = Column(String, nullable=True)
+    url = Column(File(upload_to=f'{today_str()}/'))
+    asset_id = Column(Integer, ForeignKey('assets.id'))
+
+@event.listens_for(AssetImage, 'after_delete')
+def receive_after_delete(mapper, connection, target):
+    if target.url[:3]=='S3:':
+        s3_delete.delay(target.url[3:])
+    _delete_path(target.url[3:])
+
+@event.listens_for(AssetDocument, 'after_delete')
+def receive_after_delete(mapper, connection, target):
+    if target.url[:3]=='S3:':
+        s3_delete.delay(target.url[3:])
+    _delete_path(target.url[3:])

@@ -41,6 +41,8 @@ class UpdateTenant(BaseModel):
 class Tenant(TenantBase):
     id: int
     key: str
+    logo: str
+    bg_image: str
     created: datetime
     updated: datetime
 

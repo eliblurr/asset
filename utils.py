@@ -1,6 +1,6 @@
+from datetime import timedelta, datetime, date
 from config import JWT_ALGORITHM, settings
 from inspect import Parameter, signature
-from datetime import timedelta, datetime
 from math import ceil, floor, log2
 from secrets import token_urlsafe
 import jwt, shutil, logging
@@ -81,6 +81,7 @@ def delete_path(path):
         logger = logging.getLogger("eAsset.main")
         logger.error("Error: %s - %s." % (e.filename, e.strerror))
 
+today = date.today()
 sum_ls = lambda ls : sum(ls)
-
+today_str =  lambda: today.strftime("%Y/%m/%d")
 act_url = lambda base_url, id, userType: f"""{base_url}{settings.ACCOUNT_ACTIVATION_PATH}?token={create_jwt(data={'id':id, "userType":userType},exp=timedelta(minutes=settings.ACTIVATION_TOKEN_DURATION_IN_MINUTES))}"""

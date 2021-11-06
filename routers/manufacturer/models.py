@@ -54,7 +54,7 @@ def merge_metadata(*original_metadata) -> MetaData:
     
     return merged
 
-print(merge_metadata(TenantBase.metadata, Base.metadata).tables.keys())
+# print(merge_metadata(TenantBase.metadata, Base.metadata).tables.keys())
 
 @event.listens_for(Manufacturer, 'before_insert')
 @event.listens_for(Manufacturer, 'before_update')

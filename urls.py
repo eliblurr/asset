@@ -92,65 +92,6 @@ async def custom_swagger_ui_html():
         swagger_favicon_url="/static/images/logo.png",
     )
 
-from ctypes import File
-from sqlalchemy import Column
-from fastapi import Depends, File as F, UploadFile
-from database import Base, SessionLocal
-from dependencies import get_db
-from mixins import BaseMixin
-from datetime import date
-from services.aws import s3_upload, s3_delete
-today = date.today()
-
-class TestDB(BaseMixin, Base):
-    '''TestDB Model'''
-    __tablename__ = "test_db"
-
-    file = Column(File(upload_to=f'{today.strftime("%Y/%m/%d")}/images/', size=(100,100)))
-
-# Base.metadata.create_all(bind=engine)
-
-@app.post('/custom-file')
-def fi(file:UploadFile=F(None), db=Depends(get_db)):
-    try:
-        # s3_upload(file, object_name='uploads')
-        s3_delete('uploads/media/2021/11/05/images/photo.jpg')
-        # obj = TestDB(file=file)
-        # db.add(obj)
-        # db.commit()
-    except Exception as e:
-        print(e)
-
-# obj = TestDB(some_str=24)
-
-# print(obj.some_str)
-
-# db = SessionLocal()
-
-# db.add(obj)
-# db.commit()
-
-# res = [res.file for res in db.query(TestDB).all()]
-
-# print(res)
-
-# from fastapi import File, UploadFile
-# from cls import FileReader
-# from constants import SUPPORTED_EXT
-# from exceptions import FileNotSupported
- 
-# f_reader = FileReader([".csv", ".CSV", ".xlsx", ".xlsm", ".xls", ".xml", ".xla"])
-
-# @app.post("/file-op")
-# async def create_upload_file(file: UploadFile = File(...)):
-#     try:
-#         a = await f_reader.read(file, ["Gender", "Last Name", "First Name",], to_dict=True)
-#         print(a)
-#         # return {"filename": file.content_type}
-#     except Exception as e:
-#         print("%s: %s", e.__class__, e)
-
-
 # @api.websocket("/ws/{client_id}")
 # async def websocket_endpoint(websocket:WebSocket, client_id:int):
 #     await manager.connect(websocket, client_id)
@@ -200,11 +141,9 @@ def fi(file:UploadFile=F(None), db=Depends(get_db)):
 # </html>
 # """
 
-
 # @app.get("/socket")
 # async def get():
 #     return HTMLResponse(html)
-
 
 # @app.websocket("/ws")
 # async def websocket_endpoint(websocket: WebSocket):
@@ -214,72 +153,3 @@ def fi(file:UploadFile=F(None), db=Depends(get_db)):
 #     while True:
 #         data = await websocket.receive_text()
 #         await websocket.send_text(f"Message text was: {data}")
-
-# send_email
-
-# from services.email import email, Mail
-
-# id={'id':234243423}
-
-# mail = Mail(
-#     subject='Some Sub',
-#     recipients=['a@a.com', 'b@b.com'],
-#     template_name="email.html",
-#     body=id, 
-# )
-
-# @app.post('/email') 
-# async def send_email():
-#     try:
-#         await email(mail.dict())
-#     except Exception as e:
-#         print(e)
-
-# from clry import add, email
-
-# print(mail.json())
-
-# add.delay()
-# try:
-#     email.delay(mail.dict())
-# except Exception as e:
-#     print(e)
-
-# logger = logging.getLogger("eAsset.main")
-
-# '''/////////////////////'''
-
-# from sqlalchemy import Column, String, Integer, CheckConstraint
-# from fastapi import Depends, File as F, UploadFile
-# from database import Base, SessionLocal
-# from dependencies import get_db
-# from mixins import BaseMixin
-# from cls import File 
-
-    
-#     file = FileField(upload_to='/some_path')
-
-# print(
-#     # dir(TestDB),
-#     # [(c.name, c.type.python_type) for c in TestDB.__table__.columns],
-#     # TestDB.__table__.columns,
-#     # TestDB.__mapper__.c['file'],
-#     sep='\n'
-# )
-# # return [(c.name, c.type.python_type) if c.name!='__ts_vector__' else (c.name, None) for c in cls.__table__.columns]
-# # TableB.__mapper__.c['common_column'].excel_column_name
-
-# Base.metadata.create_all(bind=engine)
-
-# # TestDB.file()
-
-# # obj = TestDB(file=TestDB.file())
-# # obj()
-# # print(dir(obj))
-
-# @app.post('/custom-field')
-# def custom_field(db=Depends(get_db)):
-#     obj = TestDB(file='sdsds')
-    # db.add(obj)
-    # db.commit()
-#     pass

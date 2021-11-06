@@ -1,6 +1,7 @@
 from services.aws import s3_upload, s3_delete
 import asyncio, logging, celery as C
 from services.email import email
+from utils import delete_path
 from .celery import app
 
 logger = logging.getLogger("eAsset.main")
@@ -25,3 +26,7 @@ def s3_upload_bg(self, *args, **kwargs):
 @app.task(name='s3_delete', base=TaskManager, bind=True, acks_late=True, task_time_limit=200, task_soft_time_limit=200, default_retry_delay=10 * 60, retry_backoff=True, retry_kwargs={'max_retries': 2, 'countdown': 2}) 
 def s3_delete_bg(self, *args, **kwargs):
     s3_delete(*args, **kwargs)
+
+@app.task(name='path_delete', base=TaskManager, bind=True, acks_late=True, task_time_limit=200, task_soft_time_limit=200, default_retry_delay=10 * 60, retry_backoff=True, retry_kwargs={'max_retries': 2, 'countdown': 2}) 
+def _delete_path(self, *args, **kwargs):
+    delete_path(*args, **kwargs)
