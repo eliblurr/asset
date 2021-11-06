@@ -81,6 +81,9 @@ def delete_path(path):
         logger = logging.getLogger("eAsset.main")
         logger.error("Error: %s - %s." % (e.filename, e.strerror))
 
+def timestamp_to_datetime(timestamp):
+    return datetime.fromtimestamp(timestamp)
+
 today = date.today()
 sum_ls = lambda ls : sum(ls)
 today_str =  lambda: today.strftime("%Y/%m/%d")
