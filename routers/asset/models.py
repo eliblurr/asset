@@ -26,12 +26,11 @@ class Asset(BaseMixin, TenantBase):
     )
 
     make = Column(String, nullable=False)
-    price = Column(Float, nullable=False)
     title = Column(String, nullable=False)
     model = Column(String, nullable=False)
+    lifespan = Column(Float, nullable=False)
     dep_factor = Column(Float, nullable=True)
     metatitle = Column(String, nullable=True)
-    lifespan = Column(Integer, nullable=False)
     description = Column(String, nullable=True)
     numerable = Column(Boolean, nullable=False)
     consumable = Column(Boolean, nullable=False)
@@ -43,6 +42,7 @@ class Asset(BaseMixin, TenantBase):
     decommission_justification = Column(String, nullable=True)
     serial_number = Column(String, nullable=False, unique=True)
     decommission = Column(Boolean, default=False, nullable=False)
+    price = Column(Float, CheckConstraint('price>=0'), nullable=False)
     code = Column(String, nullable=False, unique=True, default=pwd.genword)
     quantity = Column(Integer, CheckConstraint('quantity>0'), nullable=True)
     depreciation_algorithm = Column(Enum(DepreciationAlgorithm), nullable=True)
@@ -102,3 +102,11 @@ def receive_after_delete(mapper, connection, target):
     if target.url[:3]=='S3:':
         s3_delete.delay(target.url[3:])
     _delete_path(target.url[3:])
+
+@event.listens_for(Asset, 'after_insert')
+@event.listens_for(Asset, 'after_update')
+def create_warranty_notification(mapper, connection, target):
+    pass
+    # if target.password:
+    #     connection.execute(User.__table__.update().values(password=target.generate_hash(target.password)))
+    # after_create to set warranty deadline

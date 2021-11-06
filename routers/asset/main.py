@@ -21,7 +21,7 @@ async def create(payload:schemas.CreateAsset=Depends(schemas.CreateAsset.as_form
         documents = [models.AssetDocument(url=document) for document in documents]
     if images:
         images = [models.AssetImage(url=image) for image in images]
-    return await crud.asset.bk_create(payload, db) if isinstance(payload, list) else await crud.asset.create(payload, db, images=images, documents=documents)
+    return await crud.bk_create(payload, db) if isinstance(payload, list) else await crud.asset.create(payload, db, images=images, documents=documents)
 
 @router.get('/', description='', response_model=schemas.AssetList, name='Asset')
 @ContentQueryChecker(crud.asset.model.c(), None)
@@ -34,7 +34,9 @@ async def read_by_id(id:int, fields:List[str]=Query(None, regex=f'({"|".join([x[
 
 @router.patch('/{id}', description='', response_model=schemas.Asset, name='Asset')
 async def update(id:int, payload:schemas.UpdateAsset, db:Session=Depends(get_db)):
-    return await crud.asset.update(id, payload, db)
+    if payload.warranty_deadline:
+        await crud.update_warranty(id, payload.warranty_deadline, db)
+    return await crud.asset.update(id, payload.copy(exclude={'warranty_deadline'}), db)
 
 @router.delete('/{id}', description='', name='Asset')
 async def delete(id:int, db:Session=Depends(get_db)):
