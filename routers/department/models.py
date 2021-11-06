@@ -18,6 +18,6 @@ class Department(BaseMixin, TenantBase):
     inventories = relationship('Inventory', back_populates="department")
     branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
     head_of_department_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    staff = relationship('User', back_populates="department", foreign_keys="[User.department_id]")
-    head_of_department = relationship('User', back_populates="department", foreign_keys="[Department.head_of_department_id]")
+    head_of_department = relationship('User', foreign_keys=[head_of_department_id])
+    staff = relationship('User', back_populates="department", foreign_keys='[User.department_id]')
 #     requests = relationship("Request", uselist=True, backref='department', cascade=("all, delete")

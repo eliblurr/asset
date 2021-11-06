@@ -24,6 +24,9 @@ class User(BaseMixin, HashMethodMixin, TenantBase):
     proposals = relationship("Proposal", back_populates="author")
     branch = relationship("Branch", back_populates="staff")
     branch_id = Column(Integer, ForeignKey('branches.id'))
+    department_id = Column(Integer, ForeignKey('departments.id'))
+    department = relationship("Department", back_populates="staff", foreign_keys=[department_id])
+    
     status = 1
 
     @validates('email')

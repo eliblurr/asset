@@ -261,33 +261,33 @@ class FileReader:
     def _ext(self):
         return pathlib.Path(self.file.filename).suffix
 
-    def _csv(self, to_dict:bool=True):
+    def _csv(self, to_dict:bool=True, replace_nan_with=None):
         df = pd.read_csv(self.file.file, usecols=self.header)[self.header]
-        return self.validate_rows(df, to_dict)
+        return self.validate_rows(df, to_dict, replace_nan_with=replace_nan_with)
        
-    def _excel(self, to_dict:bool=True):
+    def _excel(self, to_dict:bool=True, replace_nan_with=None):
         df = pd.read_excel(self.file.file, usecols=self.header)[self.header]
-        return self.validate_rows(df, to_dict)
+        return self.validate_rows(df, to_dict, replace_nan_with=replace_nan_with)
     
     def verify_ext(self):
         return self._ext() in self._supported_ext
 
-    def validate_rows(self, df, to_dict:bool=True):
+    def validate_rows(self, df, to_dict:bool=True, replace_nan_with=None):
         if to_dict:
-            return list(df.to_dict(orient="index").values())
-        return np.array(df[self.header].replace(np.nan, None).drop_duplicates())
+            return [{k:None if pd.isna(v) else v for (k,v) in row.items()} for row in df.to_dict(orient="records")] if not replace_nan_with else df.fillna(replace_nan_with).to_dict(orient="records")
+        return [[None if pd.isna(item) else item for item in row] for row in np.array(df[self.header].drop_duplicates())] if not replace_nan_with else np.array(df[self.header].fillna(replace_nan_with).drop_duplicates())
 
-    async def read(self, to_dict:bool=True):
+    async def read(self, to_dict:bool=True, replace_nan_with=None):
         try:
             if not self.verify_ext():
                 raise FileNotSupported('file extension not supported')
             if self._ext() in [".csv",".CSV"]:
-                rows = self._csv(to_dict)
+                rows = self._csv(to_dict=to_dict, replace_nan_with=replace_nan_with)
             else:
-                rows = self._excel(to_dict)
+                rows = self._excel(to_dict=to_dict, replace_nan_with=replace_nan_with)
             return rows
         finally:
-            await file.close()
+            await self.file.close()
 
 class Upload:
     def __init__(self, file, upload_to, size=None):

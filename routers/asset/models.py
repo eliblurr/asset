@@ -21,6 +21,7 @@ class Asset(BaseMixin, TenantBase):
         CheckConstraint('salvage_price<=price', name='_price_salvage_price_'),
         CheckConstraint('decommission is TRUE AND decommission_justification IS NOT NULL'),
         CheckConstraint('numerable is TRUE AND quantity IS NOT NULL', name='_quantity_numerable_'),
+        CheckConstraint('COALESCE(inventory_id, department_id) IS NOT NULL', name='_at_least_inv_or_dep_'),
         CheckConstraint("depreciation_algorithm='declining_balance_depreciation' AND dep_factor IS NOT NULL", name='_verify_dpa_'),
     )
 
@@ -29,7 +30,6 @@ class Asset(BaseMixin, TenantBase):
     title = Column(String, nullable=False)
     model = Column(String, nullable=False)
     dep_factor = Column(Float, nullable=True)
-    quantity = Column(Integer, nullable=True)
     metatitle = Column(String, nullable=True)
     lifespan = Column(Integer, nullable=False)
     description = Column(String, nullable=True)
@@ -44,6 +44,7 @@ class Asset(BaseMixin, TenantBase):
     serial_number = Column(String, nullable=False, unique=True)
     decommission = Column(Boolean, default=False, nullable=False)
     code = Column(String, nullable=False, unique=True, default=pwd.genword)
+    quantity = Column(Integer, CheckConstraint('quantity>0'), nullable=True)
     depreciation_algorithm = Column(Enum(DepreciationAlgorithm), nullable=True)
     documents = relationship("AssetDocument", uselist=True, cascade="all, delete")
     images = relationship("AssetImage", uselist=True, cascade="all, delete")
@@ -61,19 +62,19 @@ class Asset(BaseMixin, TenantBase):
         amount, percentage=0, 0
         years = relativedelta(datetime.datetime.utcnow(), self.created_at).years
         if years >= self.lifespan:
-            return {'percentage':(self.amount-self.salvage_amount)/self.amount, 'amount':self.salvage_amount}
+            return {'percentage':(self.price-self.salvage_price)/self.price, 'amount':self.salvage_price}
 
         if self.depreciation_algorithm == DepreciationAlgorithm.declining_balance_depreciation:
-            bal = self.amount
+            bal = self.price
             annual_dep_rate = 1/self.lifespan
             for i in range(years):   
                 annual_dep_amount = bal * annual_dep_rate * self.dep_factor
                 bal -= annual_dep_amount     
-            percentage = (self.amount-bal)/self.amount
-            amount = self.amount-bal
+            percentage = (self.price-bal)/self.price
+            amount = self.price-bal
         elif self.depreciation_algorithm == DepreciationAlgorithm.straight_line_depreciation:
-            percentage = years * (((self.amount-self.salvage_amount)/self.lifespan)/self.amount)
-            amount = years * ((self.amount-self.salvage_amount)/self.lifespan)
+            percentage = years * (((self.price-self.salvage_price)/self.lifespan)/self.price)
+            amount = years * ((self.price-self.salvage_price)/self.lifespan)
         
         return {'percentage':percentage, 'amount':amount}
 
