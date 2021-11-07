@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
 from dependencies import get_db
@@ -12,13 +12,21 @@ async def create(payload:schemas.CreateManufacturer, db:Session=Depends(get_db))
     return await crud.manufacturer.create(payload, db)
 
 @router.get('/', description='', response_model=schemas.ManufacturerList, name='Manufacturer')
-@ContentQueryChecker(crud.manufacturer.model.c(), None)
-async def read(db:Session=Depends(get_db), **params):
-    return await crud.manufacturer.read(params, db)
+@ContentQueryChecker(crud.manufacturer().model.c(), None)
+async def read(request:Request, db:Session=Depends(get_db), **params):
+    return await crud.manufacturer(
+        request.headers.get('tenant_key', False)
+    ).read(
+        params, db, use_extra_models=request.headers.get('scope', None)=='global'
+    )
 
 @router.get('/{id}', description='', response_model=Union[schemas.Manufacturer, dict], name='Manufacturer')
-async def read_by_id(id:str, fields:List[str]=Query(None, regex=f'^({"|".join([x[0] for x in crud.manufacturer.model.c()])})$'), db:Session=Depends(get_db)):
-    return await crud.manufacturer.read_by_id(id, db, fields)
+async def read_by_id(request:Request, id:str, fields:List[str]=Query(None, regex=f'^({"|".join([x[0] for x in crud.manufacturer().model.c()])})$'), db:Session=Depends(get_db)):
+    return await crud.manufacturer(
+        request.headers.get('tenant_key', None)
+    ).read_by_id(
+        id, db, fields, use_extra_models=request.headers.get('scope', None)=='global'
+    )
 
 @router.patch('/{id}', description='', response_model=schemas.Manufacturer, name='Manufacturer')
 async def update(id:str, payload:schemas.UpdateManufacturer, db:Session=Depends(get_db)):

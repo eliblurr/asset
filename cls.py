@@ -1,11 +1,12 @@
 import enum, re, datetime, pathlib, pandas as pd, numpy as np, os, asyncio, shutil
 from exceptions import MaxOccurrenceError, FileNotSupported, UploadNotAllowed
+from constants import DT_X, Q_X, SUPPORTED_EXT, Q_STR_X, SORT_STR_X
 from sqlalchemy.exc import ProgrammingError, IntegrityError
 from utils import schema_to_model, http_exception_detail
 from inspect import Parameter, Signature, signature
 from fastapi import Query, WebSocket, HTTPException
-from constants import DT_X, Q_X, SUPPORTED_EXT
 from psycopg2.errors import UndefinedTable
+from sqlalchemy import and_, or_, func
 from services.aws import s3_upload
 from sqlalchemy.orm import Session
 from functools import wraps
@@ -17,8 +18,9 @@ from PIL import Image
 from config import *
 
 class CRUD:
-    def __init__(self, model):
+    def __init__(self, model, extra_models:list=None):
         self.model = model
+        self.extra_models = extra_models
 
     async def create(self, payload, db:Session, **kw):
         try:
@@ -38,11 +40,21 @@ class CRUD:
                 ),
             )
 
-    async def read(self, params, db:Session):
-        try:
-            fields = [getattr(self.model, field.strip()) for field in params["fields"]]  if params["fields"]!=None else [self.model]
+    def _base(self, fields, db:Session, use_extra_models:bool=False):
+        b_fields = [getattr(self.model, field.strip()) for field in fields]  if fields!=None else [self.model] 
+        base = db.query(*b_fields)
+        if use_extra_models and self.extra_models:
+            if all([self.model.c()==model.c() for model in self.extra_models]):
+                q_fields = [db.query(*[getattr(model, field.strip()) for field in fields]) for model in self.extra_models] if fields!=None else [db.query(model) for model in self.extra_models]
+                return base.union(*q_fields)
+            raise ValueError('conflicts in model classes')
+        return base
 
-            base = db.query(*fields)
+    async def read(self, params, db:Session, use_extra_models:bool=False):
+        try:
+            # fields = [getattr(self.model, field.strip()) for field in params["fields"]]  if params["fields"]!=None else [self.model]
+
+            base = self._base(params['fields'], db, use_extra_models)   
             dt_cols = [col[0] for col in self.model.c() if col[1]==datetime.datetime]
             ex_cols = [col[0] for col in self.model.c() if col[1]==int or col[1]==bool or issubclass(col[1], enum.Enum)]
             
@@ -76,6 +88,7 @@ class CRUD:
             return {'bk_size':base.count(), 'pg_size':data.__len__(), 'data':data}
         except Exception as e:
             # log here
+            print(e)
             raise HTTPException(
                 status_code=400 if isinstance(e.__class__, UndefinedTable) else 500, 
                 detail=http_exception_detail(
@@ -84,12 +97,13 @@ class CRUD:
                 ),
             )
 
-    async def read_by_id(self, id, db:Session, fields:List[str]=None):
+    async def read_by_id(self, id, db:Session, fields:List[str]=None, use_extra_models:bool=False):
         try:
-            fields = [getattr(self.model, field.strip()) for field in fields]  if fields!=None else [self.model]
-            return db.query(*fields).filter(self.model.id==id).first()
+            # fields = [getattr(self.model, field.strip()) for field in fields]  if fields!=None else [self.model]
+            return self._base(fields, db, use_extra_models).filter(self.model.id==id).first()
         except Exception as e:
             # log here
+            print(e)
             raise HTTPException(
                 status_code=400 if isinstance(e.orig, UndefinedTable) else 500, 
                 detail=http_exception_detail(

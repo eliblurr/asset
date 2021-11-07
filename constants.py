@@ -1,5 +1,8 @@
+SORT_STR_X = r'^-'
+SORT_STR = r'(^-)?\w'
 DT_Y = r'^(lt|lte|gt|gte)'
 PHONE = r'^\+?1?\d{9,15}$'
+Q_STR_X = r'^[\w]+:[\w]+$'
 Q_X = '^[\w]+$|{cols}:[\w]+$'
 EMAIL = r'^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$'
 COLOR_HEX = r'^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$'

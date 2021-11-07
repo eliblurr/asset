@@ -11,11 +11,11 @@ class ManufacturerMixin(object):
     def __tablename__(cls):
         return "manufacturers"
     
-    email = Column(String, nullable=True)
-    contact = Column(String, nullable=True)
-    website = Column(String, nullable=True)
     metatitle = Column(String, nullable=True)
     description = Column(String, nullable=True)
+    email = Column(String, nullable=True, unique=True)
+    contact = Column(String, nullable=True, unique=True)
+    website = Column(String, nullable=True, unique=True)
     title =  Column(String, nullable=False, unique=True)
 
     @validates('email')
@@ -36,25 +36,8 @@ class ManufacturerMixin(object):
 class Manufacturer(ManufacturerMixin, BaseMixin, Base):
     '''Manufacturer Model for public schema'''
 
-class Manufacturer(ManufacturerMixin, BaseMixin, TenantBase):
+class Manufacturer2(ManufacturerMixin, BaseMixin, TenantBase):
     '''Manufacturer Model for tenant schema'''
-
-class ManufacturerView():
-    pass
-
-
-from sqlalchemy import MetaData
-    
-def merge_metadata(*original_metadata) -> MetaData:
-    merged = MetaData()
-
-    for original_metadatum in original_metadata:
-        for table in original_metadatum.tables.values():
-            table.to_metadata(merged)
-    
-    return merged
-
-# print(merge_metadata(TenantBase.metadata, Base.metadata).tables.keys())
 
 @event.listens_for(Manufacturer, 'before_insert')
 @event.listens_for(Manufacturer, 'before_update')
