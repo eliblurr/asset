@@ -17,31 +17,39 @@ class Upload(BaseModel):
     class Config:
         orm_mode = True
 
-class Validator:
-    # _service_date_ = validator('service_date', allow_reuse=True)(timestamp_to_datetime)
-    # _purchase_date_ = validator('purchase_date', allow_reuse=True)(timestamp_to_datetime)
-    # _warranty_deadline_ = validator('warranty_deadline', allow_reuse=True)(timestamp_to_datetime)
-    
-    # CheckConstraint('salvage_price<=price', name='_price_salvage_price_'),
-    # CheckConstraint('decommission is TRUE AND decommission_justification IS NOT NULL'),
-    # CheckConstraint('numerable is TRUE AND quantity IS NOT NULL', name='_quantity_numerable_'),
-    # CheckConstraint('COALESCE(inventory_id, department_id) IS NOT NULL', name='_at_least_inv_or_dep_'),
-    # CheckConstraint("depreciation_algorithm='declining_balance_depreciation' AND dep_factor IS NOT NULL", name='_verify_dpa_'),
+class Validator(BaseModel):
+    _service_date_ = validator('service_date', allow_reuse=True, check_fields=False)(timestamp_to_datetime)
+    _purchase_date_ = validator('purchase_date', allow_reuse=True, check_fields=False)(timestamp_to_datetime)
+    _warranty_deadline_ = validator('warranty_deadline', allow_reuse=True, check_fields=False)(timestamp_to_datetime)
+
+    @validator('salvage_price', check_fields=False)
+    def _check_price_(cls, v, values):
+        if v<=values['price']:
+            raise ValueError('salvage_price must be lower than price')
+        return v
    
-    @validator('department_id')
-    def _inv_dep_(cls, v, values):
+    @validator('decommission_justification', check_fields=False)
+    def _check_decommission_(cls, v, values):
+        if v == None and values['decommission']:
+            raise ValueError('decommission_justification required for decommission')
+        return v
+
+    @validator('numerable', check_fields=False)
+    def _check_numerable_(cls, v, values):
+        if v and not values['quantity']:
+            raise ValueError('quantity required for numerable')
+        return v
+
+    @validator('department_id', check_fields=False)
+    def _check_inv_dep_(cls, v, values):
+        if v == None and values['inventory_id'] == None:
+            raise ValueError('either department_id or inventory_id is required')
         if values['inventory_id']:
             return None
         return v
     
-    @validator('numerable')
-    def _num_quan_(cls, v, values):
-        if v and not values['quantity']:
-            raise ValueError('quantity required')
-        return v
-
-    @validator('depreciation_algorithm', allow_reuse=True)
-    def _df_dal_(cls, v, values):
+    @validator('depreciation_algorithm', check_fields=False)
+    def _check_d_a_(cls, v, values):
         if v==DepreciationAlgorithm.dbp and not values['dep_factor']:
             raise ValueError('declining balance depreciation requires dep_factor')
         return v
@@ -50,7 +58,6 @@ class AssetBase(BaseModel):
     make:str
     title: str
     model: str
-    numerable:bool
     consumable:bool
     serial_number:str
     code:Optional[str]
@@ -62,16 +69,17 @@ class AssetBase(BaseModel):
     decommission:Optional[bool]
     salvage_price:confloat(ge=0)
     available:Optional[bool]=True
-    service_date:datetime.datetime
+    service_date:int
     quantity:Optional[conint(ge=0)]
-    purchase_date:datetime.datetime
+    purchase_date:int
     vendor_id:Optional[conint(gt=0)]
     inventory_id:Optional[conint(gt=0)]
     dep_factor:Optional[confloat(gt=0)]
     department_id:Optional[conint(gt=0)]
     decommission_justification:Optional[str]
-    warranty_deadline:Optional[datetime.datetime] 
+    warranty_deadline:Optional[int] 
     depreciation_algorithm:Optional[DepreciationAlgorithm]
+    numerable:bool
     
     class Config:
         orm_mode = True
@@ -80,10 +88,10 @@ class AssetBase(BaseModel):
         model = m.Asset
 
 @as_form  
-class CreateAsset(AssetBase, Validator):
-    pass
+class CreateAsset(Validator, AssetBase):
+    category_ids:List[int]
     
-class UpdateAsset(BaseModel, Validator):
+class UpdateAsset(Validator, BaseModel):
     make:Optional[str]
     code:Optional[str]
     title: Optional[str]
@@ -103,11 +111,12 @@ class UpdateAsset(BaseModel, Validator):
     inventory_id:Optional[conint(gt=0)]
     department_id:Optional[conint(gt=0)]
     salvage_price:Optional[confloat(ge=0)]
-    service_date:Optional[datetime.datetime]
+    service_date:Optional[int]
     decommission_justification:Optional[str]
-    purchase_date:Optional[datetime.datetime]
-    warranty_deadline:Optional[datetime.datetime]
+    purchase_date:Optional[int]
+    warranty_deadline:Optional[int]
     depreciation_algorithm:Optional[DepreciationAlgorithm]
+    category_ids:List[int]
 
 class Asset(AssetBase):
     id: int
