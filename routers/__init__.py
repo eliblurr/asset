@@ -11,6 +11,7 @@ import routers.vendor.models
 import routers.branch.models 
 import routers.faqs.models 
 import routers.manufacturer.models 
+import routers.category.models
 
 import routers.tenant.models
 
