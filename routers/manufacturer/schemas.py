@@ -8,12 +8,9 @@ class ManufacturerBase(BaseModel):
     title: str
     metatitle: Optional[str]
     description: Optional[str]
-    email: str
-    # Optional[constr(regex=EMAIL)]
-    website: str
-    # Optional[constr(regex=URL)]
-    contact: str
-    # Optional[constr(regex=PHONE)]
+    email: constr(regex=EMAIL)
+    website: constr(regex=URL)
+    contact: constr(regex=PHONE)
 
     class Config:
         orm_mode = True
