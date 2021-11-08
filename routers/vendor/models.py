@@ -1,9 +1,11 @@
-from sqlalchemy import Column, String, CheckConstraint
+from sqlalchemy import Column, String, CheckConstraint, Integer, ForeignKey
 from sqlalchemy.orm import validates, relationship
 from constants import EMAIL, PHONE
-from database import TenantBase
+from database import TenantBase, Base
 from mixins import BaseMixin
 import re
+
+# from routers.category.models import CategoryVendor
 
 class Vendor(BaseMixin, TenantBase):
     '''Vendor Model'''
@@ -15,6 +17,10 @@ class Vendor(BaseMixin, TenantBase):
     email = Column(String, unique=True, index=True)
     contact = Column(String, unique=True, nullable=True)
     assets_sold = relationship("Asset", back_populates="vendor")
+    # categories = relationship(Category,  back_populates="categories")
+    # category_id = Column(Integer, ForeignKey('%s.categories.id'%Base.metadata.schema))
+    category_id = Column(Integer, ForeignKey('%s.categories.id'%Base.metadata.schema))
+    # secondary=CategoryVendor.__table__,
 
     @validates('email')
     def validate_email(self, key, address):
@@ -25,3 +31,5 @@ class Vendor(BaseMixin, TenantBase):
     def validate_phone(self, key, address):
         assert re.search(PHONE, address), 'invalid phone format'
         return address
+
+print('%s.categories.id'%Base.metadata.schema)
