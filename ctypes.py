@@ -16,6 +16,9 @@ class File(types.TypeDecorator):
         return url
 
     def process_result_value(self, value, dialect):
-        if value[:3]=='S3:':
-            return AWS_S3_CUSTOM_DOMAIN+value[3:]
-        return settings.BASE_URL+value[3:]
+        if value:
+            if value[:3]=='S3:':
+                return AWS_S3_CUSTOM_DOMAIN+value[3:]
+            return settings.BASE_URL+value[3:]
+        else:
+            return None

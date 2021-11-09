@@ -2,13 +2,13 @@ from sqlalchemy import Column, String, Boolean, event, Integer, ForeignKey
 from sqlalchemy.ext.hybrid import hybrid_property
 from mixins import BaseMixin, HashMethodMixin
 from sqlalchemy.orm import relationship
-from database import Base, TenantBase
+from database import Base, TenantBase, Base
 from sqlalchemy.orm import validates
 from constants import EMAIL, PHONE
 from passlib import pwd
 import re
 
-class User(BaseMixin, HashMethodMixin, TenantBase):
+class User(BaseMixin, HashMethodMixin, Base):
     '''User Model'''
     __tablename__ = "users"
 
@@ -24,8 +24,8 @@ class User(BaseMixin, HashMethodMixin, TenantBase):
     proposals = relationship("Proposal", back_populates="author")
     branch = relationship("Branch", back_populates="staff")
     branch_id = Column(Integer, ForeignKey('branches.id'))
-    department_id = Column(Integer, ForeignKey('departments.id'))
-    department = relationship("Department", back_populates="staff", foreign_keys=[department_id])
+    department_id = Column(Integer, ForeignKey('departments.id', use_alter=True))
+    department = relationship("Department", back_populates="staff", foreign_keys="User.department_id")
     
     status = 1
 

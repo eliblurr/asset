@@ -12,8 +12,18 @@ import routers.branch.models
 import routers.faqs.models 
 import routers.manufacturer.models 
 import routers.category.models
-
 import routers.tenant.models
+
+from database import Base
+
+__all__=[
+    Base
+]
+
+# print(
+#     Base.metadata.sorted_tables
+#     # [table for table in Base.metadata.sorted_tables if table.schema=='public']
+# )
 
 '''
     Do this to order the the way each model interacts with Base from database.py

@@ -1,13 +1,10 @@
-# from __future__ import annotations
 from sqlalchemy import Column, String, ForeignKey, Integer
 from sqlalchemy.orm import relationship
-# from routers.asset.models import Asset
-# from routers.asset import Asset
-from database import TenantBase
 from mixins import BaseMixin
+from database import Base
 import re
 
-class Department(BaseMixin, TenantBase):
+class Department(BaseMixin, Base):
     '''Department Model'''
     __tablename__ = 'departments'
 
@@ -18,6 +15,8 @@ class Department(BaseMixin, TenantBase):
     inventories = relationship('Inventory', back_populates="department")
     branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
     head_of_department_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    head_of_department = relationship('User', foreign_keys=[head_of_department_id])
-    staff = relationship('User', back_populates="department", foreign_keys='[User.department_id]')
+    head_of_department = relationship('User', foreign_keys="Department.head_of_department_id")
+    staff = relationship('User', back_populates="department", foreign_keys="[User.department_id]")
 #     requests = relationship("Request", uselist=True, backref='department', cascade=("all, delete")
+
+# https://stackoverflow.com/questions/64807850/sqlalchemy-multiple-one-to-one-and-one-to-many-relationships

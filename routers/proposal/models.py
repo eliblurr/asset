@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Enum, ForeignKey, Integer
 from sqlalchemy.orm import relationship
-from database import TenantBase
+from database import TenantBase, Base
 from mixins import BaseMixin
 import  enum
 
@@ -10,9 +10,10 @@ class ProposalStatus(enum.Enum):
     declined = 'declined'
     delivered = 'delivered'
 
-class Proposal(BaseMixin, TenantBase):
+class Proposal(BaseMixin, Base):
     '''Proposal Model'''
     __tablename__ = "proposals"
+    # __table_args__ = ({'schema':None},)
 
     priority = relationship("Priority")
     title = Column(String, nullable=False)

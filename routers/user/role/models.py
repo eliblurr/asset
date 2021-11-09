@@ -2,11 +2,12 @@ from mixins import BaseMixin, PermissionMixin
 from sqlalchemy import Column, String, event
 
 from sqlalchemy.orm import relationship
-from database import TenantBase
+from database import TenantBase, Base
 
-class Role(BaseMixin, PermissionMixin, TenantBase):
+class Role(BaseMixin, PermissionMixin, Base):
     '''Roles Model'''
     __tablename__ = "roles"
+    # __table_args__ = ({'schema':None},)
 
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)

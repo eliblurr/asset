@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, ForeignKey, Integer, DateTime
 from sqlalchemy.orm import relationship
-from database import TenantBase
+from database import TenantBase, Base
 from mixins import BaseMixin
 import enum
 
@@ -21,9 +21,10 @@ class TransferAction(enum.Enum):
 class Flag(enum.Enum):
     pass
 
-class Request(BaseMixin, TenantBase):
+class Request(BaseMixin, Base):
     '''Request Model'''
     __tablename__ = 'requests'
+    # __table_args__ = ({'schema':None},)
 
     # end_date = Column(DateTime, nullable=True)
     # start_date = Column(DateTime, nullable=False)

@@ -1,9 +1,10 @@
 from sqlalchemy import Column, String, Integer, CheckConstraint, Boolean, Float, DateTime, Enum, ForeignKey, event
 from clry.tasks import s3_delete_bg, _delete_path
 from sqlalchemy.ext.hybrid import hybrid_property
+from routers.category.models import CategoryAsset
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import relationship
-from database import TenantBase
+from database import TenantBase, Base
 from mixins import BaseMixin
 from utils import today_str
 from passlib import pwd
@@ -14,10 +15,11 @@ class DepreciationAlgorithm(enum.Enum):
     straight_line_depreciation = 'straight_line_depreciation'
     declining_balance_depreciation = 'declining_balance_depreciation'
 
-class Asset(BaseMixin, TenantBase):
+class Asset(BaseMixin, Base):
     '''Asset Model'''
     __tablename__ = "assets"
     __table_args__ = (
+        # {'schema':None},
         CheckConstraint('salvage_price<=price', name='_price_salvage_price_'),
         CheckConstraint('decommission is TRUE AND decommission_justification IS NOT NULL'),
         CheckConstraint('numerable is TRUE AND quantity IS NOT NULL', name='_quantity_numerable_'),
@@ -47,6 +49,7 @@ class Asset(BaseMixin, TenantBase):
     quantity = Column(Integer, CheckConstraint('quantity>0'), nullable=True)
     depreciation_algorithm = Column(Enum(DepreciationAlgorithm), nullable=True)
     documents = relationship("AssetDocument", uselist=True, cascade="all, delete")
+    categories = relationship("Category", secondary=CategoryAsset.__table__, back_populates="assets")
     images = relationship("AssetImage", uselist=True, cascade="all, delete")
     department = relationship("Department", back_populates="assets")
     inventory = relationship("Inventory", back_populates="assets")
@@ -56,7 +59,7 @@ class Asset(BaseMixin, TenantBase):
     vendor_id = Column(Integer, ForeignKey('vendors.id'))
     author_id = Column(Integer, ForeignKey('users.id'))
     author = relationship("User")
-
+    
     @hybrid_property
     def depreciation(self):
         amount, percentage=0, 0
@@ -78,18 +81,26 @@ class Asset(BaseMixin, TenantBase):
         
         return {'percentage':percentage, 'amount':amount}
 
-class AssetImage(BaseMixin, TenantBase):
+class AssetImage(BaseMixin, Base):
     '''Asset Images Model'''
     __tablename__ = "asset_images"
 
     url = Column(File(upload_to=f'{today_str()}/images/'))
     asset_id = Column(Integer, ForeignKey('assets.id'))
 
-class AssetDocument(BaseMixin, TenantBase):
+class AssetDocument(BaseMixin, Base):
     __tablename__ = "asset_documents"
 
     url = Column(File(upload_to=f'{today_str()}/'))
     asset_id = Column(Integer, ForeignKey('assets.id'))
+
+# class AssetCategory(TenantBase):
+#     '''Category Item Model'''
+#     __tablename__ = 'categories'
+
+#     asset_id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
+#     category_id = Column(Integer, ForeignKey('%s.categories.id'%Base.metadata.schema), primary_key=True)
+    
 
 @event.listens_for(AssetImage, 'after_delete')
 def receive_after_delete(mapper, connection, target):

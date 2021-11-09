@@ -369,6 +369,9 @@ class Upload:
             url = '/'+os.path.relpath(self._url(), BASE_DIR) 
             s3_upload(self.file, object_name=url) # push to celery to upload
         else:
-            url = self._image() if self.file.content_type.split("/")[0]=="image" else self._save_file()
-            url = '/'+os.path.relpath(url, BASE_DIR) 
-        return f"S3:{url}" if settings.USE_S3 else f"LD:{url}"
+            if self.file:
+                url = self._image() if self.file.content_type.split("/")[0]=="image" else self._save_file()
+                url = '/'+os.path.relpath(url, BASE_DIR) 
+            else:
+                url = None
+        return f"S3:{url}" if settings.USE_S3 else f"LD:{url}" if url else None

@@ -1,10 +1,11 @@
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
 from fastapi import FastAPI, Request, WebSocket
 from fastapi.openapi.utils import get_openapi
-from database import Base, TenantBase, engine
 from fastapi.responses import HTMLResponse
 from main import app, templates, socket
+from database import engine
 from config import settings
+from routers import Base
 import os, logging
 
 logger = logging.getLogger("eAsset.main")
@@ -16,7 +17,10 @@ async def read_item(request: Request, id: str):
 @app.post("/init")
 def init():  
     try:
-        Base.metadata.create_all(bind=engine)
+        Base.metadata.create_all(
+            bind=engine, 
+            tables=[table for table in Base.metadata.sorted_tables if table.schema=='public']
+        )
     except Exception as e:
         logger.critical(f"{e.__class__}: {e}") 
 

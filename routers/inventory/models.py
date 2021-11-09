@@ -1,9 +1,9 @@
 from sqlalchemy import Column, String, Integer, CheckConstraint, ForeignKey
 from sqlalchemy.orm import relationship
-from database import TenantBase
+from database import TenantBase, Base
 from mixins import BaseMixin
 
-class Inventory(BaseMixin, TenantBase):
+class Inventory(BaseMixin, Base):
     '''Inventory Model'''
     __tablename__ = "inventories"
     __table_args__ = (CheckConstraint('coalesce(department_id , branch_id) is not null', name='_department_or_branch_'),)

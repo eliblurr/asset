@@ -1,13 +1,15 @@
 from routers.department.models import Department
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, String
-from database import TenantBase
+from database import TenantBase, Base
 from mixins import BaseMixin
 import re
 
-class Branch(BaseMixin, TenantBase):
+class Branch(BaseMixin, Base):
     '''Branch Model'''
     __tablename__ = 'branches'
+    # __table_args__ = ({'schema':None},)
+    
 
     email = Column(String, nullable=False)
     phone = Column(String, nullable=False)

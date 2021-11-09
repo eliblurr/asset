@@ -11,7 +11,7 @@ else:
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 TenantBase = declarative_base(metadata=MetaData(schema=None))
-Base = declarative_base(metadata=MetaData(schema='public'))
+Base = declarative_base(metadata=MetaData(schema=None))
 metadata = MetaData()
 
 def merge_metadata(*original_metadata) -> MetaData:

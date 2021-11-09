@@ -1,6 +1,6 @@
 from sqlalchemy.schema import CreateSchema, DropSchema
 from sqlalchemy import Column, String, event, Boolean
-from database import Base, TenantBase, engine
+from database import Base, TenantBase, engine, GlobalBase
 from mixins import BaseMixin, HashMethodMixin
 from sqlalchemy.orm import validates
 from utils import gen_hex, today_str
@@ -42,7 +42,7 @@ class Tenant(BaseMixin, HashMethodMixin, Base):
 def create_tenant_schema(mapper, connection, target):
     connection.engine.execute(CreateSchema(target.key))
     connection = engine.connect().execution_options(schema_translate_map={None: target.key,})
-    TenantBase.metadata.create_all(bind=connection)
+    Base.metadata.create_all(bind=connection, tables=[table for table in Base.metadata.sorted_tables if table.schema==None])
 
 @event.listens_for(Tenant, 'before_insert')
 @event.listens_for(Tenant, 'before_update')
@@ -56,3 +56,7 @@ def receive_after_delete(mapper, connection, target):
     if target.url[:3]=='S3:':
         s3_delete.delay(target.url[3:])
     _delete_path(target.url[3:])
+
+# print(
+#     TenantBase.metadata.tables.keys()
+# )

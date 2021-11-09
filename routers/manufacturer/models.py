@@ -35,9 +35,11 @@ class ManufacturerMixin(object):
 
 class Manufacturer(ManufacturerMixin, BaseMixin, Base):
     '''Manufacturer Model for public schema'''
+    __table_args__ = ({'schema':'public'},)
 
-class Manufacturer2(ManufacturerMixin, BaseMixin, TenantBase):
+class Manufacturer2(ManufacturerMixin, BaseMixin, Base):
     '''Manufacturer Model for tenant schema'''
+    
 
 @event.listens_for(Manufacturer, 'before_insert')
 @event.listens_for(Manufacturer, 'before_update')
