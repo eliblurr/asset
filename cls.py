@@ -187,6 +187,21 @@ class CRUD:
                 ),
             )
 
+    async def bk_delete_2(self, db:Session, **kwargs):
+        try:
+            rows = db.query(self.model).filter_by(**kwargs).delete(synchronize_session=False)
+            db.commit()
+            return "success", {"info":f"{rows} row(s) deleted"}
+        except Exception as e:
+            # log here
+            raise HTTPException(
+                status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e.orig, UndefinedTable) or isinstance(e, AssertionError) else 500, 
+                detail=http_exception_detail(
+                    msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e.orig, UndefinedTable) else  e.orig}", 
+                    type=f"{e.__class__}"
+                ),
+            )
+
     async def exists(self, db, **kwargs):
         try:
             return db.query(self.model).filter_by(**kwargs).first() is not None

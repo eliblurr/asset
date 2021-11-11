@@ -10,7 +10,6 @@ class CategoryVendor(Base):
     vendor_id = Column(Integer, ForeignKey('vendors.id'), primary_key=True)
     category_id = Column(Integer, ForeignKey('public.categories.id'), primary_key=True)
 
-
 class CategoryAsset(Base):
     '''Category Vendor Model'''
     __tablename__ = 'asset_categories'
@@ -21,8 +20,16 @@ class CategoryAsset(Base):
 class Category(BaseMixin, Base):
     '''Category Model'''
     __tablename__ = "categories"
-    __table_args__ = ({'schema':'public'},)
-    # __table_args__=(UniqueConstraint('title', 'tenant_key', name='uix_tnt_key'),)
+    __table_args__ = (
+        # UniqueConstraint('title', 'tenant_key', name='uix_tnt_key'),
+        # CheckConstraint(
+        #     """
+        #         tenant_key IS NOT NULL AND  
+        #     """
+        # ),
+        # tenant not null and unique(title)
+        {'schema':'public'},
+    )
 
     title = Column(String, nullable=False)
     metatitle = Column(String, nullable=True)

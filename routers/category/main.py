@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Body
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
 from dependencies import get_db
 from typing import Union, List
 from . import crud, schemas
+import re
 
 router = APIRouter()
 
 @router.post('/', description='', response_model=schemas.Category, status_code=201, name='Category')
-async def create(request:Request, payload:schemas.CreateCategory, db:Session=Depends(get_db)):
+async def create(payload:schemas.CreateCategory, db:Session=Depends(get_db)):
     return await crud.category.create(payload, db)
 
 @router.get('/', description='', response_model=schemas.CategoryList, name='Category')
@@ -28,7 +29,10 @@ async def update(id:int, payload:schemas.UpdateCategory, db:Session=Depends(get_
 async def delete(id:int, db:Session=Depends(get_db)):
     return await crud.category.delete(id, db)
 
-# @router.post('/assets', description='', response_model=schemas.Category, status_code=201, name='Category Assets')
-# @router.post('/vendors', description='', response_model=schemas.Category, status_code=201, name='Category Vendors')
-# if re.search('assets$', '/asdsd/load'):
-#     pass
+@router.post('/{id}/{resource}', description='', status_code=200, name='Category Assets/Vendors')
+async def add_to_category(id:int, resource:schemas.Resource, ids:List[int] = Body(...), db:Session=Depends(get_db)):
+    return await crud.add_to_category(id, ids, resource, db)
+
+@router.delete('/{id}/{resource}', description='', status_code=204, name='Category Assets/Vendors')
+async def add_to_category(id:int, resource:schemas.Resource, ids:List[int] = Body(...), db:Session=Depends(get_db)):
+    return await crud.rem_from_category(id, ids, resource, db)
