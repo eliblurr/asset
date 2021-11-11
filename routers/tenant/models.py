@@ -56,7 +56,3 @@ def receive_after_delete(mapper, connection, target):
     if target.url[:3]=='S3:':
         s3_delete.delay(target.url[3:])
     _delete_path(target.url[3:])
-
-# print(
-#     TenantBase.metadata.tables.keys()
-# )
