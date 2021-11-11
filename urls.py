@@ -22,6 +22,7 @@ def init():
             tables=[table for table in Base.metadata.sorted_tables if table.schema=='public']
         )
     except Exception as e:
+        print(e)
         logger.critical(f"{e.__class__}: {e}") 
 
 @app.websocket("/ws/{client_id}")
