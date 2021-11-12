@@ -80,12 +80,15 @@ UPLOAD_ROOT = os.path.join(BASE_DIR, 'uploads/')
 MEDIA_ROOT = os.path.join(UPLOAD_ROOT, 'media/')
 DOCUMENT_ROOT = os.path.join(UPLOAD_ROOT, 'documents/')
 
-if not os.path.isdir(UPLOAD_ROOT):
-    os.mkdir(UPLOAD_ROOT)
+try:
+    if not os.path.isdir(UPLOAD_ROOT):
+        os.mkdir(UPLOAD_ROOT)
 
-LOG_ROOT = os.path.join(BASE_DIR, 'logs/')
+    LOG_ROOT = os.path.join(BASE_DIR, 'logs/')
 
-if not os.path.isdir(LOG_ROOT):
-    os.mkdir(LOG_ROOT)
+    if not os.path.isdir(LOG_ROOT):
+        os.mkdir(LOG_ROOT)
+except:
+    pass
 
 locale = Locale('en', 'US')
