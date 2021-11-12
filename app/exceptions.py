@@ -3,3 +3,9 @@ class BlacklistedToken(Exception):
 
 class MaxOccurrenceError(Exception):
     pass
+
+class FileNotSupported(Exception):
+    pass
+
+class UploadNotAllowed(Exception):
+    pass

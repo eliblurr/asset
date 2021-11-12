@@ -1,43 +1,60 @@
+import enum, re, datetime, pathlib, pandas as pd, numpy as np, os, asyncio, shutil
+from exceptions import MaxOccurrenceError, FileNotSupported, UploadNotAllowed
+from constants import DT_X, Q_X, SUPPORTED_EXT, Q_STR_X, SORT_STR_X
 from sqlalchemy.exc import ProgrammingError, IntegrityError
 from utils import schema_to_model, http_exception_detail
 from inspect import Parameter, Signature, signature
 from fastapi import Query, WebSocket, HTTPException
 from psycopg2.errors import UndefinedTable
-from exceptions import MaxOccurrenceError
+from sqlalchemy import and_, or_, func
+from services.aws import s3_upload
 from sqlalchemy.orm import Session
-from constants import DT_X, Q_X
 from functools import wraps
-import enum, re, datetime
+from pathlib import Path
 from typing import List
+from passlib import pwd
+from io import BytesIO
+from PIL import Image
+from config import *
 
 class CRUD:
-    def __init__(self, model):
+    def __init__(self, model, extra_models:list=None):
         self.model = model
+        self.extra_models = extra_models
 
-    async def create(self, payload, db:Session, images=None):
+    async def create(self, payload, db:Session, **kw):
         try:
-            obj = self.model(**schema_to_model(payload))
-            if images:
-                pass
+            obj = self.model(**schema_to_model(payload), **kw)
             db.add(obj)
             db.commit()
             db.refresh(obj) 
             return obj
         except Exception as e:
             # log here
+            print(e)
             raise HTTPException(
-                status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e.orig, UndefinedTable) or isinstance(e, AssertionError) else 500, 
+                status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e, UndefinedTable) or isinstance(e, AssertionError) else 500, 
                 detail=http_exception_detail(
-                    msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e.orig, UndefinedTable) else  e.orig}", 
+                    msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e, UndefinedTable) else  e}", 
                     type=f"{e.__class__}"
                 ),
             )
 
-    async def read(self, params, db:Session):
-        try:
-            fields = [getattr(self.model, field.strip()) for field in params["fields"]]  if params["fields"]!=None else [self.model]
+    def _base(self, fields, db:Session, use_extra_models:bool=False):
+        b_fields = [getattr(self.model, field.strip()) for field in fields]  if fields!=None else [self.model] 
+        base = db.query(*b_fields)
+        if use_extra_models and self.extra_models:
+            if all([self.model.c()==model.c() for model in self.extra_models]):
+                q_fields = [db.query(*[getattr(model, field.strip()) for field in fields]) for model in self.extra_models] if fields!=None else [db.query(model) for model in self.extra_models]
+                return base.union(*q_fields)
+            raise ValueError('conflicts in model classes')
+        return base
 
-            base = db.query(*fields)
+    async def read(self, params, db:Session, use_extra_models:bool=False):
+        try:
+            # fields = [getattr(self.model, field.strip()) for field in params["fields"]]  if params["fields"]!=None else [self.model]
+
+            base = self._base(params['fields'], db, use_extra_models)   
             dt_cols = [col[0] for col in self.model.c() if col[1]==datetime.datetime]
             ex_cols = [col[0] for col in self.model.c() if col[1]==int or col[1]==bool or issubclass(col[1], enum.Enum)]
             
@@ -71,20 +88,22 @@ class CRUD:
             return {'bk_size':base.count(), 'pg_size':data.__len__(), 'data':data}
         except Exception as e:
             # log here
+            print(e)
             raise HTTPException(
-                status_code=400 if isinstance(e.orig, UndefinedTable) else 500, 
+                status_code=400 if isinstance(e.__class__, UndefinedTable) else 500, 
                 detail=http_exception_detail(
-                    msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e.orig, UndefinedTable) else  e.orig}", 
+                    msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e.__class__, UndefinedTable) else  e}", 
                     type=f"{e.__class__}"
                 ),
             )
 
-    async def read_by_id(self, id, db:Session, fields:List[str]=None):
+    async def read_by_id(self, id, db:Session, fields:List[str]=None, use_extra_models:bool=False):
         try:
-            fields = [getattr(self.model, field.strip()) for field in fields]  if fields!=None else [self.model]
-            return db.query(*fields).filter(self.model.id==id).first()
+            # fields = [getattr(self.model, field.strip()) for field in fields]  if fields!=None else [self.model]
+            return self._base(fields, db, use_extra_models).filter(self.model.id==id).first()
         except Exception as e:
             # log here
+            print(e)
             raise HTTPException(
                 status_code=400 if isinstance(e.orig, UndefinedTable) else 500, 
                 detail=http_exception_detail(
@@ -168,6 +187,21 @@ class CRUD:
                 ),
             )
 
+    async def bk_delete_2(self, db:Session, **kwargs):
+        try:
+            rows = db.query(self.model).filter_by(**kwargs).delete(synchronize_session=False)
+            db.commit()
+            return "success", {"info":f"{rows} row(s) deleted"}
+        except Exception as e:
+            # log here
+            raise HTTPException(
+                status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e.orig, UndefinedTable) or isinstance(e, AssertionError) else 500, 
+                detail=http_exception_detail(
+                    msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e.orig, UndefinedTable) else  e.orig}", 
+                    type=f"{e.__class__}"
+                ),
+            )
+
     async def exists(self, db, **kwargs):
         try:
             return db.query(self.model).filter_by(**kwargs).first() is not None
@@ -194,7 +228,7 @@ class ContentQueryChecker:
         params = list(sig._parameters.values())
         del params[-1]
         sort_str = "|".join([f"{x[0]}|-{x[0]}" for x in self._cols]) if self._cols else None
-        q_str = "|".join([x[0] for x in self._cols]) if self._cols else None
+        q_str = "|".join([x[0] for x in self._cols if x[0]!='password']) if self._cols else None
         if self._cols:
             params.extend([Parameter(param[0], Parameter.KEYWORD_ONLY, annotation=param[1], default=Query(None)) for param in self._cols if param[1]!=datetime.datetime])
             params.extend([
@@ -211,7 +245,7 @@ class ContentQueryChecker:
         wrapper.__signature__ = Signature(params)
         return wrapper
 
-class SocketConnectionManager:
+class ConnectionManager:
     def __init__(self):
         self.active_connections:List[WebSocket] = []
 
@@ -219,6 +253,7 @@ class SocketConnectionManager:
         websocket._cookies['client_id']=client_id
         await websocket.accept()
         self.active_connections.append(websocket)
+        # check if any pending messages then send
 
     def disconnect(self, websocket:WebSocket):
         self.active_connections.remove(websocket)
@@ -227,6 +262,7 @@ class SocketConnectionManager:
         return [websocket for websocket in self.active_connections if websocket._cookies.get('client_id', None) == client_id]
 
     async def send_personal_message(self, message:(str, dict), client_id:int):
+        # if websocket not in client_connections save message
         client_connections = self.client_connection(client_id)
         for websocket in client_connections:
             if isinstance(message, str):
@@ -234,104 +270,123 @@ class SocketConnectionManager:
             return await websocket.send_json(message)
 
     async def broadcast(self, message: (str, dict)):
+        # if websocket not in client_connections save message
         for websocket in self.active_connections:
             if isinstance(message, str):
                 return await websocket.send_text(message)
             return await websocket.send_json(message)
 
-# from sqlalchemy.schema import Column
-# from sqlalchemy import Integer, String
+    async def on_verify(self, client_id:int):
+        pass
 
-# class FileField(Column):
-#     def __init__(self, *args, upload_to, **kwargs):
-#         super(FileField, self).__init__(type_=String, default='some', *args, **kwargs)
-#         # self.__call__()
-#         # self._value_map = None
-#         # self.value_map = None
-#         # self._excel_column_name = None
-#         # self.excel_column_name = 'some'
+class FileReader:
+    def __init__(self, file, header, supported_extensions:list=[]):
+        self.file=file
+        self.header = header
+        self._supported_ext = SUPPORTED_EXT
+        self._supported_ext.extend(supported_extensions)
+        self._supported_ext = list(set(self._supported_ext))
+
+    def _ext(self):
+        return pathlib.Path(self.file.filename).suffix
+
+    def _csv(self, to_dict:bool=True, replace_nan_with=None):
+        df = pd.read_csv(self.file.file, usecols=self.header)[self.header]
+        return self.validate_rows(df, to_dict, replace_nan_with=replace_nan_with)
+       
+    def _excel(self, to_dict:bool=True, replace_nan_with=None):
+        df = pd.read_excel(self.file.file, usecols=self.header)[self.header]
+        return self.validate_rows(df, to_dict, replace_nan_with=replace_nan_with)
+    
+    def verify_ext(self):
+        return self._ext() in self._supported_ext
+
+    def validate_rows(self, df, to_dict:bool=True, replace_nan_with=None):
+        if to_dict:
+            return [{k:None if pd.isna(v) else v for (k,v) in row.items()} for row in df.to_dict(orient="records")] if not replace_nan_with else df.fillna(replace_nan_with).to_dict(orient="records")
+        return [[None if pd.isna(item) else item for item in row] for row in np.array(df[self.header].drop_duplicates())] if not replace_nan_with else np.array(df[self.header].fillna(replace_nan_with).drop_duplicates())
+
+    async def read(self, to_dict:bool=True, replace_nan_with=None):
+        try:
+            if not self.verify_ext():
+                raise FileNotSupported('file extension not supported')
+            if self._ext() in [".csv",".CSV"]:
+                rows = self._csv(to_dict=to_dict, replace_nan_with=replace_nan_with)
+            else:
+                rows = self._excel(to_dict=to_dict, replace_nan_with=replace_nan_with)
+            return rows
+        finally:
+            await self.file.close()
+
+class Upload:
+    def __init__(self, file, upload_to, size=None):
+        self.file = file
+        self.upload_to = upload_to
+        self.size = size
+
+    def _ext(self):
+        return pathlib.Path(self.file.filename).suffix
+
+    def file_allowed(self, ext=None):
+        ext=ext if ext else self._ext()
+        if ext in UPLOAD_EXTENSIONS["IMAGE"]:
+            return True, "images/"
+        elif ext in UPLOAD_EXTENSIONS["AUDIO"]:
+            return True, "audio/"
+        elif ext in UPLOAD_EXTENSIONS["VIDEO"]:
+            return True, "videos/"
+        elif ext in UPLOAD_EXTENSIONS["DOCUMENT"]:
+            return True, "documents/"
+        raise UploadNotAllowed('Unsupported file extension')
+    
+    def _path(self):
+        _, url = self.file_allowed()
+        root = DOCUMENT_ROOT if url=='documents/' else MEDIA_ROOT
+        path = os.path.join(root, f'{self.upload_to}')
+                
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        return path
         
-#     def __call__(self):
-#         print('ds')
-#     # @property
-#     # def excel_column_name(self):
-#     #     if self._excel_column_name is None:
-#     #         return self.name
-#     #     else:
-#     #         return self._excel_column_name
+    def _url(self):
+        name, cnt = os.path.splitext(self.file.filename)[0], 1
+        url = os.path.join(self._path(), f'{self.file.filename}')
+        while Path(url).exists():
+            filename = f"{name}_{cnt}{self._ext()}"
+            url = os.path.join(self._path(), f'{filename}')
+            cnt+=1
+        return url
+    
+    def path(self):
+        self._path()
 
-#     # @excel_column_name.setter
-#     # def excel_column_name(self, n):
-#     #     self._excel_column_name = n
+    def _image(self):
+        url = self._url()
+        try:
+            with Image.open(BytesIO(self.file.file.read())) as im:
+                im.thumbnail(self.size if self.size else im.size)
+                im.save(url)
+        finally:
+            self.file.file.close()
+            return url
 
-#     @property
-#     def value_map(self):
-#         return (lambda x: x+'some_data') if self._value_map is None else self._value_map
+    def _save_file(self):
+        url = self._url()
+        try:
+            with open(url, "wb") as buffer:
+                shutil.copyfileobj(self.file.file, buffer)
+        finally:
+            self.file.file.close()
+            return url
 
-#     @value_map.setter
-#     def value_map(self, fn):
-#         # print(fn)
-#         if callable(fn) or fn is None:
-#             self._value_map = fn
-#         else:
-#             raise ValueError('ExcelColumn.value_map must be callable.')
-
-# class Storage(str, enum.Enum):
-#     s3 = 's3'
-#     fs = 'fs'
-
-# class Upload:
-#     def __init__(self, loc, extension_allowed, name, ext):
-#         self.loc = loc
-#         self.ext = ext
-#         self.name = name
-#         # content_type, mimetype
-#         # self.storage = storage -> storage:Storage,
-#         self.extension_allowed = extension_allowed
-        
-#     def path(self, filename):
-#         '''This returns the absolute path of a file uploaded to this set. It doesn’t actually check whether said file exists.
-#         Parameters:	
-#         filename – The filename to return the path for.
-#         '''
-
-#     def resolve_conflict(self,):
-#         '''If a file with the selected name already exists in the target folder, this method is called to resolve the conflict. It should return a new basename for the file.
-
-#         The default implementation splits the name and extension and adds a suffix to the name consisting of an underscore and a number, and tries that until it finds one that doesn’t exist.
-
-#         Parameters:	
-#         target_folder – The absolute path to the target.
-#         basename – The file’s original basename.'''
-#         pass
-
-#     def url(self, filename):
-#         '''This function gets the URL a file uploaded to this set would be accessed at. It doesn’t check whether said file exists.
-#         Parameters:	
-#         filename – The filename to return the URL for.
-#         '''
-#         pass
-
-#     def save(self, storage:Storage, folder=None, name=None):
-#         '''This saves a werkzeug.FileStorage into this upload set. If the upload is not allowed, an UploadNotAllowed error will be raised. 
-#         Otherwise, the file will be saved and its name (including the folder) will be returned.
-#         Parameters:	
-#         storage – The uploaded file to save.
-#         folder – The subfolder within the upload set to save to.
-#         name – The name to save the file as. If it ends with a dot, the file’s extension will be appended to the end.'''
-#         pass
-
-#     def file_allowed(storage, basename):
-#         '''This tells whether a file is allowed. It should return True if the given werkzeug.FileStorage object can be saved with the given basename, and False if it can’t. 
-#         The default implementation just checks the extension, so you can override this if you want.
-
-#         Parameters:	
-#         storage – The werkzeug.FileStorage to check.
-#         basename – The basename it will be saved under.'''
-
-#     def extension_allowed(self, ext):
-#         '''This determines whether a specific extension is allowed. It is called by file_allowed, so if you override that but still want to check extensions, 
-#         call back into this.
-
-#         Parameters:	
-#         ext – The extension to check, without the dot.'''
+    def save(self, *args, **kwargs):
+        if settings.USE_S3:
+            url = '/'+os.path.relpath(self._url(), BASE_DIR) 
+            s3_upload(self.file, object_name=url) # push to celery to upload
+        else:
+            if self.file:
+                url = self._image() if self.file.content_type.split("/")[0]=="image" else self._save_file()
+                url = '/'+os.path.relpath(url, BASE_DIR) 
+            else:
+                url = None
+        return f"S3:{url}" if settings.USE_S3 else f"LD:{url}" if url else None

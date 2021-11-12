@@ -10,7 +10,7 @@ executors = {
     'default': ThreadPoolExecutor(settings.APS_THREAD_POOL_MAX_WORKERS),
     'processpool': ProcessPoolExecutor(settings.APS_PROCESS_POOL_MAX_WORKERS)
 }
-job_defaults = {'coalesce': False, 'max_instances': 3}
+job_defaults = {'coalesce': settings.APS_COALESCE, 'max_instances': settings.APS_MAX_INSTANCES}
 
 scheduler = BackgroundScheduler(
     timezone=pytz.utc, 

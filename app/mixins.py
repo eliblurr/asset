@@ -2,11 +2,18 @@ from sqlalchemy import Column, DateTime, Boolean, Integer, BigInteger
 from passlib.hash import pbkdf2_sha256 as sha256
 from datetime import datetime
 from utils import gen_code
+from ctypes import File
 
 class BaseMethodMixin(object):
     @classmethod
     def c(cls):
-        return [(c.name, c.type.python_type) if c.name!='__ts_vector__' else (c.name, None) for c in cls.__table__.columns]
+        return [
+            (c.name, c.type.python_type) if not isinstance(c.type, File) else (c.name, str) for c in cls.__table__.columns
+            # if c.name!='__ts_vector__' 
+            # or not isinstance(c.type, File)
+            # if any((c.name=='__ts_vector__', not isinstance(c.type, File))) # needs fixing
+            # else (c.name, None) for c in cls.__table__.columns
+        ]
 
 class BaseMixin(BaseMethodMixin):    
     status = Column(Boolean, default=True)
