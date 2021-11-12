@@ -13,7 +13,7 @@ class Manufacturer(BaseMixin, Base):
     '''Manufacturer Model'''
     __tablename__ = "manufacturers"
     __table_args__ = (
-        UniqueConstraint('title', 'tenant_key', name='uix_tnt_key'),
+        UniqueConstraint('title', 'tenant_key', name='uix_tnt_key_man'),
         {'schema':'public'},
     )
 
