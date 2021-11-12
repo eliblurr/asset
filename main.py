@@ -4,8 +4,8 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from database import SessionLocal, engine
-from cls import SocketConnectionManager
 from datetime import time, datetime
+from cls import ConnectionManager
 from scheduler import scheduler
 from config import *
 import logging, os
@@ -26,13 +26,15 @@ app.add_middleware(
     allow_headers = ALLOWED_HEADERS,
 )
 
-socket = SocketConnectionManager()
+socket = ConnectionManager()
 logging.config.fileConfig('logging.conf')
+logger = logging.getLogger('eAsset.main')
 templates = Jinja2Templates(directory="static/html")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
-app.mount(MEDIA_URL, StaticFiles(directory=MEDIA_ROOT), name="media")
 app.mount(STATIC_URL, StaticFiles(directory=STATIC_ROOT), name="static")
-app.mount(DOCUMENT_URL, StaticFiles(directory=DOCUMENT_ROOT), name="documents")
+app.mount(UPLOAD_URL, StaticFiles(directory=UPLOAD_ROOT), name="upload")
+# app.mount(MEDIA_URL, StaticFiles(directory=MEDIA_ROOT), name="media")
+# app.mount(DOCUMENT_URL, StaticFiles(directory=DOCUMENT_ROOT), name="documents")
 
 @app.middleware("http")
 async def tenant_session(request:Request, call_next):
@@ -44,13 +46,31 @@ async def tenant_session(request:Request, call_next):
 @app.on_event("startup")
 async def startup_event():
     print('startup', app.title)
-    scheduler.start()
+    # try:
+    #     scheduler.start()
+    # except Exception as e:
+    #     logger.critical(f"Scheduler could not start: {e.__class__}: {e}", exc_info=True) 
     
 @app.on_event("shutdown")
 def shutdown_event():
-    scheduler.shutdown(wait=False)
+    pass
+    # try:
+    #     scheduler.shutdown(wait=False)
+    # except Exception as e:
+    #     logger.critical(f"Scheduler could not shutdown: {e.__class__}: {e}", exc_info=True) 
 
 from urls import *
+
+from clry import event
+event.start_listener()
+
+# @app.post("/evemt")
+# def ass():
+#     try:
+#         event.emit("broadcast", "Custom message from event")
+#         pass
+#     except Exception as e:
+#         print(e)
 
 # from fastapi import Request
 # from babel import Locale
@@ -161,3 +181,9 @@ from urls import *
 # logging.debug("This is a debug message")
 # logging.info("Informational message")
 # logging.error("An error has happened!")
+items = {}
+items["foo"] = {"name": "Fighters"}
+items["bar"] = {"name": "Tenders"}
+@app.get("/items/{item_id}")
+async def read_items(item_id: str):
+    return items[item_id]

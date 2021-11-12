@@ -5,6 +5,7 @@ from database import Base
 class FAQ(BaseMixin, Base):
     '''FAQ Model'''
     __tablename__ = "faqs"
+    __table_args__ = ({'schema':'public'},)
 
     title = Column(String, nullable=False)
     metatitle = Column(String, nullable=True)

@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, Query, Request
-from cls import ContentQueryChecker
+from fastapi import APIRouter, Depends, Query, Request, File, UploadFile
+from cls import ContentQueryChecker, FileReader
 from sqlalchemy.orm import Session
 from dependencies import get_db
 from typing import List, Union
@@ -9,11 +9,11 @@ from utils import act_url
 router = APIRouter()
 
 @router.post('/', description='', response_model=Union[schemas.User, List[schemas.User], list], status_code=201, name='User Account')
-async def create(request:Request, payload:Union[schemas.CreateUser, List[schemas.CreateUser]], db:Session=Depends(get_db)):
+async def create(request:Request, payload:Union[schemas.CreateUser, List[schemas.CreateUser]], file:UploadFile=File(None), db:Session=Depends(get_db)):
+    # gen_payload here -> rows = await FileReader(file, ['email', 'password']).read()
     obj = await crud.bk_create(payload, db) if isinstance(payload, list) else await crud.user.create(payload, db)
     if obj:
         urls = [act_url(request.base_url, user.id, "users") for user in obj] if isinstance(obj, list) else act_url(request.base_url, obj.id, "users")
-        print(urls)
     return obj
         
 @router.get('/', description='', response_model=schemas.UserList, name='User Account')

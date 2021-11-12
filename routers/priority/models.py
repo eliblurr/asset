@@ -1,13 +1,14 @@
 from sqlalchemy import Column, String, Boolean, Integer, event, CheckConstraint
 from sqlalchemy.orm import validates
 from constants import COLOR_HEX
-from database import TenantBase
+from database import TenantBase, Base
 from mixins import BaseMixin
 import re
 
-class Priority(BaseMixin, TenantBase):
+class Priority(BaseMixin, Base):
     '''Priority Model'''
     __tablename__ = "priorities"
+    # __table_args__ = ({'schema':None},)
     
     color_hex = Column(String, nullable=False)
     title = Column(String, nullable=False, unique=True)
