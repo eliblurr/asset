@@ -33,8 +33,6 @@ templates = Jinja2Templates(directory="static/html")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 app.mount(STATIC_URL, StaticFiles(directory=STATIC_ROOT), name="static")
 app.mount(UPLOAD_URL, StaticFiles(directory=UPLOAD_ROOT), name="upload")
-# app.mount(MEDIA_URL, StaticFiles(directory=MEDIA_ROOT), name="media")
-# app.mount(DOCUMENT_URL, StaticFiles(directory=DOCUMENT_ROOT), name="documents")
 
 @app.middleware("http")
 async def tenant_session(request:Request, call_next):
