@@ -1,5 +1,6 @@
 from datetime import timedelta, datetime, date
 from config import JWT_ALGORITHM, settings
+from babel.numbers import format_currency
 from inspect import Parameter, signature
 from math import ceil, floor, log2
 from secrets import token_urlsafe
@@ -83,6 +84,11 @@ def delete_path(path):
 
 def timestamp_to_datetime(timestamp):
     return datetime.fromtimestamp(timestamp)
+
+def money(currency:str, amount:float, locale:str=None):
+    if locale:
+        format_currency(amount, currency, locale=locale)
+    return format_currency(amount, currency)
 
 today = date.today()
 sum_ls = lambda ls : sum(ls)

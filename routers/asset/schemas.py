@@ -1,5 +1,5 @@
 from pydantic import BaseModel, confloat, conint, validator, ValidationError
-from utils import as_form, timestamp_to_datetime
+from utils import as_form, timestamp_to_datetime, money
 from typing import Optional, List, Union
 import routers.asset.models as m
 import datetime, enum
@@ -90,6 +90,7 @@ class AssetBase(BaseModel):
 @as_form  
 class CreateAsset(Validator, AssetBase):
     category_ids:List[int]
+    currency: m.CurrencyChoice
     
 class UpdateAsset(Validator, BaseModel):
     make:Optional[str]
@@ -111,6 +112,7 @@ class UpdateAsset(Validator, BaseModel):
     inventory_id:Optional[conint(gt=0)]
     department_id:Optional[conint(gt=0)]
     salvage_price:Optional[confloat(ge=0)]
+    currency:Optional[m.CurrencyChoice]
     service_date:Optional[int]
     decommission_justification:Optional[str]
     purchase_date:Optional[int]
@@ -125,6 +127,16 @@ class Asset(AssetBase):
     updated: datetime.datetime
     documents: List[Upload] = []
     depreciation: Optional[dict]
+    price:Union[confloat(ge=0), str]
+    salvage_price:Union[confloat(ge=0), str]
+
+    @validator('price', allow_reuse=True, check_fields=False)
+    def format_price(cls, v, values):
+        return money(v, values["currency"])
+
+    @validator('price', allow_reuse=True, check_fields=False)
+    def format_price(cls, v, values):
+        return money(v, values["currency"])
 
 class AssetList(BaseModel):
     bk_size: int

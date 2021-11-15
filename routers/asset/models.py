@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Integer, CheckConstraint, Boolean, Float, DateTime, Enum, ForeignKey, event
+from routers.currency.models import CurrencyChoice
 from clry.tasks import s3_delete_bg, _delete_path
 from sqlalchemy.ext.hybrid import hybrid_property
 from routers.category.models import CategoryAsset
@@ -19,7 +20,6 @@ class Asset(BaseMixin, Base):
     '''Asset Model'''
     __tablename__ = "assets"
     __table_args__ = (
-        # {'schema':None},
         CheckConstraint('salvage_price<=price', name='_price_salvage_price_'),
         CheckConstraint('decommission is TRUE AND decommission_justification IS NOT NULL'),
         CheckConstraint('numerable is TRUE AND quantity IS NOT NULL', name='_quantity_numerable_'),
@@ -56,6 +56,7 @@ class Asset(BaseMixin, Base):
     vendor = relationship("Vendor", back_populates="assets_sold")
     department_id = Column(Integer, ForeignKey('departments.id'))
     inventory_id = Column(Integer, ForeignKey('inventories.id'))
+    currency = Column(Enum(CurrencyChoice), nullable=False)
     vendor_id = Column(Integer, ForeignKey('vendors.id'))
     author_id = Column(Integer, ForeignKey('users.id'))
     author = relationship("User")
