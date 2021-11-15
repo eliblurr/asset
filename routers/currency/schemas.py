@@ -1,10 +1,13 @@
-from pydantic import BaseModel, conint
+from pydantic import BaseModel, conint, validator
 from typing import Optional, List, Union
 import routers.currency.models as m
 import datetime, enum
 
 class CurrencyBase(BaseModel):
     currency: m.CurrencyChoice
+
+    class Config:
+        orm_mode=True
 
     class Meta:
         model = m.Currency

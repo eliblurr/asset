@@ -132,11 +132,11 @@ class Asset(AssetBase):
 
     @validator('price', allow_reuse=True, check_fields=False)
     def format_price(cls, v, values):
-        return money(v, values["currency"])
+        return money(v, values["currency"].value)
 
-    @validator('price', allow_reuse=True, check_fields=False)
+    @validator('salvage_price', allow_reuse=True, check_fields=False)
     def format_price(cls, v, values):
-        return money(v, values["currency"])
+        return money(v, values["currency"].value)
 
 class AssetList(BaseModel):
     bk_size: int
