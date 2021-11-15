@@ -72,14 +72,14 @@ event.start_listener()
 
 # from fastapi import Request
 # from babel import Locale
-# import babel
+import babel
 
 # from gettext import gettext as _
 
 # string = _("This is a translatable string.")
 # # print(string)
 
-# local = Locale('en', 'US')
+local = Locale('en', 'US')
 
 # print(dir(Locale))
 # c = Locale.negotiate(['de_AT'], ['de', 'en'])
@@ -91,10 +91,15 @@ event.start_listener()
 # territories = list(local.territories.keys())
 # currencies = list(local.currencies.keys())
 
+# from babel.numbers import list_currencies
+# CURRENCY_CHOICES = [currency if currency=='GHC' else None for currency in list_currencies()] 
+
+# print(CURRENCY_CHOICES)
+
 # s = babel.core.get_global('zone_territories')
 
-# j = babel.core.get_global('territory_currencies')['GH']
-# # print(s)
+# currencies = babel.core.get_global('territory_currencies')['GH']
+# print(currencies)
 
 # @app.get('/babel')
 # def local(request:Request):

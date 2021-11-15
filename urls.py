@@ -38,6 +38,7 @@ from routers.manufacturer.main import router as manufacturer
 from routers.category.main import router as category
 from routers.user.account.main import router as user
 from routers.priority.main import router as priority
+from routers.currency.main import router as currency
 from routers.user.role.main import router as role
 from routers.user.auth.main import router as auth
 from routers.branch.main import router as branch
@@ -56,6 +57,7 @@ app.include_router(manufacturer, tags=['Manufacturers'], prefix='/manufacturers'
 app.include_router(tenant, tags=['Tenants/Organizations'], prefix='/tenants')
 app.include_router(category, tags=['Categories'], prefix='/categories')
 app.include_router(priority, tags=['Priorities'], prefix='/priorities')
+app.include_router(currency, tags=['Currencies'], prefix='/currencies')
 app.include_router(policy, tags=['Policies'], prefix='/policies')
 app.include_router(user, tags=['User Accounts'], prefix='/users')
 app.include_router(vendor, tags=['Vendor'], prefix='/vendors')
