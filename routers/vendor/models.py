@@ -27,12 +27,3 @@ class Vendor(BaseMixin, Base):
     def validate_phone(self, key, address):
         assert re.search(PHONE, address), 'invalid phone format'
         return address
-
-# print('%s.categories.id'%Base.metadata.schema)
-
-# class VendorCategory(TenantBase):
-#     '''Category Vendor Model'''
-#     __tablename__ = 'vendor_categories'
-
-#     vendor_id = Column(Integer, ForeignKey('vendors.id'), primary_key=True)
-#     category_id = Column(Integer, ForeignKey('%s.categories.id'%Base.metadata.schema), primary_key=True)
