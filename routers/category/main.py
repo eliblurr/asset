@@ -29,7 +29,7 @@ async def update(id:int, payload:schemas.UpdateCategory, db:Session=Depends(get_
 async def delete(id:int, db:Session=Depends(get_db)):
     return await crud.category.delete(id, db)
 
-@router.post('/{id}/{resource}', description='', status_code=200, name='Category Assets/Vendors')
+@router.post('/{id}/{resource}', description='', status_code=202, name='Category Assets/Vendors')
 async def add_to_category(id:int, resource:schemas.Resource, ids:List[int] = Body(...), db:Session=Depends(get_db)):
     return await crud.add_to_category(id, ids, resource, db)
 

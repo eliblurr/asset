@@ -17,6 +17,6 @@ class Department(BaseMixin, Base):
     head_of_department_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     head_of_department = relationship('User', foreign_keys="Department.head_of_department_id")
     staff = relationship('User', back_populates="department", foreign_keys="[User.department_id]")
-#     requests = relationship("Request", uselist=True, backref='department', cascade=("all, delete")
+    requests = relationship("Request", back_populates="department")
 
 # https://stackoverflow.com/questions/64807850/sqlalchemy-multiple-one-to-one-and-one-to-many-relationships

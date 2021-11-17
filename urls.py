@@ -35,6 +35,7 @@ def init():
 #         socket.disconnect(websocket)
 
 from routers.manufacturer.main import router as manufacturer
+from routers.department.main import router as department
 from routers.category.main import router as category
 from routers.user.account.main import router as user
 from routers.priority.main import router as priority
@@ -55,6 +56,7 @@ app.include_router(branch, tags=['Tenant/Organization Branch'], prefix='/branche
 app.include_router(config, tags=['Environment Configuration'], prefix='/settings')
 app.include_router(manufacturer, tags=['Manufacturers'], prefix='/manufacturers')
 app.include_router(tenant, tags=['Tenants/Organizations'], prefix='/tenants')
+app.include_router(department, tags=['Departments'], prefix='/departments')
 app.include_router(category, tags=['Categories'], prefix='/categories')
 app.include_router(priority, tags=['Priorities'], prefix='/priorities')
 app.include_router(currency, tags=['Currencies'], prefix='/currencies')

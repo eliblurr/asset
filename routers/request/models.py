@@ -43,6 +43,9 @@ class Request(BaseMixin, Base):
     priority_id = Column(Integer, ForeignKey('priorities.id'), nullable=False)
     priority = relationship("Priority")
 
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+    department = relationship("Parent", back_populates="requests")
+
 @event.listens_for(Request, 'before_insert') 
 @event.listens_for(Request, 'before_update') 
 def one_req_per_user_per_item(mapper, connection, target):
