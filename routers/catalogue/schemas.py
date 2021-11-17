@@ -1,6 +1,6 @@
 from routers.asset.schemas import Upload
 from typing import Optional, List, Union
-from pydantic import BaseModel, conint
+from pydantic import BaseModel, conint, confloat, Field
 import routers.catalogue.models as m
 import datetime
 

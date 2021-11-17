@@ -34,13 +34,19 @@ def init():
 #     except WebSocketDisconnect:
 #         socket.disconnect(websocket)
 
+from routers.user.permissions.main import router as permissions
 from routers.manufacturer.main import router as manufacturer
 from routers.department.main import router as department
+from routers.catalogue.main import router as catalogue
+from routers.analytics.main import router as analytics
 from routers.inventory.main import router as inventory
 from routers.category.main import router as category
+from routers.activity.main import router as activity
+from routers.proposal.main import router as proposal
 from routers.user.account.main import router as user
 from routers.priority.main import router as priority
 from routers.currency.main import router as currency
+from routers.request.main import router as request
 from routers.user.role.main import router as role
 from routers.user.auth.main import router as auth
 from routers.branch.main import router as branch
@@ -53,6 +59,8 @@ from routers.faqs.main import router as faqs
 from routers.log.main import router as log
 
 app.include_router(faqs, tags=['Frequently Asked Questions'], prefix='/frequently-asked-questions')
+app.include_router(catalogue, tags=['Request Catalogues'], prefix='/request-catalogues')
+app.include_router(permissions, tags=['User Permissions'], prefix='/user-permissions')
 app.include_router(branch, tags=['Tenant/Organization Branch'], prefix='/branches')
 app.include_router(config, tags=['Environment Configuration'], prefix='/settings')
 app.include_router(manufacturer, tags=['Manufacturers'], prefix='/manufacturers')
@@ -62,8 +70,12 @@ app.include_router(inventory, tags=['Inventories'], prefix='/inventories')
 app.include_router(category, tags=['Categories'], prefix='/categories')
 app.include_router(priority, tags=['Priorities'], prefix='/priorities')
 app.include_router(currency, tags=['Currencies'], prefix='/currencies')
+app.include_router(analytics, tags=['Analytics'], prefix='/analytics')
+app.include_router(proposal, tags=['Proposals'], prefix='/proposals')
+app.include_router(activity, tags=['Activity'], prefix='/activities')
 app.include_router(policy, tags=['Policies'], prefix='/policies')
 app.include_router(user, tags=['User Accounts'], prefix='/users')
+app.include_router(request, tags=['Request'], prefix='/request')
 app.include_router(vendor, tags=['Vendor'], prefix='/vendors')
 app.include_router(asset, tags=['Asset'], prefix='/assets')
 app.include_router(role, tags=['Roles'], prefix='/roles')
