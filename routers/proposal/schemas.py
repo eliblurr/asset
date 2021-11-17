@@ -9,12 +9,6 @@ class ProposalStatus(str, enum.Enum):
     declined = 'declined'
     delivered = 'delivered'
 
-# inventory = relationship("Inventory", back_populates="proposals")
-# department = relationship("Department", back_populates="proposals")
-# inventory_id = Column(Integer, ForeignKey('inventories.id'), nullable=True)
-# department_id = Column(Integer, ForeignKey('departments.id'), nullable=False)
-# status = Column(Enum(ProposalStatus), default=ProposalStatus.active, nullable=False)
-
 class ProposalBase(BaseModel):
     title: str
     justification: str
