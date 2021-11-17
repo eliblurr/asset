@@ -1,5 +1,5 @@
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
-from fastapi import FastAPI, Request, WebSocket
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse
 from main import app, templates, socket
@@ -25,14 +25,14 @@ def init():
         print(e)
         logger.critical(f"{e.__class__}: {e}") 
 
-@app.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket:WebSocket, client_id:int):
-    await socket.connect(websocket, client_id)
-    try:
-        while True:
-            data = await websocket.receive_text()
-    except:
-        socket.disconnect(websocket)
+# @app.websocket("/ws/{client_id}")
+# async def websocket_endpoint(websocket:WebSocket, client_id:int):
+#     await socket.connect(websocket, client_id)
+#     try:
+#         while True:
+#             data = await websocket.receive_text()
+#     except WebSocketDisconnect:
+#         socket.disconnect(websocket)
 
 from routers.manufacturer.main import router as manufacturer
 from routers.category.main import router as category
@@ -103,14 +103,37 @@ async def custom_swagger_ui_html():
         swagger_favicon_url="/static/images/logo.png",
     )
 
-# @api.websocket("/ws/{client_id}")
-# async def websocket_endpoint(websocket:WebSocket, client_id:int):
-#     await manager.connect(websocket, client_id)
-#     try:
-#         while True:
-#             data = await websocket.receive_text()
-#     except:
-#         manager.disconnect(websocket)
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        print(websocket.path_params["client_id"])
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+manager = ConnectionManager()   
+
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket:WebSocket, client_id:int):
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    
+        
 # from typing import List
 
 # from fastapi import FastAPI, WebSocket
@@ -118,43 +141,43 @@ async def custom_swagger_ui_html():
 
 # # app = FastAPI()
 
-# html = """
-# <!DOCTYPE html>
-# <html>
-#     <head>
-#         <title>Chat</title>
-#     </head>
-#     <body>
-#         <h1>WebSocket Chat</h1>
-#         <form action="" onsubmit="sendMessage(event)">
-#             <input type="text" id="messageText" autocomplete="off"/>
-#             <button>Send</button>
-#         </form>
-#         <ul id='messages'>
-#         </ul>
-#         <script>
-#             var ws = new WebSocket("ws://localhost:8000/ws");
-#             ws.onmessage = function(event) {
-#                 var messages = document.getElementById('messages')
-#                 var message = document.createElement('li')
-#                 var content = document.createTextNode(event.data)
-#                 message.appendChild(content)
-#                 messages.appendChild(message)
-#             };
-#             function sendMessage(event) {
-#                 var input = document.getElementById("messageText")
-#                 ws.send(input.value)
-#                 input.value = ''
-#                 event.preventDefault()
-#             }
-#         </script>
-#     </body>
-# </html>
-# """
+html = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat</title>
+    </head>
+    <body>
+        <h1>WebSocket Chat</h1>
+        <form action="" onsubmit="sendMessage(event)">
+            <input type="text" id="messageText" autocomplete="off"/>
+            <button>Send</button>
+        </form>
+        <ul id='messages'>
+        </ul>
+        <script>
+            var ws = new WebSocket("ws://localhost:8000/ws/2001");
+            ws.onmessage = function(event) {
+                var messages = document.getElementById('messages')
+                var message = document.createElement('li')
+                var content = document.createTextNode(event.data)
+                message.appendChild(content)
+                messages.appendChild(message)
+            };
+            function sendMessage(event) {
+                var input = document.getElementById("messageText")
+                ws.send(input.value)
+                input.value = ''
+                event.preventDefault()
+            }
+        </script>
+    </body>
+</html>
+"""
 
-# @app.get("/socket")
-# async def get():
-#     return HTMLResponse(html)
+@app.get("/socket")
+async def get():
+    return HTMLResponse(html)
 
 # @app.websocket("/ws")
 # async def websocket_endpoint(websocket: WebSocket):

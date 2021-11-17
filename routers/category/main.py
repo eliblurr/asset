@@ -34,5 +34,5 @@ async def add_to_category(id:int, resource:schemas.Resource, ids:List[int] = Bod
     return await crud.add_to_category(id, ids, resource, db)
 
 @router.delete('/{id}/{resource}', description='', status_code=204, name='Category Assets/Vendors')
-async def add_to_category(id:int, resource:schemas.Resource, ids:List[int] = Body(...), db:Session=Depends(get_db)):
+async def rem_from_category(id:int, resource:schemas.Resource, ids:List[int] = Body(...), db:Session=Depends(get_db)):
     return await crud.rem_from_category(id, ids, resource, db)

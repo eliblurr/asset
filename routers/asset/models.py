@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Integer, CheckConstraint, Boolean, Float, DateTime, Enum, ForeignKey, event
+from routers.catalogue.models import CatalogueAsset
 from routers.currency.models import CurrencyChoice
 from clry.tasks import s3_delete_bg, _delete_path
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -50,6 +51,7 @@ class Asset(BaseMixin, Base):
     depreciation_algorithm = Column(Enum(DepreciationAlgorithm), nullable=True)
     documents = relationship("AssetDocument", uselist=True, cascade="all, delete")
     categories = relationship("Category", secondary=CategoryAsset.__table__, back_populates="assets")
+    catalogues = relationship("Catalogue", secondary=CatalogueAsset.__table__, back_populates="assets")
     images = relationship("AssetImage", uselist=True, cascade="all, delete")
     department = relationship("Department", back_populates="assets")
     inventory = relationship("Inventory", back_populates="assets")
