@@ -7,7 +7,7 @@ from . import crud, schemas
 
 router = APIRouter()
 
-@router.post('/', description='', response_model=schemas.Inventory, status_code=201, name='Inventory')
+@router.post('/', description='some description here', response_model=schemas.Inventory, status_code=201, name='Inventory')
 async def create(payload:schemas.CreateInventory, db:Session=Depends(get_db)):
     return await crud.inventory.create(payload, db)
 
