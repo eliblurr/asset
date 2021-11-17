@@ -16,10 +16,7 @@ class Inventory(BaseMixin, Base):
     manager_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     department = relationship("Department", back_populates="inventories")
     proposals = relationship("Proposal", back_populates="inventory")
+    requests = relationship("Request", back_populates="inventory")
     branch = relationship("Branch", back_populates="inventories")
     assets = relationship("Asset", back_populates="inventory")
     branch_id = Column(Integer, ForeignKey('branches.id'))
-    # requests
-
-#     requests = relationship("Request", uselist=True, backref='inventory')
-#     items = relationship('Item', backref='inventory', uselist=True, lazy='dynamic')

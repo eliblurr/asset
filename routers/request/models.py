@@ -44,7 +44,10 @@ class Request(BaseMixin, Base):
     priority = relationship("Priority")
 
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
-    department = relationship("Parent", back_populates="requests")
+    department = relationship("Department", back_populates="requests")
+
+    inventory_id = Column(Integer, ForeignKey("inventories.id"), nullable=True)
+    inventory = relationship("Inventory", back_populates="requests")
 
 @event.listens_for(Request, 'before_insert') 
 @event.listens_for(Request, 'before_update') 
