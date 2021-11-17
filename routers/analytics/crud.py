@@ -1,5 +1,17 @@
 # Analytics & Report generation (DB level, Schema(s)/Tenant(s) level, Branch(es) level)
 # Aggregations By some factor of some fields (DB level, Schema(s)/Tenant(s) level, Branch(es) level) .eg. group monetary value by currency
+#               db
+#             /    \
+#       tenant      tenant
+#        / \         | \
+#       /   \        |  \
+#      /     \       |   \
+#   branch branch branch branch
+# 
+# ?level=db -> payload:tenants=[some tenant list, *] 
+# ?level=tenant -> payload:branches=[some branch list, *]
+# min, max, count, avg, sum
+# order_by, group_by
 
 '''
 c_s = {'visits':VisitView, 'appointments':AppointmentView, 'bills':BillView, 'doctors':ClinicianView, 'chart-examination':ChartExaminationView, 'chart-eye-pressure':ChartEyePressureView, 'chart-refraction':ChartRefractionView, 'patients':PatientView} 

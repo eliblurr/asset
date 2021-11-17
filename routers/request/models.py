@@ -25,9 +25,9 @@ class Flag(enum.Enum):
 class Request(BaseMixin, Base):
     '''Request Model'''
     __tablename__ = 'requests'
-    __table_args__ = (
+    # __table_args__ = (
         # check constraint on item being returnable to have certain fields eg. return date 
-    )
+    # )
 
     # end_date = Column(DateTime, nullable=True)
     # start_date = Column(DateTime, nullable=False)
