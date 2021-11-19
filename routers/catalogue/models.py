@@ -8,11 +8,11 @@ class CatalogueAsset(Base):
     __tablename__ = 'catalogue_assets'
 
     asset_id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
-    catalogue_id = Column(Integer, ForeignKey('public.categories.id'), primary_key=True)
+    catalogue_id = Column(Integer, ForeignKey('catalogues.id'), primary_key=True)
 
 class Catalogue(BaseMixin, Base):
     '''Catalogue Model'''
-    __tablename__ = "catalogue"
+    __tablename__ = "catalogues"
 
     title = Column(String, nullable=False)
     metatitle = Column(String, nullable=True)

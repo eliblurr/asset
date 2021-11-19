@@ -1,4 +1,5 @@
 import routers.asset.models
+import routers.catalogue.models
 import routers.currency.models
 import routers.user.account.models 
 import routers.user.role.models

@@ -2,17 +2,69 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from dependencies import get_db
-from . import crud, schemas
+from . import crud, schemas, models
 from typing import List
 
 router = APIRouter()
+
+# for tenant, for db
+
+# from routers.currency.models import Currency
+
+# from database import SessionLocal
+
+# db = SessionLocal()
+
+# # year = crud.dates_available('created', Currency, db)
+
+# c = crud.Analytics(Currency)
+# fields = [('id', 'sum_of_ids'),]
+# # values
+# r = c.avg( fields, db)
+# print(r)
 
 @router.post('/', description='', status_code=201, name='Generate Report')
 async def create(payload:int, db:Session=Depends(get_db)):
     return 
 
-@router.get('/', description='', status_code=201, name='Analytics')
-async def create(dashboard:bool=False, db:Session=Depends(get_db)):
+@router.get('/dashboard', description='', status_code=200, name='Analytics')
+async def create(level:schemas.Level, db:Session=Depends(get_db)):
+    assets = {
+        'years':await crud.dates_available('created', models.Asset, db),
+        'count':0,
+        'count_by_status':{
+            'decomissioned':0,
+            'numerable':0,
+            'consumable':0
+        },
+        'value':{
+            'GHC':0,
+            'USD':0
+        },
+        'value_by_status':{
+            'decomissioned':0,
+            'numerable':0,
+            'consumable':0
+        },
+        'count_by_years':{
+            '2001':{
+                'count':0,
+                'count_by_status':{
+                    'decomissioned':0,
+                    'numerable':0,
+                    'consumable':0
+                },
+            }
+        },
+        'total':0,
+        'total':0,
+        'total':0,
+        'total':0,
+        'total':0,
+        'total':0,
+        'total':0, 
+    }
+
     if dashboard:
         return 'dashboard data'
     return 

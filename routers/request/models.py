@@ -49,6 +49,9 @@ class Request(BaseMixin, Base):
     inventory_id = Column(Integer, ForeignKey("inventories.id"), nullable=True)
     inventory = relationship("Inventory", back_populates="requests")
 
+class RequestAsset():
+    pass
+
 @event.listens_for(Request, 'before_insert') 
 @event.listens_for(Request, 'before_update') 
 def one_req_per_user_per_item(mapper, connection, target):

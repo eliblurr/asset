@@ -1,3 +1,92 @@
+from sqlalchemy import func, distinct, Date
+from sqlalchemy.orm import Session
+
+async def dates_available(field, model, db:Session):
+    dates = db.query(getattr(model, field).cast(Date)).distinct().all()
+    return [date[0].year for date in dates]
+
+class Analytics:
+    def __init__(self, model):
+        self.model = model
+
+    async def sum(self, fields:list, db:Session, group_by=None, order_by=None, **kw):
+        sums = [
+            func.sum(
+                getattr(self.model, field[0])
+            ).label(
+                field[1]
+            ) for field in fields
+        ]
+        base = db.query(*sums).filter(**kw)
+        if group_by:
+            attr = getattr(self.model, group_by)
+            base = db.query(*sums, attr).filter(**kw).group_by(attr)
+        return base.subquery() if subq else base.all()
+
+    async def count(self, db:Session, group_by=None, order_by=None, subq=False, **kw):
+        base = db.query(func.count(self.model.id)).filter(**kw)
+        if group_by:
+            attr = getattr(self.model, group_by)
+            base = db.query(func.count(self.model.id), attr).filter(**kw).group_by(attr)
+        return base.subquery() if subq else base.all()
+
+    async def min(self, fields:list, db:Session, group_by=None, order_by=None, subq=False, **kw):
+        mins = [
+            func.min(
+                getattr(self.model, field[0])
+            ).label(
+                field[1]
+            ) for field in fields
+        ]
+        base = db.query(*mins).filter(**kw)
+        if group_by:
+            attr = getattr(self.model, group_by)
+            base = db.query(*mins, attr).filter(**kw).group_by(attr)
+        return base.subquery() if subq else base.all()
+    
+    async def max(self, fields:list, db:Session, group_by=None, order_by=None, subq=False, **kw):
+        maxs = [
+            func.max(
+                getattr(self.model, field[0])
+            ).label(
+                field[1]
+            ) for field in fields
+        ]
+        base = db.query(*maxs).filter(**kw)
+        if group_by:
+            attr = getattr(self.model, group_by)
+            base = db.query(*maxs, attr).filter(**kw).group_by(attr)
+        return base.subquery() if subq else base.all()
+
+    async def avg(self, fields:list, db:Session, group_by=None, order_by=None, subq=False,**kw):
+        avgs = [
+            func.avg(
+                getattr(self.model, field[0])
+            ).label(
+                field[1]
+            ) for field in fields
+        ]
+        base = db.query(*avgs).filter(**kw)
+        if group_by:
+            attr = getattr(self.model, group_by)
+            base = db.query(*avgs, attr).filter(**kw).group_by(attr)
+        return base.subquery() if subq else base.all()
+
+# session.query(Table.column, func.count(Table.column)).group_by(Table.column).all()
+# q = session.query(User.id).\
+# join(User.addresses).\
+# group_by(User.id).\
+# having(func.count(Address.id) > 2)
+
+# session.query(func.count(User.id)).\
+#         group_by(User.name)
+
+# aggregated_unit_price = Session.query(
+#                             func.sum(UnitPrice.price).label('price')
+#                         ).group_by(UnitPrice.unit_id).subquery()
+
+# fields is [('column','label')]
+
 # Analytics & Report generation (DB level, Schema(s)/Tenant(s) level, Branch(es) level)
 # Aggregations By some factor of some fields (DB level, Schema(s)/Tenant(s) level, Branch(es) level) .eg. group monetary value by currency
 #               db
@@ -13,8 +102,49 @@
 # min, max, count, avg, sum
 # order_by, group_by
 
+# Assets
+# - total count
+# - total count by status
+# - total count by numerable
+# - total count by numerable
+# - sum of prices by currency
+# - total count by consumable
+# - total value by consumable
+# - total count by year [created]
+# - total count by month [created]
+# - total count of decomission assets
+# - total asset value after depreciation
+
+# Inventory
+# - assets groupings in inventory
+# - proposal count[grouping by status]
+# - count of request[grouping by status]
+
+# Department
+# - assets groupings in inventory
+# - proposal count[grouping by status]
+# - count of request[grouping by status]
+
+# Request
+# - total requests
+# - request count by status'
+# - value of accepted[or other status'] request assets
+
+# Proposal
+# - total count by status' 
+# - total count of proposals
+
+# Finance
+# total value by currency 
+
 '''
 c_s = {'visits':VisitView, 'appointments':AppointmentView, 'bills':BillView, 'doctors':ClinicianView, 'chart-examination':ChartExaminationView, 'chart-eye-pressure':ChartEyePressureView, 'chart-refraction':ChartRefractionView, 'patients':PatientView} 
+
+class QPPatientSerializer(PatientSerializer):
+    class Meta:
+        model = Patient
+        fields = ('age', 'is_active' , 'gender', 'is_registered',)
+        extra_kwargs = {k:{'required': False, 'allow_null':True} for k in fields}
 
 @api_view(['GET'])
 @permission_classes([AllowAny,])
