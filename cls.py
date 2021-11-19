@@ -3,10 +3,10 @@ from exceptions import MaxOccurrenceError, FileNotSupported, UploadNotAllowed
 from constants import DT_X, Q_X, SUPPORTED_EXT, Q_STR_X, SORT_STR_X
 from sqlalchemy.exc import ProgrammingError, IntegrityError
 from utils import schema_to_model, http_exception_detail
+from sqlalchemy import and_, or_, func, distinct, Date
 from inspect import Parameter, Signature, signature
 from fastapi import Query, WebSocket, HTTPException
 from psycopg2.errors import UndefinedTable
-from sqlalchemy import and_, or_, func
 from services.aws import s3_upload
 from sqlalchemy.orm import Session
 from functools import wraps
@@ -214,6 +214,84 @@ class CRUD:
                     type=f"{e.__class__}"
                 ),
             )
+
+class Analytics:
+    def __init__(self, model):
+        self.model = model
+
+    async def sum(self, fields:list, db:Session, group_by=None, order_by=None, **kw):
+        sums = [
+            func.sum(
+                getattr(self.model, field[0])
+            ).label(
+                field[1]
+            ) for field in fields
+        ]
+        base = db.query(*sums).filter(**kw)
+        if group_by:
+            attr = getattr(self.model, group_by)
+            base = db.query(*sums, attr).filter(**kw).group_by(attr)
+        return base.subquery() if subq else base.all()
+
+    async def count(self, fields:list, db:Session, group_by=None, order_by=None, subq=False, **kw):
+        cnts = [
+            func.count(
+                getattr(self.model, field[0])
+            ).label(
+                field[1]
+            ) for field in fields
+        ]
+        base = db.query(*cnts).filter(**kw)
+        if group_by:
+            attr = getattr(self.model, group_by)
+            base = db.query(*cnts, attr).filter(**kw).group_by(attr)
+        return base.subquery() if subq else base.all()
+
+    async def min(self, fields:list, db:Session, group_by=None, order_by=None, subq=False, **kw):
+        mins = [
+            func.min(
+                getattr(self.model, field[0])
+            ).label(
+                field[1]
+            ) for field in fields
+        ]
+        base = db.query(*mins).filter(**kw)
+        if group_by:
+            attr = getattr(self.model, group_by)
+            base = db.query(*mins, attr).filter(**kw).group_by(attr)
+        return base.subquery() if subq else base.all()
+    
+    async def max(self, fields:list, db:Session, group_by=None, order_by=None, subq=False, **kw):
+        maxs = [
+            func.max(
+                getattr(self.model, field[0])
+            ).label(
+                field[1]
+            ) for field in fields
+        ]
+        base = db.query(*maxs).filter(**kw)
+        if group_by:
+            attr = getattr(self.model, group_by)
+            base = db.query(*maxs, attr).filter(**kw).group_by(attr)
+        return base.subquery() if subq else base.all()
+
+    async def avg(self, fields:list, db:Session, group_by=None, order_by=None, subq=False,**kw):
+        avgs = [
+            func.avg(
+                getattr(self.model, field[0])
+            ).label(
+                field[1]
+            ) for field in fields
+        ]
+        base = db.query(*avgs).filter(**kw)
+        if group_by:
+            attr = getattr(self.model, group_by)
+            base = db.query(*avgs, attr).filter(**kw).group_by(attr)
+        return base.subquery() if subq else base.all()
+
+    async def years_available(self, field, db:Session):
+        dates = db.query(getattr(self.model, field).cast(Date)).distinct().all()
+        return [date[0].year for date in dates]
 
 class ContentQueryChecker:
     def __init__(self, cols=None, actions=None):

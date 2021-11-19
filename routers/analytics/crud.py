@@ -1,76 +1,15 @@
-from sqlalchemy import func, distinct, Date
 from sqlalchemy.orm import Session
+from . import models, schemas
+from cls import Analytics
 
-async def dates_available(field, model, db:Session):
-    dates = db.query(getattr(model, field).cast(Date)).distinct().all()
-    return [date[0].year for date in dates]
+asset = Analytics(models.Asset)
+request = Analytics(models.Request)
+proposal = Analytics(models.Proposal)
+inventory = Analytics(models.Inventory)
+department = Analytics(models.Department)
 
-class Analytics:
-    def __init__(self, model):
-        self.model = model
 
-    async def sum(self, fields:list, db:Session, group_by=None, order_by=None, **kw):
-        sums = [
-            func.sum(
-                getattr(self.model, field[0])
-            ).label(
-                field[1]
-            ) for field in fields
-        ]
-        base = db.query(*sums).filter(**kw)
-        if group_by:
-            attr = getattr(self.model, group_by)
-            base = db.query(*sums, attr).filter(**kw).group_by(attr)
-        return base.subquery() if subq else base.all()
 
-    async def count(self, db:Session, group_by=None, order_by=None, subq=False, **kw):
-        base = db.query(func.count(self.model.id)).filter(**kw)
-        if group_by:
-            attr = getattr(self.model, group_by)
-            base = db.query(func.count(self.model.id), attr).filter(**kw).group_by(attr)
-        return base.subquery() if subq else base.all()
-
-    async def min(self, fields:list, db:Session, group_by=None, order_by=None, subq=False, **kw):
-        mins = [
-            func.min(
-                getattr(self.model, field[0])
-            ).label(
-                field[1]
-            ) for field in fields
-        ]
-        base = db.query(*mins).filter(**kw)
-        if group_by:
-            attr = getattr(self.model, group_by)
-            base = db.query(*mins, attr).filter(**kw).group_by(attr)
-        return base.subquery() if subq else base.all()
-    
-    async def max(self, fields:list, db:Session, group_by=None, order_by=None, subq=False, **kw):
-        maxs = [
-            func.max(
-                getattr(self.model, field[0])
-            ).label(
-                field[1]
-            ) for field in fields
-        ]
-        base = db.query(*maxs).filter(**kw)
-        if group_by:
-            attr = getattr(self.model, group_by)
-            base = db.query(*maxs, attr).filter(**kw).group_by(attr)
-        return base.subquery() if subq else base.all()
-
-    async def avg(self, fields:list, db:Session, group_by=None, order_by=None, subq=False,**kw):
-        avgs = [
-            func.avg(
-                getattr(self.model, field[0])
-            ).label(
-                field[1]
-            ) for field in fields
-        ]
-        base = db.query(*avgs).filter(**kw)
-        if group_by:
-            attr = getattr(self.model, group_by)
-            base = db.query(*avgs, attr).filter(**kw).group_by(attr)
-        return base.subquery() if subq else base.all()
 
 # session.query(Table.column, func.count(Table.column)).group_by(Table.column).all()
 # q = session.query(User.id).\

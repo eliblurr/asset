@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Body
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from dependencies import get_db
-from . import crud, schemas, models
+from . import crud, schemas
 from typing import List
 
 router = APIRouter()
@@ -23,14 +23,24 @@ router = APIRouter()
 # r = c.avg( fields, db)
 # print(r)
 
+a = ['*', 'sdf']
+
+print('*' in a )
+
 @router.post('/', description='', status_code=201, name='Generate Report')
 async def create(payload:int, db:Session=Depends(get_db)):
     return 
 
-@router.get('/dashboard', description='', status_code=200, name='Analytics')
-async def create(level:schemas.Level, db:Session=Depends(get_db)):
+@router.post('/dashboard', description='', status_code=200, name='Analytics')
+async def create(level:schemas.Level, payload:list=Body(...), db:Session=Depends(get_db)):
+    if level==schemas.Level.db:
+        # body contains list of tenant keys
+        pass
+    if level==schemas.Level.tenant:
+        # body contains list of branch ids
+        pass
     assets = {
-        'years':await crud.dates_available('created', models.Asset, db),
+        'years':0,
         'count':0,
         'count_by_status':{
             'decomissioned':0,

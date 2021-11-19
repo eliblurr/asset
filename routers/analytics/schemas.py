@@ -10,4 +10,3 @@ class AResource(str, enum.Enum):
 class Level(str, enum.Enum):
     db = 'db'
     tenant = 'tenant'
-    branch = 'branch'
