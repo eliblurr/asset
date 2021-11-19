@@ -8,7 +8,49 @@ proposal = Analytics(models.Proposal)
 inventory = Analytics(models.Inventory)
 department = Analytics(models.Department)
 
+async def db_aggregator(keys, years, db:Session):
+    pass
 
+async def tenant_aggregator(ids, years, db:Session):
+    return {
+        "assets":{
+            "years": await asset.years_available('created', db)
+        },
+        "inventories":"",
+        "requests":"",
+        "proposals":"",
+        "departments":"",
+    }
+    # group by years, monthss
+    # pass
+
+# getattr(self.model, field).cast(Date)
+# year_filter = filter(models.Asset.created.cast(Date)==year)
+
+# field filters
+
+# Parameter('sort', Parameter.KEYWORD_ONLY, annotation=List[str], default=Query(None, regex=sort_str if sort_str else '(^-)?\w')),])  
+# Parameter('fields', Parameter.KEYWORD_ONLY, annotation=List[str], default=Query(None, regex=f'({q_str})$')),
+# DT_X = r'^((lt|lte|gt|gte):)?\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01]) (00|[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9]):([0-9]|[0-5][0-9])?'
+# filters.extend([
+#     getattr(self.model, k) >= str_to_datetime(val.split(":", 1)[1]) if val.split(":", 1)[0]=='gte'
+#     else getattr(self.model, k) <= str_to_datetime(val.split(":", 1)[1]) if val.split(":", 1)[0]=='lte'
+#     else getattr(self.model, k) > str_to_datetime(val.split(":", 1)[1]) if val.split(":", 1)[0]=='gt'
+#     else getattr(self.model, k) < str_to_datetime(val.split(":", 1)[1]) if val.split(":", 1)[0]=='lt'
+#     else getattr(self.model, k) == str_to_datetime(val)
+#     for k,v in dte_filters.items() for val in v 
+# ])
+# getattr(self.model, field).cast(Date)
+# sort_str = "|".join([f"{x[0]}|-{x[0]}" for x in self._cols]) if self._cols else None
+# q_str = "|".join([x[0] for x in self._cols if x[0]!='password']) if self._cols else None
+# if self._cols:
+#     params.extend([Parameter(param[0], Parameter.KEYWORD_ONLY, annotation=param[1], default=Query(None)) for param in self._cols if param[1]!=datetime.datetime])
+#     params.extend([
+#         Parameter(param[0], Parameter.KEYWORD_ONLY, annotation=List[str], default=Query(None, regex=DT_X)) for param in self._cols if param[1]==datetime.datetime
+#     ])
+# if params['sort']:
+#     sort = [f'{item[1:]} desc' if re.search(SORT_STR_X, item) else f'{item} asc' for item in params['sort']]
+#     base = base.order_by(text(*sort))
 
 
 # session.query(Table.column, func.count(Table.column)).group_by(Table.column).all()
@@ -75,6 +117,92 @@ department = Analytics(models.Department)
 
 # Finance
 # total value by currency 
+
+# assets = {
+#     'years':0,
+#     'count':0,
+#     'count_by_status':{
+#         'decomissioned':0,
+#         'numerable':0,
+#         'consumable':0
+#     },
+#     'value':{
+#         'GHC':0,
+#         'USD':0
+#     },
+#     'value_by_status':{
+#         'decomissioned':0,
+#         'numerable':0,
+#         'consumable':0
+#     },
+#     'count_by_years':{
+#         '2001':{
+#             'count':0,
+#             'count_by_status':{
+#                 'decomissioned':0,
+#                 'numerable':0,
+#                 'consumable':0
+#             },
+#         }
+#     },
+#     'total':0,
+#     'total':0,
+#     'total':0,
+#     'total':0,
+#     'total':0,
+#     'total':0,
+#     'total':0, 
+# }
+
+# if dashboard:
+#     return 'dashboard data'
+# return 
+
+'''
+    if file:
+        file_path = os.path.join(path, file)
+        if os.path.isfile(file_path):
+            if request.url.path=='/logs/download':
+                return FileResponse(file_path, media_type='text/plain', filename=f"{file}.log")
+            return FileResponse(file_path, media_type='text/plain', stat_result=os.stat(file_path))
+        else:
+            return "error", {"info":f"File not found"}  
+    files_gen_to_list = list(path.iterdir())
+    files = [
+        {
+            "filename": file.name,
+            "path": file.as_posix(),
+            "entries": get_entries(file)
+        }
+        for file in files_gen_to_list[offset:offset+limit] if file.is_file()
+    ]  
+    return {
+        "bk_size": files_gen_to_list.__len__(),
+        "pg_size": files.__len__(),
+        "data": files
+    }
+'''
+
+
+# for tenant, for db
+
+# from routers.currency.models import Currency
+
+# from database import SessionLocal
+
+# db = SessionLocal()
+
+# # year = crud.dates_available('created', Currency, db)
+
+# c = crud.Analytics(Currency)
+# fields = [('id', 'sum_of_ids'),]
+# # values
+# r = c.avg( fields, db)
+# print(r)
+
+# a = ['*', 'sdf']
+
+# print('*' in a )
 
 '''
 c_s = {'visits':VisitView, 'appointments':AppointmentView, 'bills':BillView, 'doctors':ClinicianView, 'chart-examination':ChartExaminationView, 'chart-eye-pressure':ChartEyePressureView, 'chart-refraction':ChartRefractionView, 'patients':PatientView} 

@@ -1,0 +1,69 @@
+{
+    "asset":{
+        "create":"created by %s on %s",
+        "delivery":"delivered to %s on %s",
+        "update":"updated by %s on %s",
+        "pick":"picked by %s on %s",
+        "return":"returned by %s on %s",
+        "delete":"deleted by %s on %s",
+        "transfer_inv":"transferred by %s from %s to %s on %s",
+        "transfer_brnch":"transferred by %s from %s to %s on %s",
+        "decommission":"decommissioned by %s on %s",
+        "transfer_usr":"transferred by %s from %s to %s on %s"
+    },
+    "inventory":{
+        "create":"created by %s on %s",
+        "update":"created by %s on %s",
+        "delete":"created by %s on %s",
+        "update_manager":"manager changed by %s from %s to %s on %s"
+    },
+    "user":{
+        "create":"created by %s on %s",
+        "update":"updated by %s on %s",
+        "delete":"deleted by %s on %s",
+        "asset_assingnment":"%s assigned asset %s to %s on %s",
+        "password_update":"password updated by %s on %s",
+        "logged_in":"logged in: %s",
+        "logged_out":"logged out: %s"
+    },
+    "department":{
+        "create":"created by %s on %s",
+        "update":"updated by %s on %s",
+        "delete":"deleted by %s on %s",
+        "update_manager":"manager changed by %s from %s to %s on %s"
+    },
+    "category":{
+        "create":"created by %s on %s",
+        "update":"updated by %s on %s",
+        "delete":"deleted by %s on %s"
+    },
+    "branch":{
+        "create":"created by %s on %s",
+        "update":"updated by %s on %s",
+        "delete":"deleted by %s on %s"
+    },
+    "vendor":{
+        "create":"created by %s on %s",
+        "update":"updated by %s on %s",
+        "delete":"deleted by %s on %s"
+    },
+    "roles":{
+        "create":"created by %s on %s",
+        "update":"updated by %s on %s",
+        "delete":"deleted by %s on %s"
+    },
+    "request":{
+        "create":"created by %s on %s",
+        "update":"updated by %s on %s",
+        "approve":"approved by %s on %s",
+        "decline":"declined by %s on %s",
+        "expire":"expired on %s"
+    },
+    "proposals":{
+        "create":"created by %s on %s",
+        "update":"updated by %s on %s",
+        "accept":"accepted by %s on %s",
+        "decline":"declined by %s on %s",
+        "deliver":"asset %s delivered to %s on %s"
+    }
+}
