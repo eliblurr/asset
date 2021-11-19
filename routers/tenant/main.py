@@ -9,7 +9,7 @@ from utils import act_url
 router = APIRouter()
 
 @router.post('/', description='', response_model=schemas.Tenant, status_code=201, name='Tenant/Organization')
-async def create(request:Request, payload:schemas.CreateTenant=Depends(schemas.CreateTenant.as_form), logo:UploadFile=File(None), bg_image:UploadFile=File(None), db:Session=Depends(get_db)):
+async def create(request:Request, payload:schemas.CreateTenant=Depends(schemas.CreateTenant.as_form), logo:UploadFile=File(...), bg_image:UploadFile=File(...), db:Session=Depends(get_db)):
     tenant = await crud.tenant.create(payload, db, logo=logo, bg_image=bg_image)
     if tenant: 
         url = act_url(request.base_url, tenant.id, "tenants")
