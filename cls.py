@@ -294,8 +294,8 @@ class Analytics:
         return [date[0].year for date in dates]
 
 class ContentQueryChecker:
-    def __init__(self, cols=None, actions=None):
-        self._cols = cols
+    def __init__(self, cols=None, actions=None, exclude:List[str]=[]):
+        self._cols = [col for col in cols if col[0] not in exclude]
         self._actions = actions
     
     def __call__(self, func):

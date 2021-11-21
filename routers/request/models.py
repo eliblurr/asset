@@ -49,6 +49,8 @@ class Request(BaseMixin, Base):
     inventory_id = Column(Integer, ForeignKey("inventories.id"), nullable=True)
     inventory = relationship("Inventory", back_populates="requests")
 
+    activities = relationship("Activity", order_by="Activity.created")
+
 class RequestAsset():
     pass
 

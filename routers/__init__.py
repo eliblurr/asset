@@ -1,3 +1,4 @@
+import routers.activity.models
 import routers.asset.models
 import routers.catalogue.models
 import routers.currency.models

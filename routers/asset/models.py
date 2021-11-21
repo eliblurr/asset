@@ -53,6 +53,7 @@ class Asset(BaseMixin, Base):
     categories = relationship("Category", secondary=CategoryAsset.__table__, back_populates="assets")
     catalogues = relationship("Catalogue", secondary=CatalogueAsset.__table__, back_populates="assets")
     images = relationship("AssetImage", uselist=True, cascade="all, delete")
+    activities = relationship("Activity", order_by="Activity.created")
     department = relationship("Department", back_populates="assets")
     inventory = relationship("Inventory", back_populates="assets")
     vendor = relationship("Vendor", back_populates="assets_sold")

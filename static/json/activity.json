@@ -1,3 +1,29 @@
 {
-    
+    "asset":{
+        "create":"created by %s on %s",
+        "delivery":"delivered to %s on %s",
+        "update":"updated by %s on %s",
+        "pick":"picked by %s on %s",
+        "return":"returned by %s on %s",
+        "delete":"deleted by %s on %s",
+        "transfer_inv":"transferred by %s from %s to %s on %s",
+        "transfer_brnch":"transferred by %s from %s to %s on %s",
+        "decommission":"decommissioned by %s on %s",
+        "transfer_usr":"transferred by %s from %s to %s on %s"
+    },
+    "request":{
+        "create":"created by %s on %s",
+        "approve":"approved by %s on %s",
+        "decline":"declined by %s on %s",
+        "expire":"expired on %s",
+        "return":"",
+        "complete":"",
+        "ready":""
+    },
+    "proposals":{
+        "create":"created by %s on %s",
+        "accept":"accepted by %s on %s",
+        "decline":"declined by %s on %s",
+        "deliver":"asset %s delivered to %s on %s"
+    }
 }

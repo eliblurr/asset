@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Boolean, Integer, BigInteger
+from sqlalchemy import Column, DateTime, Boolean, Integer, BigInteger, JSON
 from passlib.hash import pbkdf2_sha256 as sha256
 from datetime import datetime
 from utils import gen_code

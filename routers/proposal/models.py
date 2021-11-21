@@ -13,7 +13,6 @@ class ProposalStatus(enum.Enum):
 class Proposal(BaseMixin, Base):
     '''Proposal Model'''
     __tablename__ = "proposals"
-    # __table_args__ = ({'schema':None},)
 
     priority = relationship("Priority")
     title = Column(String, nullable=False)
@@ -22,6 +21,7 @@ class Proposal(BaseMixin, Base):
     justification = Column(String, nullable=False)
     author = relationship("User", back_populates="proposals")
     inventory = relationship("Inventory", back_populates="proposals")
+    activities = relationship("Activity", order_by="Activity.created")
     department = relationship("Department", back_populates="proposals")
     author_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     priority_id = Column(Integer, ForeignKey('priorities.id'), nullable=False)
