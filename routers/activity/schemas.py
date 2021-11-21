@@ -14,7 +14,7 @@ class ActivityBase(BaseModel):
         model = m.Activity
 
     @validator('meta')
-    def only_one_fk(cls, v):
+    def json_to_dict(cls, v):
         return json.loads(v)
           
 class Activity(ActivityBase):
