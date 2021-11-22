@@ -7,11 +7,23 @@ activity = CRUD(models.Activity)
 logger = logging.getLogger("eAsset.routers.activity")
 path = os.path.join(STATIC_ROOT, 'json/activity.json')
 
-async def get_message(key:str, op:str):
+'''
+target = {
+    "key":{
+        "user_id":1,
+        "value":"title"
+    }
+}
+'''
+
+async def get_message(key:str, op:str, target:dict):
     try:
         with open(path) as f:
             data = json.load(f)
-        return data[key][op]
+        data = data[key][op]
+        if set(target.keys())!=set([n for _,n,_,_ in Formatter().parse(data) if n]):
+            raise ValueError('key mismatch b/n target and message')        
+        return ActivityBase(msg=data[key][op], meta=target)
     except KeyError:
         raise KeyError(f'could not find message for {key}.{op}')
     except Exception as e:
