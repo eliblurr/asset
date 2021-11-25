@@ -218,6 +218,7 @@ class CRUD:
 class Analytics:
     def __init__(self, model):
         self.model = model
+        # kw = {"and":{}, "or":{}}
 
     async def sum(self, fields:list, db:Session, group_by=None, order_by=None, **kw):
         sums = [

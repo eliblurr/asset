@@ -2,6 +2,7 @@ from fastapi import Request, Header, HTTPException, Depends
 from routers.user.auth.crud import is_token_blacklisted
 from utils import http_exception_detail, decode_jwt
 from jwt.exceptions import ExpiredSignatureError
+from database import SessionLocal, engine
 from exceptions import BlacklistedToken
 from main import oauth2_scheme
 from config import settings
@@ -11,6 +12,12 @@ def get_db(request:Request):
         yield request.state.db
     finally:
         request.state.db.close()
+
+def session_generator(schemas):
+    prev_schema = None
+    for schema in schemas:
+        yield SessionLocal(bind=engine.execution_options(schema_translate_map={prev_schema: str(schema)}))
+        prev_schema = schema
 
 # Global Dependency
 # app = FastAPI(dependencies=[Depends(verify_token), Depends(verify_key)])

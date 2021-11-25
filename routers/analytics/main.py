@@ -8,14 +8,18 @@ from typing import List
 
 router = APIRouter()
 
-# years:List[str]=Query(None, regex=DT_Z),
-@router.post('/reports/{resource}', description='', status_code=200, name='Generate Report')
-async def create(level:schemas.Level, resource:schemas.AResource, db:Session=Depends(get_db)):
+@router.post('/test')
+async def create(db:Session=Depends(get_db)):
     return 
 
-@router.post('/dashboard', description='', status_code=200, name='Analytics')
-async def create(level:schemas.Level, keys_or_ids:list=Body(...), db:Session=Depends(get_db)):
-    if level==schemas.Level.db:
-        return await crud.db_aggregator(keys_or_ids, db)
-    if level==schemas.Level.tenant:
-        return await crud.tenant_aggregator(keys_or_ids, db)
+# # years:List[str]=Query(None, regex=DT_Z),
+# @router.post('/reports/{resource}', description='', status_code=200, name='Generate Report')
+# async def create(level:schemas.Level, resource:schemas.AResource, db:Session=Depends(get_db)):
+#     return 
+
+# @router.post('/dashboard', description='', status_code=200, name='Analytics')
+# async def create(level:schemas.Level, keys_or_ids:list=Body(...), db:Session=Depends(get_db)):
+#     if level==schemas.Level.db:
+#         return await crud.db_aggregator(keys_or_ids, db)
+#     if level==schemas.Level.tenant:
+#         return await crud.tenant_aggregator(keys_or_ids, db)

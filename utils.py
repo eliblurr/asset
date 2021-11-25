@@ -90,6 +90,12 @@ def money(currency:str, amount:float, locale:str=None):
         format_currency(amount, currency, locale=locale)
     return format_currency(amount, currency)
 
+def generator(keys):
+    prev_key = None
+    for key in keys:
+        yield key
+        prev_key = key
+
 today = date.today()
 sum_ls = lambda ls : sum(ls)
 today_str =  lambda: today.strftime("%Y/%m/%d")

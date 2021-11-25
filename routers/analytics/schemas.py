@@ -1,3 +1,5 @@
+from pydantic import BaseModel
+from typing import List
 import datetime, enum
 
 class AResource(str, enum.Enum):
@@ -10,3 +12,8 @@ class AResource(str, enum.Enum):
 class Level(str, enum.Enum):
     db = 'db'
     tenant = 'tenant'
+
+class DateFilters(BaseModel):
+    field: str = 'created'
+    years:List[int]=[]
+    months: List[int]=[]
