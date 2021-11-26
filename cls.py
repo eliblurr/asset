@@ -1,11 +1,13 @@
 import enum, re, datetime, pathlib, pandas as pd, numpy as np, os, asyncio, shutil
 from exceptions import MaxOccurrenceError, FileNotSupported, UploadNotAllowed
+from sqlalchemy import and_, or_, func, distinct, Date, union_all, extract
 from constants import DT_X, Q_X, SUPPORTED_EXT, Q_STR_X, SORT_STR_X
 from sqlalchemy.exc import ProgrammingError, IntegrityError
+from sqlalchemy.types import Date, DateTime, DATE, DATETIME
 from utils import schema_to_model, http_exception_detail
-from sqlalchemy import and_, or_, func, distinct, Date
 from inspect import Parameter, Signature, signature
 from fastapi import Query, WebSocket, HTTPException
+from pydantic import BaseModel, conint, constr
 from psycopg2.errors import UndefinedTable
 from services.aws import s3_upload
 from sqlalchemy.orm import Session
@@ -16,6 +18,12 @@ from passlib import pwd
 from io import BytesIO
 from PIL import Image
 from config import *
+import enum
+
+class D(BaseModel):
+    field: str = 'created'
+    months: List[conint(gt=0, lt=13)]=[]
+    years:List[constr(regex=r'(\d\d\d\d)$')]=[]
 
 class CRUD:
     def __init__(self, model, extra_models:list=None):
@@ -215,84 +223,91 @@ class CRUD:
                 ),
             )
 
-class Analytics:
+class Aggregator:
+    """
+        A simple Aggregator class
+        fields = ['id']
+        q_type = QueryType.res -> [
+            res = "res" -> return actual results
+            subq = "subq" -> returns subquery
+            query = "query" -> returns query
+        ]
+        group_by = ['status']
+        op = 'sum' -> [
+            count = 'count' -> for sql COUNT function
+            sum = 'sum' -> for sql SUM function
+            min = 'min' -> for sql MIN function
+            max = 'max' -> for sql MAX function
+            avg = 'avg' -> for sql AVG function
+        ]
+        res = zx.op(
+            fields, list(sessions), op, q_type, group_by
+        )
+    """
+    Op = enum.Enum('Op', {v:v for v in ["sum","min","max","avg","count"]})
+    QueryType = enum.Enum('QueryType', {v:v for v in ["res","subq","query"]})
+    
     def __init__(self, model):
         self.model = model
-        # kw = {"and":{}, "or":{}}
 
-    async def sum(self, fields:list, db:Session, group_by=None, order_by=None, **kw):
-        sums = [
-            func.sum(
-                getattr(self.model, field[0])
-            ).label(
-                field[1]
-            ) for field in fields
-        ]
-        base = db.query(*sums).filter(**kw)
-        if group_by:
-            attr = getattr(self.model, group_by)
-            base = db.query(*sums, attr).filter(**kw).group_by(attr)
-        return base.subquery() if subq else base.all()
+    def op(self, fields:list, dbs:List[Session], op:Op, date:D=None, q_type:QueryType='res', group_by:List[str]=[], and_filters:dict={}, or_filters:dict={}, **kw):
+        queryset, d_fields = self.get_queryset(fields, dbs, date, group_by, and_filters, or_filters, **kw), []
 
-    async def count(self, fields:list, db:Session, group_by=None, order_by=None, subq=False, **kw):
-        cnts = [
-            func.count(
-                getattr(self.model, field[0])
-            ).label(
-                field[1]
-            ) for field in fields
-        ]
-        base = db.query(*cnts).filter(**kw)
-        if group_by:
-            attr = getattr(self.model, group_by)
-            base = db.query(*cnts, attr).filter(**kw).group_by(attr)
-        return base.subquery() if subq else base.all()
+        obj = [getattr(func, op)(queryset.c[field]) for field in fields]
 
-    async def min(self, fields:list, db:Session, group_by=None, order_by=None, subq=False, **kw):
-        mins = [
-            func.min(
-                getattr(self.model, field[0])
-            ).label(
-                field[1]
-            ) for field in fields
-        ]
-        base = db.query(*mins).filter(**kw)
+        if date:
+            if date.months:
+                d_fields.append(queryset.c.month)
+            if date.years:
+                d_fields.append(queryset.c.year)
+            obj.extend(d_fields)
+        
         if group_by:
-            attr = getattr(self.model, group_by)
-            base = db.query(*mins, attr).filter(**kw).group_by(attr)
-        return base.subquery() if subq else base.all()
-    
-    async def max(self, fields:list, db:Session, group_by=None, order_by=None, subq=False, **kw):
-        maxs = [
-            func.max(
-                getattr(self.model, field[0])
-            ).label(
-                field[1]
-            ) for field in fields
-        ]
-        base = db.query(*maxs).filter(**kw)
-        if group_by:
-            attr = getattr(self.model, group_by)
-            base = db.query(*maxs, attr).filter(**kw).group_by(attr)
-        return base.subquery() if subq else base.all()
+            group_by = [queryset.c[group_by] for group_by in group_by]
+            obj.extend(group_by)
+            d_fields.extend(group_by)
 
-    async def avg(self, fields:list, db:Session, group_by=None, order_by=None, subq=False,**kw):
-        avgs = [
-            func.avg(
-                getattr(self.model, field[0])
-            ).label(
-                field[1]
-            ) for field in fields
-        ]
-        base = db.query(*avgs).filter(**kw)
+        base = dbs[0].query(*obj).group_by(*d_fields)
+        return base if q_type=='query' else base.subquery() if q_type=='subq' else base.all()
+   
+    def get_queryset(self, fields:list, dbs:List[Session], date:D=None, group_by:List[str]=[], and_filters:dict={}, or_filters:dict={}, **kw):
+        fields = [getattr(self.model, field).label(field) for field in fields]
+        
         if group_by:
-            attr = getattr(self.model, group_by)
-            base = db.query(*avgs, attr).filter(**kw).group_by(attr)
-        return base.subquery() if subq else base.all()
+            fields += [getattr(self.model, group_by).label(group_by) for group_by in group_by]
 
-    async def years_available(self, field, db:Session):
-        dates = db.query(getattr(self.model, field).cast(Date)).distinct().all()
-        return [date[0].year for date in dates]
+        d_fields,d_filters = [],[]
+        if date:
+            d_fields,d_filters = self.year_filter(date)
+            fields.extend(d_fields)
+        
+        querysets = [
+            db.query(*fields).filter(or_(**or_filters)).filter(and_(**and_filters)).filter(**kw).filter(*d_filters)
+            for db in dbs
+        ]
+
+        return union_all(*querysets).subquery()
+
+    def year_filter(self, obj:D):
+        if not self.is_date(obj.field):
+            raise ValueError(f'{obj.field} not date_type')
+        fields,filters,yObj,mObj = [],[],None,None
+        if obj.months:
+            mObj = extract('month', getattr(self.model, obj.field)).label('month')
+            filters.append(or_(*[mObj==int(month) for month in obj.months])) 
+        if obj.years:
+            yObj = extract('year', getattr(self.model, obj.field)).label('year')
+            filters.append(or_(*[yObj==int(year) for year in obj.years])) 
+        fields.extend([yObj, mObj])
+        return fields, filters
+
+    def years(self, db:Session, field='created'):
+        if not self.is_date(field):
+            raise ValueError(f'{field} not date_type')
+        return [date[0].year for date in db.query(getattr(self.model, field).cast(Date)).distinct().all()]
+
+    def is_date(self, field):
+        return isinstance(self.model.__table__.c[field].type, (DATETIME, DATE, Date, DateTime))
 
 class ContentQueryChecker:
     def __init__(self, cols=None, actions=None, exclude:List[str]=[]):

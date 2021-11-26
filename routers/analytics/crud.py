@@ -1,5 +1,7 @@
+from dependencies import session_generator
 from sqlalchemy.orm import Session
 from . import models, schemas
+# from cls import Aggregator
 
 from sqlalchemy import func, distinct, union_all, and_, or_, extract
 from sqlalchemy.types import Date, DateTime, DATE, DATETIME
@@ -39,10 +41,10 @@ class Aggregator:
     def __init__(self, model):
         self.model = model
 
-    def op(self, fields:list, dbs:List[Session], op:Op, date:D=None, q_type:QueryType='res', group_by:str=None, and_filters:dict={}, or_filters:dict={}, **kw):
-        queryset, d_fields = self.get_queryset(fields, dbs, date, group_by, and_filters, or_filters, **kw), []
-
-        obj = [getattr(func, op)(queryset.c[field]) for field in fields]
+    async def op(self, aggr, dbs:List[Session], date:D=None, q_type:QueryType='res', group_by:List[str]=[], and_filters:dict={}, or_filters:dict={}, **kw):
+        fields, ops = zip(*[(dict(field)["field"], dict(field)["op"]) for field in aggr])
+        queryset, d_fields = await self.get_queryset(fields, dbs, date, group_by, and_filters, or_filters, **kw), []            
+        obj = [getattr(func, op)(queryset.c[field]) for op in set(ops) for field in set(fields)]
 
         if date:
             if date.months:
@@ -50,34 +52,31 @@ class Aggregator:
             if date.years:
                 d_fields.append(queryset.c.year)
             obj.extend(d_fields)
-        
+
         if group_by:
-            obj.append(queryset.c[group_by])
-            d_fields.append(queryset.c[group_by])
+            group_by = [queryset.c[group_by] for group_by in group_by]
+            obj.extend(group_by)
+            d_fields.extend(group_by)
 
         base = dbs[0].query(*obj).group_by(*d_fields)
         return base if q_type=='query' else base.subquery() if q_type=='subq' else base.all()
    
-    def get_queryset(self, fields:list, dbs:List[Session], date:D=None, group_by:str=None, and_filters:dict={}, or_filters:dict={}, **kw):
-        fields = [getattr(self.model, field).label(field) for field in fields]
-        
+    async def get_queryset(self, fields:list, dbs:List[Session], date:D=None, group_by:List[str]=[], and_filters:dict={}, or_filters:dict={}, **kw):
+        fields = [getattr(self.model, field).label(field) for field in set(fields)]
         if group_by:
-            fields += [getattr(self.model, group_by).label(group_by)]
-
+            fields += [getattr(self.model, group_by).label(group_by) for group_by in group_by]
         d_fields,d_filters = [],[]
         if date:
-            d_fields,d_filters = self.year_filter(date)
-            fields.extend(d_fields)
-        
+            d_fields,d_filters = await self.year_filter(date)
+            fields.extend(d_fields)    
         querysets = [
             db.query(*fields).filter(or_(**or_filters)).filter(and_(**and_filters)).filter(**kw).filter(*d_filters)
             for db in dbs
         ]
-
         return union_all(*querysets).subquery()
 
-    def year_filter(self, obj:D):
-        if not self.is_date(obj.field):
+    async def year_filter(self, obj:D):
+        if not await self.is_date(obj.field):
             raise ValueError(f'{obj.field} not date_type')
         fields,filters,yObj,mObj = [],[],None,None
         if obj.months:
@@ -89,14 +88,31 @@ class Aggregator:
         fields.extend([yObj, mObj])
         return fields, filters
 
-    def years(self, db:Session, field='created'):
-        if not self.is_date(field):
+    async def years(self, db:Session, field='created'):
+        if not await self.is_date(field):
             raise ValueError(f'{field} not date_type')
         return [date[0].year for date in db.query(getattr(self.model, field).cast(Date)).distinct().all()]
 
-    def is_date(self, field):
+    async def is_date(self, field):
         return isinstance(self.model.__table__.c[field].type, (DATETIME, DATE, Date, DateTime))
-   
+
+# asset = Aggregator(models.Asset)
+# request = Aggregator(models.Request)
+# proposal = Aggregator(models.Proposal)
+# inventory = Aggregator(models.Inventory)
+# department = Aggregator(models.Department)
+
+# 
+switcher = {
+    "inventories":Aggregator(models.Inventory),
+    "departments":Aggregator(models.Department),
+    "proposals":Aggregator(models.Proposal),
+    "requests":Aggregator(models.Request),
+    "policies": Aggregator(models.Policy),
+    "assets": Aggregator(models.Asset), 
+}
+
+
 # Analytics & Report generation (DB level, Schema(s)/Tenant(s) level, Branch(es) level)
 # Aggregations By some factor of some fields (DB level, Schema(s)/Tenant(s) level, Branch(es) level) .eg. group monetary value by currency
 #               db
