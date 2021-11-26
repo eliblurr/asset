@@ -105,7 +105,6 @@ switcher = {
     "assets": Aggregator(models.Asset), 
 }
 
-
 # Analytics & Report generation (DB level, Schema(s)/Tenant(s) level, Branch(es) level)
 # Aggregations By some factor of some fields (DB level, Schema(s)/Tenant(s) level, Branch(es) level) .eg. group monetary value by currency
 #               db
