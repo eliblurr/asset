@@ -10,58 +10,43 @@ router = APIRouter()
 async def create(schema:schemas.ResponseSchema, level:schemas.Level, db:Session=Depends(get_db)):
     res = {}
     try:
+        dbs = [db]
         for schema in schema.schemas:
-            # print(dict(schema.aggr[0]))
             kw = schema.filters.kw if schema.filters else {}
             obj = crud.switcher.get(schema.resource)
             res.update(
                 {
-                    schema.resource: await obj.op(
-                        aggr = schema.aggr,
-                        dbs = [db],
-                        date = schema.d_filters,
-                        q_type = 'res',
-                        group_by = schema.group_by,
-                        and_filters = schema.filters.and_ if schema.filters else {},
-                        or_filters = schema.filters.or_ if schema.filters else {},
-                        **kw
-                    )
+                    schema.resource: {
+                        "aggr":await obj.op(
+                            aggr = schema.aggr,
+                            dbs = dbs,
+                            date = schema.d_filters,
+                            q_type = 'res',
+                            group_by = schema.group_by,
+                            and_filters = schema.filters.and_ if schema.filters else {},
+                            or_filters = schema.filters.or_ if schema.filters else {},
+                            **kw
+                        )
+                    }
                 }
             )
-            # res.update({schema.resource:{}})
-            # for aggr in schema.aggr:
-            #     res[schema.resource].update(
-            #         {
-            #             aggr.op: await obj.op(
-            #                 fields = aggr.field, 
-            #                 op = aggr.op,
-            #                 dbs = [db],
-            #                 date = schema.d_filters,
-            #                 q_type = 'res',
-            #                 group_by = schema.group_by,
-            #                 and_filters = schema.filters.and_ if schema.filters else {},
-            #                 or_filters = schema.filters.or_ if schema.filters else {},
-            #                 **kw
-            #             )
-            #         }
-            #     )
+            
+            if schema.available_years_fields:
+                res[schema.resource].update({"years_available":{}})
+                for d_field in schema.available_years_fields:
+                    res[schema.resource]["years_available"].update({d_field: await obj.years(dbs[0])})
+
             print(
-                dir(res[schema.resource][0]), 
-                res[schema.resource][0]._fields,
-                sep="\n\n"
+                res[schema.resource],
+                sep="\n"
             )
-            # print(dir(obj))
+
+            return res
+
     except Exception as e:
         print(e)
-    
 
-            
     
-        # print(
-        #     schema.resource
-        # )
-
-    return res
 
 # @router.post('/reports/{resource}', description='', status_code=200, name='Generate Report')
 # async def create(level:schemas.Level, resource:schemas.AResource, db:Session=Depends(get_db)):

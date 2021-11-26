@@ -1,7 +1,7 @@
 from dependencies import session_generator
 from sqlalchemy.orm import Session
 from . import models, schemas
-# from cls import Aggregator
+from cls import Aggregator
 
 from sqlalchemy import func, distinct, union_all, and_, or_, extract
 from sqlalchemy.types import Date, DateTime, DATE, DATETIME
@@ -96,13 +96,6 @@ class Aggregator:
     async def is_date(self, field):
         return isinstance(self.model.__table__.c[field].type, (DATETIME, DATE, Date, DateTime))
 
-# asset = Aggregator(models.Asset)
-# request = Aggregator(models.Request)
-# proposal = Aggregator(models.Proposal)
-# inventory = Aggregator(models.Inventory)
-# department = Aggregator(models.Department)
-
-# 
 switcher = {
     "inventories":Aggregator(models.Inventory),
     "departments":Aggregator(models.Department),
