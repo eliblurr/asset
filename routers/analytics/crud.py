@@ -44,8 +44,8 @@ class Aggregator:
     async def op(self, aggr, dbs:List[Session], date:D=None, q_type:QueryType='res', group_by:List[str]=[], and_filters:dict={}, or_filters:dict={}, **kw):
         fields, ops = zip(*[(dict(field)["field"], dict(field)["op"]) for field in aggr])
         queryset, d_fields = await self.get_queryset(fields, dbs, date, group_by, and_filters, or_filters, **kw), []            
-        obj = [getattr(func, op)(queryset.c[field]) for op in set(ops) for field in set(fields)]
-
+        obj = [getattr(func, op)(queryset.c[field]).label(op) for op in set(ops) for field in set(fields)]
+        
         if date:
             if date.months:
                 d_fields.append(queryset.c.month)
