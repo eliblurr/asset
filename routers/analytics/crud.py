@@ -1,7 +1,13 @@
 from dependencies import session_generator
+from routers.tenant.crud import tenant
 from sqlalchemy.orm import Session
 from . import models, schemas
 from cls import Aggregator
+
+async def get_all_tenants(db:Session):
+    params = {"fields":["key"], "sort":[], "q":None, "offset":None, "limit":None}
+    obj = await tenant.read(params, db)
+    return [item for sublist in obj.get('data') for item in sublist] 
 
 from sqlalchemy import func, distinct, union_all, and_, or_, extract
 from sqlalchemy.types import Date, DateTime, DATE, DATETIME
@@ -45,7 +51,7 @@ class Aggregator:
         fields, ops = zip(*[(dict(field)["field"], dict(field)["op"]) for field in aggr])
         queryset, d_fields = await self.get_queryset(fields, dbs, date, group_by, and_filters, or_filters, **kw), []            
         obj = [getattr(func, op)(queryset.c[field]).label(op) for op in set(ops) for field in set(fields)]
-        
+
         if date:
             if date.months:
                 d_fields.append(queryset.c.month)
@@ -104,53 +110,3 @@ switcher = {
     "policies": Aggregator(models.Policy),
     "assets": Aggregator(models.Asset), 
 }
-
-# Analytics & Report generation (DB level, Schema(s)/Tenant(s) level, Branch(es) level)
-# Aggregations By some factor of some fields (DB level, Schema(s)/Tenant(s) level, Branch(es) level) .eg. group monetary value by currency
-#               db
-#             /    \
-#       tenant      tenant
-#        / \         | \
-#       /   \        |  \
-#      /     \       |   \
-#   branch branch branch branch
-# 
-# ?level=db -> payload:tenants=[some tenant list, *] 
-# ?level=tenant -> payload:branches=[some branch list, *]
-# min, max, count, avg, sum
-# order_by, group_by
-
-# Assets
-# - total count
-# - total count by status
-# - total count by numerable
-# - total count by numerable
-# - sum of prices by currency
-# - total count by consumable
-# - total value by consumable
-# - total count by year [created]
-# - total count by month [created]
-# - total count of decomission assets
-# - total asset value after depreciation
-
-# Inventory
-# - assets groupings in inventory
-# - proposal count[grouping by status]
-# - count of request[grouping by status]
-
-# Department
-# - assets groupings in inventory
-# - proposal count[grouping by status]
-# - count of request[grouping by status]
-
-# Request
-# - total requests
-# - request count by status'
-# - value of accepted[or other status'] request assets
-
-# Proposal
-# - total count by status' 
-# - total count of proposals
-
-# Finance
-# total value by currency 

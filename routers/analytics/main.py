@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends, Body, HTTPException
+from sqlalchemy.exc import ProgrammingError
+from dependencies import session_generator
+from utils import http_exception_detail
 from sqlalchemy.orm import Session
 from dependencies import get_db
 from . import crud, schemas
@@ -8,9 +11,22 @@ router = APIRouter()
 
 @router.post('/{level}/aggregator')
 async def create(schema:schemas.ResponseSchema, level:schemas.Level, db:Session=Depends(get_db)):
+    dbs = [db]
+    if not db.connection().get_execution_options().keys():
+        if not schema.keys_or_ids:
+            schema.keys_or_ids = await crud.get_all_tenants(db)
+        dbs.extend(list(session_generator(schema.keys_or_ids)))
+    else:
+        # perf op for branches here
+        # or_filters
+        # do op for tenants
+        pass
+
+    # print(dbs)
+    # return
     res = {}
     try:
-        dbs = [db]
+        # dbs = [db]
         for schema in schema.schemas:
             kw = schema.filters.kw if schema.filters else {}
             obj = crud.switcher.get(schema.resource)
@@ -39,6 +55,7 @@ async def create(schema:schemas.ResponseSchema, level:schemas.Level, db:Session=
             return res
 
     except Exception as e:
-        print(e.__class__)
-
-# sqlalchemy.exc.ProgrammingError = 400
+        print(e)
+        status_code = 500
+        detail = http_exception_detail(type=f"{e.__class__}", msg = f"{e}")
+        raise HTTPException(status_code=500 if e.__class__ not in [AttributeError, ProgrammingError] else 400, detail=detail)
