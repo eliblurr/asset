@@ -7,7 +7,7 @@ logs/
 *.pyc
 *.db
 *.log
-.env
+*.env
 x64js/
 
 .DS_Store

@@ -22,7 +22,7 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      # REDIS_PASSWORD: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+      DATABASE_URL: 'postgres://${DB_USER}:${DB_PASSWORD}@postgres/${DB_NAME}'
 
   pgadmin:
     build:
@@ -60,7 +60,7 @@ services:
   redis:
     restart: always
     image: redis:3.0
-    # command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81 && python3 -m rds.worker
+    command: redis-server --save 20 1 --loglevel warning 
     expose:
       - 6379
     networks: 
