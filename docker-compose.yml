@@ -15,7 +15,7 @@ services:
       - upload_data:/home/www/app/uploads
       - static_data:/home/www/app/static
     env_file:
-      - .env
+      - docker.env
     depends_on:
       - postgres
       - redis
