@@ -20,6 +20,10 @@ services:
     depends_on:
       - postgres
       - redis
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # REDIS_PASSWORD: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
 
   pgadmin:
     build:
@@ -57,12 +61,13 @@ services:
   redis:
     restart: always
     image: redis:3.0
+    # command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
     expose:
       - "6379"
     networks: 
       - asset-network
     volumes:
-      - redis_data:/docker/host/dir:/data
+      - redis_data:/data
 
   nginx:
     build:
