@@ -8,7 +8,6 @@ Procfile
 /uploads/
 /x64js/
 *.sqlite3
-.env
 
 # Python and others
 __pycache__
