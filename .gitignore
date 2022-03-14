@@ -9,3 +9,17 @@ logs/
 *.log
 .env
 x64js/
+
+.DS_Store
+*.pyc
+*.log
+*.swp
+*.retry
+.env
+.idea
+.vscode
+*~
+/logs
+/data
+.~*
+common/CACHE

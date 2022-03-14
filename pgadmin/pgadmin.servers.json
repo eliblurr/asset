@@ -1,0 +1,13 @@
+{
+	"Servers": {
+		"1": {
+			"Name": "Asset DB Server",
+            "Group": "Asset Server Group",
+	    	"Port": 5432,
+            "Username":"postgres",
+	    	"Host": "db",
+	    	"SSLMode": "prefer",
+	    	"MaintenanceDB": "postgres"
+		}
+    }
+}

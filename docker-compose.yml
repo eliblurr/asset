@@ -1,0 +1,94 @@
+version: "3.9"
+
+services:
+
+  app:
+    build:
+      context: ./asset
+      dockerfile: dockerfile
+    restart: always
+    container_name: asset-app
+    expose: 
+      - 80
+    networks:
+      - asset-network
+    volumes:
+      - upload_data:/home/app/web/static/uploads
+      - static_data:/home/app/web/static
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+
+  pgadmin:
+    build:
+      context: ./pgadmin
+      dockerfile: dockerfile
+    container_name: asset-pgadmin
+    restart: always
+    expose:
+      - 80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks: 
+      - asset-network
+    depends_on: 
+      - postgres
+
+  postgres:
+    image: postgis/postgis:12-master
+    container_name: asset-postgres
+    restart: always
+    networks: 
+      - asset-network
+    expose:
+      - 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment: 
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: postgres
+
+  redis:
+    restart: always
+    image: redis:3.0
+    expose:
+      - "6379"
+    networks: 
+      - asset-network
+    volumes:
+      - redis_data:/docker/host/dir:/data
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: dockerfile
+    restart: always
+    ports:
+      - ${WEB_PORT}:2000
+      - ${REDIS_PORT}:2001
+      - ${PGADMIN_PORT}:2002
+      - ${POSTGRES_PORT}:2003
+    networks: 
+      - asset-network
+    depends_on:
+      - app
+    volumes_from: 
+      - app:rw
+
+volumes:
+  static_data:
+  upload_data:
+  pgadmin_data:
+  postgres_data:
+  redis_data:
+    driver: local
+
+networks:
+  asset-network:
+    driver: bridge
