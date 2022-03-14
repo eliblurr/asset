@@ -1,5 +1,2 @@
-from .models import Department
-
-__all__ = [
-    Department
-]
+from .main import router as department
+from .models import Department, BaseDepartment

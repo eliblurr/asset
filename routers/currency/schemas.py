@@ -1,6 +1,6 @@
-from pydantic import BaseModel, conint, validator
-from typing import Optional, List, Union
 import routers.currency.models as m
+from pydantic import BaseModel
+from typing import List, Union
 import datetime, enum
 
 class CurrencyBase(BaseModel):
@@ -20,6 +20,7 @@ class UpdateCurrency(BaseModel):
         
 class Currency(CurrencyBase):
     id: int
+    status: bool
     created: datetime.datetime
     updated: datetime.datetime
 

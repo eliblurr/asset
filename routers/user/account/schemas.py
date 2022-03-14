@@ -2,53 +2,83 @@ from typing import Optional, List, Union
 import routers.user.account.models as m
 from pydantic import BaseModel, constr
 from constants import EMAIL, PHONE
-import datetime
+import datetime, enum
 
-# phone = Column(String, nullable=True)
-# is_active = Column(Boolean, default=False)
-# last_name = Column(String, nullable=False)
-# middle_name = Column(String, nullable=True)
-# first_name = Column(String, nullable=False)
-# email = Column(String, unique=True, index=True)
-# password = Column(String, nullable=False, default=pwd.genword)
+class Account(str, enum.Enum):
+    users = 'users'
+    administrators = 'administrators'
 
-class UserBase(BaseModel):
+class EmailBase(BaseModel):
     email: constr(regex=EMAIL)
-    phone: Optional[constr(regex=PHONE)]
-    last_name: Optional[str]
-    first_name: Optional[str]
-    middle_name: Optional[str]
-   
+    
+class PasswordBase(BaseModel):
+    password: constr(min_length=8)
+
+class UpdatePassword(PasswordBase):
+    code: str
+    
+class CreateAdmin(EmailBase):
+    password: constr(min_length=8) = None
+    
+    class Meta:
+        model = m.Administrator
+
+class Admin(EmailBase):
+    id: int
+    is_active: bool
+    created: datetime.datetime
+    updated: datetime.datetime
+    
     class Config:
         orm_mode = True
 
+class CreateUser(EmailBase):
+    last_name:str
+    first_name:str
+    middle_name:Optional[str]
+    is_active:Optional[bool]
+    phone: Optional[constr(regex=PHONE)]
+    password: constr(min_length=8) = None
+    
     class Meta:
         model = m.User
-      
-class CreateUser(UserBase):
-    pass
 
-class UpdatePassword(BaseModel):
-    code: str
-    password: constr(min_length=8)
-    
-class UpdateUser(BaseModel):
-    last_name: Optional[str]
-    first_name: Optional[str]
-    is_active: Optional[bool]
-    middle_name: Optional[str]
+class UpdateUser(EmailBase):
+    last_name:Optional[str]
+    first_name:Optional[str]
+    middle_name:Optional[str]
+    is_active:Optional[bool]
     phone: Optional[constr(regex=PHONE)]
     password: Optional[UpdatePassword]
     
     class Meta:
         model = m.User
-    
-class User(UserBase):
+
+class User(EmailBase):
     id: int
+    phone:str
+    last_name:str
+    first_name:str
+    is_active:bool
+    middle_name:Optional[str]
     created: datetime.datetime
     updated: datetime.datetime
 
-class UserList(BaseModel):
+    class Config:
+        orm_mode = True
+
+class UserOrAdminList(BaseModel):
     bk_size: int
     pg_size: int
-    data: Union[List[User], list]
+    data: Union[List[User], List[Admin], list]
+
+class UserSummary(BaseModel):
+    id:int
+    last_name: Optional[str]
+    first_name: Optional[str]
+    middle_name: Optional[str]
+    email: constr(regex=EMAIL)
+    phone: Optional[constr(regex=PHONE)]
+   
+    class Config:
+        orm_mode = True

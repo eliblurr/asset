@@ -6,8 +6,10 @@ import datetime
 
 class VendorBase(BaseModel):
     title: str
+    metatitle: Optional[str]
+    description: Optional[str]
+    url: Optional[constr(regex=URL)]
     email: Optional[constr(regex=EMAIL)]
-    website: Optional[constr(regex=URL)]
     contact: Optional[constr(regex=PHONE)]
 
     class Config:
@@ -17,13 +19,11 @@ class VendorBase(BaseModel):
         model = m.Vendor
 
 class CreateVendor(VendorBase):
-    status: Optional[bool]
-
-class UpdateVendor(BaseModel):
+    pass
+    
+class UpdateVendor(VendorBase):
     title: Optional[str]
-    email: Optional[constr(regex=EMAIL)]
-    website: Optional[constr(regex=URL)]
-    contact: Optional[constr(regex=EMAIL)]
+    status: Optional[bool]
 
 class Vendor(VendorBase):
     id: int

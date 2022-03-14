@@ -1,32 +1,61 @@
-import routers.activity.models
-import routers.asset.models
-import routers.catalogue.models
-import routers.currency.models
-import routers.user.account.models 
-import routers.user.role.models
-import routers.department.models 
-import routers.inventory.models
-import routers.proposal.models
-import routers.priority.models 
-import routers.request.models
-import routers.policy.models 
-import routers.vendor.models
-import routers.branch.models 
-import routers.faqs.models 
-import routers.manufacturer.models 
-import routers.category.models
-import routers.tenant.models
+from routers.currency import *
+from routers.priority import *
+from routers.manufacturer import *
+from routers.policy import *
+from routers.config import *
+from routers.branch import *
+from routers.faqs import *
+from routers.user import *
+from routers.catalogue import *
+from routers.category import *
+from routers.vendor import *
+from routers.consumable import *
+from routers.department import *
+from routers.inventory import *
+from routers.subscription import *
+from routers.activity import *
+from routers.log import *
+from routers.proposal import *
+from routers.upload import *
+from routers.asset import *
+from routers.request import *
+from routers.tenant import *
 
 from database import Base
 
 __all__=[
-    Base
+    'Base',
+    'permission',
+    'currency',
+    'priority',
+    'policy',
+    'config',
+    'account',
+    'auth',
+    'role',
+    'faqs',
+    'vendor',
+    'tenant',
+    'category',
+    'manufacturer',
+    'branch',
+    'department', 
+    'inventory',
+    'upload',
+    'activity',
+    'consumable',
+    'subscription',
+    'logs', 
+    'proposal', 
+    'asset',
+    'request',
+    'catalogue'
 ]
 
-# print(
-#     Base.metadata.sorted_tables
-#     # [table for table in Base.metadata.sorted_tables if table.schema=='public']
-# )
+from database import engine
+
+tables=[table for table in Base.metadata.sorted_tables if table.schema=='public' or table.schema=='global']
+Base.metadata.create_all(bind=engine, tables=tables)
 
 '''
     Do this to order the the way each model interacts with Base from database.py

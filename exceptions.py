@@ -1,11 +1,30 @@
-class BlacklistedToken(Exception):
+class BaseException(Exception):
+    def __init__(self, message="Something went wrong"):
+        self.message = message
+        super().__init__(self.message)
+
+    def _message(self):
+        return self.message
+
+class PermissionLimitReached(BaseException):
+    def __init__(self):
+        self.message = 'permission limit reached'
+        super().__init__(self.message)
+
+class OperationNotAllowed(BaseException):
     pass
 
-class MaxOccurrenceError(Exception):
+class BlacklistedToken(BaseException):
     pass
 
-class FileNotSupported(Exception):
+class MaxOccurrenceError(BaseException):
     pass
 
-class UploadNotAllowed(Exception):
+class FileNotSupported(BaseException):
+    pass
+
+class UploadNotAllowed(BaseException):
+    pass
+
+class NotFound(BaseException):
     pass

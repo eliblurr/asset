@@ -1,34 +1,48 @@
+from sqlalchemy.orm import Session
+from fastapi import HTTPException, Depends
+from dependencies import get_db_2
+from exceptions import NotFound
 from config import STATIC_ROOT
-import json, os, logging
-from . import models
+from . import models, schemas
+from utils import raise_exc
+import json, os, enum
 from cls import CRUD
 
 activity = CRUD(models.Activity)
-logger = logging.getLogger("eAsset.routers.activity")
-path = os.path.join(STATIC_ROOT, 'json/activity.json')
 
-'''
-target = {
-    "key":{
-        "user_id":1,
-        "value":"title"
-    }
-}
-'''
+def get_message(ref): # ref eg. asset.return
+    parent, child = ref.split('.')
+    with open(os.path.join(STATIC_ROOT, 'json/messages.json')) as file:
+        messages = json.load(file)  
+        file.close()
+    return messages[parent][child]
 
-async def get_message(key:str, op:str, target:dict):
+async def create(c, ref, meta:dict, resource, resource_id:int, db:Session):
     try:
-        with open(path) as f:
-            data = json.load(f)
-        data = data[key][op]
-        if set(target.keys())!=set([n for _,n,_,_ in Formatter().parse(data) if n]):
-            raise ValueError('key mismatch b/n target and message')        
-        return ActivityBase(msg=data[key][op], meta=target)
-    except KeyError:
-        raise KeyError(f'could not find message for {key}.{op}')
+        obj = c.read_by_id(resource_id, db)
+        if obj is None:raise NotFound(f"resource with id:{resource_id} not found")
+        payload = schemas.ActivityBase(message=get_message(ref), meta = meta)
     except Exception as e:
-        logger.critical(f"{e.__class__}: {e}")
-    finally:
-        f.close()
+        raise HTTPException(status_code=500, detail=raise_exc(msg=f"{e}", type= e.__class__.__name__))
+    return await activity.create(payload, db, object=obj)
 
-activity.get_message = get_message
+async def add_activity(object, ref, meta:dict, db:Session=Depends(get_db_2)):
+    db = next(get_db_2())
+    payload = schemas.ActivityBase(message=get_message(ref), meta=meta)
+    return await activity.create(payload, db, object=object)
+
+from routers.asset.crud import asset
+from routers.proposal.crud import proposal
+
+objects = {
+    'asset': asset,
+    'proposal': proposal
+}
+resources = enum.Enum('Object', {v:v for v in objects.keys()})
+
+async def read(resource, resource_id, offset, limit, db):
+    obj = await objects[resource.value].read_by_id(resource_id, db)
+    base = db.query(models.Activity).filter_by(object=obj).order_by('created')
+    data = base.offset(offset).limit(limit).all()
+    return {'bk_size':base.count(), 'pg_size':data.__len__(), 'data':data}
+     

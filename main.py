@@ -1,192 +1,81 @@
-from fastapi import FastAPI, Request, HTTPException
+from starlette.concurrency import run_until_first_complete
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
-from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import close_all_sessions
 from fastapi.staticfiles import StaticFiles
+from services.broadcaster import broadcast
 from database import SessionLocal, engine
-from datetime import time, datetime
-from cls import ConnectionManager
+from fastapi import FastAPI, Request
 from scheduler import scheduler
-from config import *
-import logging, os
-
-logging.logFile,logging.atTime, logging.MAIL_FROM, logging.ADMIN_EMAIL = os.path.join(LOG_ROOT, f'logs'), time(), settings.MAIL_FROM, settings.ADMIN_EMAIL
-logging.MAIL_SERVER, logging.MAIL_PORT, logging.MAIL_USERNAME, logging.MAIL_PASSWORD = settings.MAIL_SERVER, settings.MAIL_PORT, settings.MAIL_USERNAME, settings.MAIL_PASSWORD
+import config as cfg
 
 app = FastAPI(
     docs_url=None, 
-    redoc_url=None
+    redoc_url=None,
+    title=cfg.settings.NAME,
+    version=cfg.settings.VERSION,
+    openapi_url='/openapi.json'
 )
 
 app.add_middleware(
     CORSMiddleware,
     allow_credentials = True,
-    allow_origins = ALLOWED_ORIGINS,
-    allow_methods = ALLOWED_METHODS,
-    allow_headers = ALLOWED_HEADERS,
+    allow_origins = cfg.ORIGINS,
+    allow_methods = cfg.METHODS,
+    allow_headers = cfg.HEADERS,
 )
 
-socket = ConnectionManager()
-logging.config.fileConfig('logging.conf')
-logger = logging.getLogger('eAsset.main')
-templates = Jinja2Templates(directory="static/html")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
-app.mount(STATIC_URL, StaticFiles(directory=STATIC_ROOT), name="static")
-app.mount(UPLOAD_URL, StaticFiles(directory=UPLOAD_ROOT), name="upload")
+app.mount(cfg.STATIC_URL, StaticFiles(directory=cfg.STATIC_ROOT), name="static")
+app.mount(cfg.UPLOAD_URL, StaticFiles(directory=cfg.UPLOAD_ROOT), name="upload")
+
+@app.on_event("startup")
+async def startup_event():
+    print('service started')
+    scheduler.start()
+    await broadcast.connect()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    close_all_sessions()
+    scheduler.shutdown(wait=False)
+    await broadcast.disconnect()
 
 @app.middleware("http")
 async def tenant_session(request:Request, call_next):
-    db = SessionLocal(bind=engine.execution_options(schema_translate_map={None: request.headers.get('tenant_key')})) if request.headers.get('tenant_key', None) else SessionLocal()
+    db = SessionLocal(bind=engine.execution_options(schema_translate_map={None: request.headers.get('tenant_key'), 'global': request.headers.get('tenant_key')})) if request.headers.get('tenant_key', None) else SessionLocal()
     request.state.db = db
     response = await call_next(request)
     return response
 
-@app.on_event("startup")
-async def startup_event():
-    print('startup', app.title)
-    # try:
-    #     scheduler.start()
-    # except Exception as e:
-    #     logger.critical(f"Scheduler could not start: {e.__class__}: {e}", exc_info=True) 
-    
-@app.on_event("shutdown")
-def shutdown_event():
-    pass
-    # try:
-    #     scheduler.shutdown(wait=False)
-    # except Exception as e:
-    #     logger.critical(f"Scheduler could not shutdown: {e.__class__}: {e}", exc_info=True) 
-
 from urls import *
 
-from clry import event
-event.start_listener()
+# 
+# on_startup=[broadcast.connect], on_shutdown=[broadcast.disconnect]
+# # from sockets import broadcast, chatroom_ws_receiver, chatroom_ws_sender
 
-# @app.post("/evemt")
-# def ass():
-#     try:
-#         event.emit("broadcast", "Custom message from event")
-#         pass
-#     except Exception as e:
-#         print(e)
+# 
+# from starlette.templating import Jinja2Templates
+# from fastapi import FastAPI, WebSocket, Request
+# from fastapi.responses import HTMLResponse
+# from pydantic import BaseModel
+# import json
 
-# from fastapi import Request
-# from babel import Locale
-import babel
+# class Publish(BaseModel):
+#     channel: str = "chatroom"
+#     message: str
 
-# from gettext import gettext as _
+# app = FastAPI(on_startup=[broadcast.connect], on_shutdown=[broadcast.disconnect])
+# templates = Jinja2Templates("templates")
 
-# string = _("This is a translatable string.")
-# # print(string)
-
-local = Locale('en', 'US')
-
-# print(dir(Locale))
-# c = Locale.negotiate(['de_AT'], ['de', 'en'])
-# a = babel.negotiate_locale(['en'], ['de', 'en', 'DE'])
-# b = Locale.negotiate(['de'], ['de', 'en', 'DE'])
-# # print(local)
-
-# languages = list(local.languages.keys())
-# territories = list(local.territories.keys())
-# currencies = list(local.currencies.keys())
-
-# from babel.numbers import list_currencies
-# CURRENCY_CHOICES = [currency if currency=='GHC' else None for currency in list_currencies()] 
-
-# print(CURRENCY_CHOICES)
-
-# s = babel.core.get_global('zone_territories')
-
-# currencies = babel.core.get_global('territory_currencies')['GH']
-# print(currencies)
-
-# @app.get('/babel')
-# def local(request:Request):
-#     # lang = request.headers['accept-language'] if request.headers.get('accept-language', None) else 'en-US'
-#     # local = babel.core.negotiate(lang, )
-#     return request.headers['accept-language'] if request.headers.get('accept-language', None) else 'en-US'
-
-# from typing import Optional
-
-# from fastapi import APIRouter, FastAPI
-# from pydantic import BaseModel, HttpUrl
-
-# # app = FastAPI()
+# @app.get("/", response_class=HTMLResponse, name='chatroom_ws')
+# async def homepage(request: Request):
+#     return templates.TemplateResponse("index.html", {"request": request})
 
 
-# class Invoice(BaseModel):
-#     id: str
-#     title: Optional[str] = None
-#     customer: str
-#     total: float
 
-
-# class InvoiceEvent(BaseModel):
-#     description: str
-#     paid: bool
-
-
-# class InvoiceEventReceived(BaseModel):
-#     ok: bool
-
-
-# invoices_callback_router = APIRouter()
-
-
-# @invoices_callback_router.post(
-#     "{$callback_url}/invoices/{$request.body.id}", response_model=InvoiceEventReceived
-# )
-# def invoice_notification(body: InvoiceEvent):
-#     print('sd')
-#     pass
-
-
-# @app.post("/invoices/", callbacks=invoices_callback_router.routes)
-# def create_invoice(invoice: Invoice, callback_url: Optional[HttpUrl] = None):
-#     """
-#     Create an invoice.
-
-#     This will (let's imagine) let the API user (some external developer) create an
-#     invoice.
-
-#     And this path operation will:
-
-#     * Send the invoice to the client.
-#     * Collect the money from the client.
-#     * Send a notification back to the API user (the external developer), as a callback.
-#         * At this point is that the API will somehow send a POST request to the
-#             external API with the notification of the invoice event
-#             (e.g. "payment successful").
-#     """
-#     # Send the invoice, collect the money, send the notification (the callback)
-#     return {"msg": "Invoice received"}
-
-
-# logger = logging.getLogger("eAsset.main")
-# logger.critical("Program started") 
-# print()
-# print(dir(crud), crud.__name__)
-# print(logger)
-
-# print(dir(logging.handlers))
-
-# @app.get('/test/logging')
-# def a():
-#     logger.debug("Program started", exc_info=True)   
-#     logger.info("Program started", exc_info=True)
-#     logger.warning("Program started") 
-#     logger.error("Program started") 
-#     logger.critical("Program started") 
-
-# logging.basicConfig(filename="sample.log", level=logging.INFO)
-
-# logging.debug("This is a debug message")
-# logging.info("Informational message")
-# logging.error("An error has happened!")
-items = {}
-items["foo"] = {"name": "Fighters"}
-items["bar"] = {"name": "Tenders"}
-@app.get("/items/{item_id}")
-async def read_items(item_id: str):
-    return items[item_id]
+# @app.post("/push")
+# async def send_message(publish: Publish):
+#     print(broadcast._subscribers['chatroom']) # if does not exist persist message # replace chatroom with tenant_id@user_id or replace numerical ids with UUIDs/ or send messages to email / or generate a socket_client_id for each user 
+#     await broadcast.publish(publish.channel, json.dumps([publish.message]))
+#     return publish

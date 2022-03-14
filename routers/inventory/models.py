@@ -1,22 +1,19 @@
-from sqlalchemy import Column, String, Integer, CheckConstraint, ForeignKey
+from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship
-from database import TenantBase, Base
 from mixins import BaseMixin
+from database import Base
 
 class Inventory(BaseMixin, Base):
     '''Inventory Model'''
     __tablename__ = "inventories"
-    __table_args__ = (CheckConstraint('coalesce(department_id , branch_id) is not null', name='_department_or_branch_'),)
     
     manager = relationship("User")
-    title = Column(String, nullable=False)
     metatitle = Column(String, nullable=True)
     description = Column(String, nullable=True)
-    department_id = Column(Integer, ForeignKey('departments.id'))
+    title = Column(String, nullable=False, unique=True)
     manager_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     department = relationship("Department", back_populates="inventories")
     proposals = relationship("Proposal", back_populates="inventory")
     requests = relationship("Request", back_populates="inventory")
-    branch = relationship("Branch", back_populates="inventories")
+    department_id = Column(Integer, ForeignKey('departments.id'))
     assets = relationship("Asset", back_populates="inventory")
-    branch_id = Column(Integer, ForeignKey('branches.id'))

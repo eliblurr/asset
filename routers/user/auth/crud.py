@@ -1,38 +1,67 @@
-from routers.user.account.models import User
-from routers.user.account.crud import user
-from routers.tenant.models import Tenant
-from routers.tenant.crud import tenant
-from utils import http_exception_detail
-from fastapi import HTTPException
+from routers.user.account.models import User, Administrator
+from datetime import timedelta, datetime
+from sqlalchemy.orm import Session
+from database import SessionLocal
+from scheduler import scheduler
 from . import models, schemas
-from cls import CRUD
+from utils import raise_exc
+from typing import Union
 
-async def read_user_by_id(id, _type, db):
-    return await user.read_by_id(id, db) if _type=='users' else await tenant.read_by_id(id, db)
-
-async def read_user(payload, userType, db):
-    model = User if userType=='users' else Tenant
-    return db.query(model).filter_by(**payload.dict()).first()
-
-async def verify_user(payload, _type, db):
-    model = User if _type=='users' else Tenant
+async def verify_user(payload:schemas.Login, account:schemas.Account, db:Session):
+    model = User if account=="users" else Administrator
     user = db.query(model).filter_by(email=payload.email).first()
     if not user:
-        raise HTTPException(status_code=404, detail=http_exception_detail(loc="email", msg="user not found", type="NotFound"))
-    if not user.verify_hash(payload.password, user.password):
-        raise HTTPException(status_code=401, detail=http_exception_detail(loc="password", msg="could not verify password", type="Unauthorized"))
-    return user
+        raise HTTPException(status_code=404, detail=raise_exc("email", "user not found", "NotFound"))
+    if user.verify_hash(payload.password, user.password):
+        return user
+    raise HTTPException(status_code=401, detail=raise_exc("password", "wrong credentials", "Unauthorized"))
 
-async def activate_user(id, _type, password, db):
-    model = User if _type=='users' else Tenant
-    db.query(model).filter_by(id=id).update({"is_active":True, "password":password})
+async def read_by_id(id:str, account:schemas.Account, db:Session):
+    model = User if account=="users" else Administrator
+    return db.query(model).get(id)
+
+async def read_by_email(email:str, account:schemas.Account, db:Session):
+    model = User if account=="users" else Administrator
+    return db.query(model).filter_by(email=email).first()
+
+async def is_token_blacklisted(token:str, db:Session):
+    return db.query(models.RevokedToken.id).filter_by(jti=token).first() is not None
+
+async def add_email_verification_code(email, account:schemas.Account, db:Session):
+    model = User if account=="users" else Administrator
+    user = db.query(model).filter_by(email=email)
+    if not user:
+        raise HTTPException(status_code=404, detail=raise_exc("email", "user not found", "NotFound"))
+    obj = models.EmailVerificationCode(email=email)
+    db.add(obj)
     db.commit()
-    return "success", {"info":"account successfully activated"}
+    db.refresh(obj)
+    return obj
 
-async def revoke_token(payload:schemas.Logout, db):
-    db.add_all([models.RevokedToken(token=token) for token in payload.dict().values()])
-    db.commit()
-    return 'success', {"info":"tokens successfully blacklisted"}
+async def revoke_token(payload:Union[schemas.Logout, str], db:Session):
+    try:
+        if isinstance(payload, str):
+            db.add(models.RevokedToken(jti=payload))
+        else:
+            db.add_all([models.RevokedToken(jti=token) for token in payload.dict().values()])
+        db.commit()
+        return 'success', 'token(s) successfully blacklisted'
+    except Exception as e: 
+        print(e)
 
-async def is_token_blacklisted(token:str, db):
-    return db.query(models.RevokedToken).filter_by(token=token).first() is not None
+def del_code(email, db:Session=SessionLocal()):
+    obj = db.query(models.EmailVerificationCode).get(email)
+    if obj:
+        db.delete(obj)
+        db.commit()
+    return True
+
+def schedule_del_code(email):
+    return scheduler.add_job(
+        del_code,
+        trigger='date',
+        kwargs={'email':obj.email},
+        id=f'ID-{obj.email}',
+        replace_existing=True,
+        run_date=datetime.utcnow() + timedelta(minutes=settings.EMAIL_CODE_DURATION_IN_MINUTES)
+    )

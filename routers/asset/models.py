@@ -1,17 +1,13 @@
-from sqlalchemy import Column, String, Integer, CheckConstraint, Boolean, Float, DateTime, Enum, ForeignKey, event
-from routers.catalogue.models import CatalogueAsset
-from routers.currency.models import CurrencyChoice
-from clry.tasks import s3_delete_bg, _delete_path
+from sqlalchemy import Column, String, Float, event, DateTime, Enum, Boolean, CheckConstraint, ForeignKey, Integer
+from routers.subscription.models import Subscription
 from sqlalchemy.ext.hybrid import hybrid_property
-from routers.category.models import CategoryAsset
-from dateutil.relativedelta import relativedelta
+from rds.tasks import async_remove_file
 from sqlalchemy.orm import relationship
-from database import TenantBase, Base
+from utils import today_str, gen_code
 from mixins import BaseMixin
-from utils import today_str
-from passlib import pwd
-from ctypes import File
-import enum, datetime
+from config import THUMBNAIL
+from database import Base
+import enum
 
 class DepreciationAlgorithm(enum.Enum):
     straight_line_depreciation = 'straight_line_depreciation'
@@ -21,10 +17,8 @@ class Asset(BaseMixin, Base):
     '''Asset Model'''
     __tablename__ = "assets"
     __table_args__ = (
-        CheckConstraint('salvage_price<=price', name='_price_salvage_price_'),
+        CheckConstraint('salvage_price<=price', name='_price_salvage_price_'), # tbd
         CheckConstraint('decommission is TRUE AND decommission_justification IS NOT NULL'),
-        CheckConstraint('numerable is TRUE AND quantity IS NOT NULL', name='_quantity_numerable_'),
-        CheckConstraint('COALESCE(inventory_id, department_id) IS NOT NULL', name='_at_least_inv_or_dep_'),
         CheckConstraint("depreciation_algorithm='declining_balance_depreciation' AND dep_factor IS NOT NULL", name='_verify_dpa_'),
     )
 
@@ -35,42 +29,38 @@ class Asset(BaseMixin, Base):
     dep_factor = Column(Float, nullable=True)
     metatitle = Column(String, nullable=True)
     description = Column(String, nullable=True)
-    numerable = Column(Boolean, nullable=False)
-    consumable = Column(Boolean, nullable=False)
     salvage_price = Column(Float, nullable=False)
-    service_date = Column(DateTime, nullable=False)
-    purchase_date = Column(DateTime, nullable=False)
+    service_date = Column(DateTime, nullable=True)
+    purchase_date = Column(DateTime, nullable=True)
     warranty_deadline = Column(DateTime, nullable=True)
     available = Column(Boolean, default=True, nullable=False)
     decommission_justification = Column(String, nullable=True)
     serial_number = Column(String, nullable=False, unique=True)
     decommission = Column(Boolean, default=False, nullable=False)
     price = Column(Float, CheckConstraint('price>=0'), nullable=False)
-    code = Column(String, nullable=False, unique=True, default=pwd.genword)
-    quantity = Column(Integer, CheckConstraint('quantity>0'), nullable=True)
+    purchase_order_number = Column(String, nullable=True, unique=True)
+    code = Column(String, nullable=False, unique=True, default=gen_code)
     depreciation_algorithm = Column(Enum(DepreciationAlgorithm), nullable=True)
-    documents = relationship("AssetDocument", uselist=True, cascade="all, delete")
-    categories = relationship("Category", secondary=CategoryAsset.__table__, back_populates="assets")
-    catalogues = relationship("Catalogue", secondary=CatalogueAsset.__table__, back_populates="assets")
-    images = relationship("AssetImage", uselist=True, cascade="all, delete")
-    activities = relationship("Activity", order_by="Activity.created")
-    department = relationship("Department", back_populates="assets")
+    
+    categories = relationship("Category", secondary='CategoryAsset.__table__', back_populates="assets")
+    catalogues = relationship("Catalogue", secondary='CatalogueAsset.__table__', back_populates="assets")
+    subscriptions = relationship("Subscription", back_populates="asset")
     inventory = relationship("Inventory", back_populates="assets")
-    vendor = relationship("Vendor", back_populates="assets_sold")
-    department_id = Column(Integer, ForeignKey('departments.id'))
-    inventory_id = Column(Integer, ForeignKey('inventories.id'))
-    currency = Column(Enum(CurrencyChoice), nullable=False)
+    sold_by = relationship("Vendor", back_populates="assets_sold")
+    currency = relationship("Currency")
+    author = relationship("User")
+
+    inventory_id = Column(Integer, ForeignKey('inventories.id'), nullable=False)
+    currency_id = Column(Integer, ForeignKey('currencies.id'))
     vendor_id = Column(Integer, ForeignKey('vendors.id'))
     author_id = Column(Integer, ForeignKey('users.id'))
-    author = relationship("User")
-    
+
     @hybrid_property
     def depreciation(self):
         amount, percentage=0, 0
         years = relativedelta(datetime.datetime.utcnow(), self.created_at).years
         if years >= self.lifespan:
             return {'percentage':(self.price-self.salvage_price)/self.price, 'amount':self.salvage_price}
-
         if self.depreciation_algorithm == DepreciationAlgorithm.declining_balance_depreciation:
             bal = self.price
             annual_dep_rate = 1/self.lifespan
@@ -81,47 +71,31 @@ class Asset(BaseMixin, Base):
             amount = self.price-bal
         elif self.depreciation_algorithm == DepreciationAlgorithm.straight_line_depreciation:
             percentage = years * (((self.price-self.salvage_price)/self.lifespan)/self.price)
-            amount = years * ((self.price-self.salvage_price)/self.lifespan)
-        
+            amount = years * ((self.price-self.salvage_price)/self.lifespan) 
         return {'percentage':percentage, 'amount':amount}
 
-class AssetImage(BaseMixin, Base):
-    '''Asset Images Model'''
-    __tablename__ = "asset_images"
+    def formatted_price(self):
+        return self.currency.format_currency(self.price)
 
-    url = Column(File(upload_to=f'{today_str()}/images/'))
-    asset_id = Column(Integer, ForeignKey('assets.id'))
+    def formatted_salvage_price(self):
+        return self.currency.format_currency(self.salvage_price)
 
-class AssetDocument(BaseMixin, Base):
-    __tablename__ = "asset_documents"
+@event.listens_for(Asset, 'after_delete')
+def remove_file(mapper, connection, target):
+    if target.url:async_remove_file(target.url) 
+    from routers.upload.models import Upload
+    with connection.begin():
+        connection.execute(Upload.__table__.delete().where(Upload.object==target))
 
-    url = Column(File(upload_to=f'{today_str()}/'))
-    asset_id = Column(Integer, ForeignKey('assets.id'))
-
-# class AssetCategory(TenantBase):
-#     '''Category Item Model'''
-#     __tablename__ = 'categories'
-
-#     asset_id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
-#     category_id = Column(Integer, ForeignKey('%s.categories.id'%Base.metadata.schema), primary_key=True)
-    
-
-@event.listens_for(AssetImage, 'after_delete')
-def receive_after_delete(mapper, connection, target):
-    if target.url[:3]=='S3:':
-        s3_delete.delay(target.url[3:])
-    _delete_path(target.url[3:])
-
-@event.listens_for(AssetDocument, 'after_delete')
-def receive_after_delete(mapper, connection, target):
-    if target.url[:3]=='S3:':
-        s3_delete.delay(target.url[3:])
-    _delete_path(target.url[3:])
-
-@event.listens_for(Asset, 'after_insert')
-@event.listens_for(Asset, 'after_update')
-def create_warranty_notification(mapper, connection, target):
+@event.listens_for(Asset.service_date, 'set', propagate=True)
+@event.listens_for(Asset.purchase_date, 'set', propagate=True)
+@event.listens_for(Asset.warranty_deadline, 'set', propagate=True)
+def set_up_notification(target, value, oldvalue, initiator):
+    # servicing, warranty
+    # if value > today: schedule join and add activity
     pass
-    # if target.password:
-    #     connection.execute(User.__table__.update().values(password=target.generate_hash(target.password)))
-    # after_create to set warranty deadline
+
+# def validate_phone(target, value, oldvalue, initiator):
+#     "Strip non-numeric characters from a phone number"
+#     return re.sub(r'\D', '', value)
+# event.listen(UserContact.phone, 'set', validate_phone, retval=True)

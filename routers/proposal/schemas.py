@@ -1,24 +1,18 @@
+import routers.proposal.models as m, datetime
+from pydantic import BaseModel, validator
 from typing import Optional, List, Union
-import routers.proposal.models as m
-from pydantic import BaseModel, validator, conint
-import datetime, enum
-
-class ProposalStatus(str, enum.Enum):
-    active = 'active'
-    accepted = 'accepted'
-    declined = 'declined'
-    delivered = 'delivered'
 
 class ProposalBase(BaseModel):
     title: str
     justification: str
-    author_id: conint(gt=0)
+    department_id: int
     metatitle: Optional[str]
-    priority_id: conint(gt=0)
+    priority_id: Optional[int]
     description: Optional[str]
-    department_id: conint(gt=0)
-    inventory_id: Optional[conint(gt=0)]
-    
+    inventory_id: Optional[int]
+    status: Optional[m.ProposalStatus]
+    author_id: int  # -> get from request
+
     class Config:
         orm_mode = True
 
@@ -26,30 +20,24 @@ class ProposalBase(BaseModel):
         model = m.Proposal
 
 class CreateProposal(ProposalBase):
-    status: Optional[ProposalStatus]
-
-    @validator('status')
-    def _xor_(cls, v, values):
-        if v==ProposalStatus.accepted:
-            if not values['inventory_id']:
-                raise ValueError('inventory id required')
-        return v
-
+    pass
+    # @validator('status')
+    # def _xor_(cls, v, values):
+    #     if v==ProposalStatus.accepted:
+    #         if not values['inventory_id']:
+    #             raise ValueError('inventory id required')
+    #     return v
+        
 class UpdateProposal(BaseModel):
-    title: Optional[str]
-    metatitle: Optional[str]
-    description: Optional[str]
-    justification: Optional[str]
-    author_id: Optional[conint(gt=0)]
-    priority_id: Optional[conint(gt=0)]
-    inventory_id: Optional[conint(gt=0)]
-    department_id: Optional[conint(gt=0)]
+    priority_id: Optional[int]
+    inventory_id: Optional[int]
+    department_id: Optional[int]
+    status: Optional[m.ProposalStatus]
 
 class Proposal(ProposalBase):
     id: int
-    status: enum.Enum
     created: datetime.datetime
-    updated: datetime.datetime
+    updated: datetime.datetime    
 
 class ProposalList(BaseModel):
     bk_size: int

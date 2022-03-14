@@ -4,6 +4,7 @@ from cls import Upload
 
 class File(types.TypeDecorator):
     impl = types.String
+    cache_ok = False
 
     def __init__(self,  *args, upload_to, size=None, **kwargs):
         super(File, self).__init__(*args, **kwargs)
@@ -11,6 +12,8 @@ class File(types.TypeDecorator):
         self.size = size
 
     def process_bind_param(self, value, dialect):
+        if not value:
+            return None
         file = Upload(value, upload_to=self.upload_to, size=self.size)
         url = file.save()
         return url

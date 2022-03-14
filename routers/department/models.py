@@ -1,22 +1,27 @@
-from sqlalchemy import Column, String, ForeignKey, Integer
+from sqlalchemy import Column, String, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
 from mixins import BaseMixin
 from database import Base
-import re
+
+class BaseDepartment(BaseMixin, Base):
+    '''Base Department Model'''
+    __tablename__ = 'base_departments'
+
+    title = Column(String, unique=True, nullable=False)
+    description = Column(String, nullable=True)
 
 class Department(BaseMixin, Base):
     '''Department Model'''
     __tablename__ = 'departments'
+    __table_args__ = (UniqueConstraint('id', 'branch_id', name='_id_branch_id_'),)
 
-    title = Column(String, nullable=False)
-    assets = relationship("Asset", back_populates="department")
-    branch = relationship('Branch', back_populates="departments")
-    proposals = relationship('Proposal', back_populates="department")
-    inventories = relationship('Inventory', back_populates="department")
-    branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
+    info = relationship("BaseDepartment", cascade="all, delete")
+    branch_id = Column(Integer, ForeignKey('branches.id'))
     head_of_department_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    id = Column(Integer, ForeignKey('base_departments.id'), nullable=False, primary_key=True) 
     head_of_department = relationship('User', foreign_keys="Department.head_of_department_id")
     staff = relationship('User', back_populates="department", foreign_keys="[User.department_id]")
-    requests = relationship("Request", back_populates="department")
-
-# https://stackoverflow.com/questions/64807850/sqlalchemy-multiple-one-to-one-and-one-to-many-relationships
+    inventories = relationship('Inventory', back_populates="department")
+    proposals = relationship('Proposal', back_populates="department")
+    requests = relationship('Request', back_populates="departments")
+    branch = relationship('Branch', back_populates="departments")

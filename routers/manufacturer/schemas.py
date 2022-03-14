@@ -1,14 +1,13 @@
+import routers.manufacturer.models as m, datetime
 from typing import Optional, List, Union
 from constants import URL, EMAIL, PHONE
-import routers.manufacturer.models as m
 from pydantic import BaseModel, constr
 from utils import as_form
-import datetime
 
 class ManufacturerBase(BaseModel):
     title: str
+    scheme: Optional[str]
     metatitle: Optional[str]
-    tenant_key: Optional[str]
     description: Optional[str]
     email: Optional[constr(regex=EMAIL)]
     website: Optional[constr(regex=URL)]
@@ -24,19 +23,15 @@ class ManufacturerBase(BaseModel):
 class CreateManufacturer(ManufacturerBase):
     status: Optional[bool]
 
-class UpdateManufacturer(BaseModel):
+@as_form
+class UpdateManufacturer(ManufacturerBase):
     title: Optional[str]
     status: Optional[bool]
-    metatitle: Optional[str]
-    tenant_key: Optional[str]
-    description: Optional[str]
-    email: Optional[constr(regex=EMAIL)]
-    website: Optional[constr(regex=URL)]
-    contact: Optional[constr(regex=PHONE)]
 
 class Manufacturer(ManufacturerBase):
     id: int
     status: bool
+    logo: Optional[str]
     created: datetime.datetime
     updated: datetime.datetime
 

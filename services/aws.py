@@ -1,5 +1,5 @@
+from config import settings, AWS_S3_CUSTOM_DOMAIN
 from botocore.exceptions import ClientError
-from config import settings, UPLOAD_ROOT
 import boto3, logging, os
 
 logger = logging.getLogger("eAsset.main")
@@ -15,8 +15,8 @@ s3_client = s3()
 
 def s3_upload(file, bucket=settings.AWS_STORAGE_BUCKET_NAME, object_name=None, **kwargs):
     if object_name is None:
-        object_name = os.path.basename(file.filename)
-    
+        object_name = "_".join(os.path.basename(file.filename).split())
+       
     try:        
         response = s3_client.upload_fileobj(
             file.file, 
@@ -31,7 +31,7 @@ def s3_upload(file, bucket=settings.AWS_STORAGE_BUCKET_NAME, object_name=None, *
     except ClientError as e:
         logger.error(e)
         return False
-    return f'https://{bucket}.s3.amazonaws.com/{object_name}'
+    return f"{AWS_S3_CUSTOM_DOMAIN}{object_name}" # f'https://{bucket}.s3.amazonaws.com/{object_name}'
 
 def s3_delete(object_name, bucket=settings.AWS_STORAGE_BUCKET_NAME):
     try:

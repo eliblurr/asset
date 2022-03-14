@@ -1,13 +1,12 @@
+import routers.tenant.models as m, datetime
+from typing import Optional, List, Union
 from pydantic import BaseModel, constr
 from constants import PHONE, EMAIL
-import routers.tenant.models as m
-from typing import Optional, List, Union
-from datetime import datetime
 from utils import as_form
 
 class TenantBase(BaseModel):
     title: str
-    sub_domain_id: str
+    sub_domain: str
     metatitle: Optional[str]
     description: Optional[str]
     phone: constr(regex=PHONE)
@@ -15,7 +14,7 @@ class TenantBase(BaseModel):
     street_address: Optional[str]
     postal_address: Optional[str]
     digital_address: Optional[str]
-    
+
     class Config:
         orm_mode = True
 
@@ -26,25 +25,21 @@ class TenantBase(BaseModel):
 class CreateTenant(TenantBase):
     pass
 
-class UpdateTenant(BaseModel):
+@as_form
+class UpdateTenant(TenantBase):
     title: Optional[str]
-    password: Optional[str]
-    metatitle: Optional[str]
-    description: Optional[str]
-    sub_domain_id: Optional[str]
-    street_address: Optional[str]
-    postal_address: Optional[str]
-    digital_address: Optional[str]
-    email: Optional[constr(regex=EMAIL)]
+    is_active:Optional[bool]
+    is_verified:Optional[bool]
+    sub_domain: Optional[str]
     phone: Optional[constr(regex=PHONE)]
+    email: Optional[constr(regex=EMAIL)]
 
 class Tenant(TenantBase):
     id: int
-    key: str
     logo: str
-    bg_image: str
-    created: datetime
-    updated: datetime
+    bg_image: Optional[str]
+    created: datetime.datetime
+    updated: datetime.datetime
 
 class TenantList(BaseModel):
     bk_size: int

@@ -1,11 +1,10 @@
-from sqlalchemy import Column, String, Boolean, event, Integer, ForeignKey
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import Column, String, Integer, Boolean, ForeignKey
 from mixins import BaseMixin, HashMethodMixin
 from sqlalchemy.orm import relationship
-from database import Base, TenantBase, Base
 from sqlalchemy.orm import validates
-from constants import EMAIL, PHONE
-from passlib import pwd
+from constants import PHONE, EMAIL
+from utils import gen_code
+from database import Base
 import re
 
 class User(BaseMixin, HashMethodMixin, Base):
@@ -13,21 +12,26 @@ class User(BaseMixin, HashMethodMixin, Base):
     __tablename__ = "users"
 
     phone = Column(String, nullable=True)
-    last_name = Column(String, nullable=True)
-    first_name = Column(String, nullable=True)
+    password = Column(String, nullable=True)
+    last_name = Column(String, nullable=False)
     is_active = Column(Boolean, default=False)
+    first_name = Column(String, nullable=False)
     middle_name = Column(String, nullable=True)
+    is_verified = Column(Boolean, default=False)
     email = Column(String, unique=True, index=True)
     role_id  = Column(Integer, ForeignKey('roles.id'))
     role = relationship('Role', back_populates="users")
-    password = Column(String, nullable=False, default=pwd.genword)
-    proposals = relationship("Proposal", back_populates="author")
     branch = relationship("Branch", back_populates="staff")
     branch_id = Column(Integer, ForeignKey('branches.id'))
     department_id = Column(Integer, ForeignKey('departments.id', use_alter=True))
     department = relationship("Department", back_populates="staff", foreign_keys="User.department_id")
-    
-    status = 1
+    proposals = relationship("Proposal", back_populates="author")
+    requests = relationship("Request", back_populates="author")
+
+    @validates('password', include_removes=True)
+    def validate_password(self, key, value, is_remove):
+        assert len(value) > 7, 'unacceptable password length'
+        return self.__class__.generate_hash(value)
 
     @validates('email')
     def validate_email(self, key, value):
@@ -35,12 +39,30 @@ class User(BaseMixin, HashMethodMixin, Base):
         return value
 
     @validates('phone')
-    def validate_phone(self, key, address):
-        assert re.search(PHONE, address), 'invalid phone format'
-        return address
+    def validate_phone(self, key, value):
+        assert re.search(PHONE, value), 'invalid phone format'
+        return value
 
-@event.listens_for(User, 'after_insert')
-@event.listens_for(User, 'before_update')
-def hash_password(mapper, connection, target):
-    if target.password:
-        connection.execute(User.__table__.update().values(password=target.generate_hash(target.password)))
+    status = None
+
+class Administrator(BaseMixin, HashMethodMixin, Base):
+    '''System Administrator Model'''
+    __tablename__ = "administrators"
+    # __table_args__ = ({'schema':'public'},)
+
+    is_active = Column(Boolean, default=False)
+    email = Column(String, unique=True, index=True)
+    is_verified = Column(Boolean, default=False)
+    password = Column(String, nullable=True)
+
+    @validates('password', include_removes=True)
+    def validate_password(self, key, value, is_remove):
+        assert len(value) > 7, 'unacceptable password length'
+        return self.__class__.generate_hash(value)
+
+    @validates('email')
+    def validate_email(self, key, value):
+        assert re.search(EMAIL, value), 'invalid email format'
+        return value
+    
+    status = None

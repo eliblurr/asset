@@ -1,65 +1,111 @@
-from sqlalchemy import Column, String, ForeignKey, Integer, DateTime, event, Enum
+from sqlalchemy import Column, DateTime, Integer, Enum, CheckConstraint, ForeignKey, event, String, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
-from database import TenantBase, Base
+from routers.asset.models import Asset
 from mixins import BaseMixin
+from database import Base
 import enum
 
 class RequestStatus(enum.Enum):
     active = 'active'
     expired = 'expired'
-    inactive = 'inactive'
+    declined = 'declined'
+    accepted = 'accepted'
 
-class TransferAction(enum.Enum):
+class ConsumableTransferAction(enum.Enum):
     ready = 'ready'
     picked = 'picked'
-    created = 'created'
-    returned = 'returned'
-    accepted = 'accepted'
-    declined = 'declined'
-    completed = 'completed'
 
-class Flag(enum.Enum):
-    pass
+class AssetTransferAction(enum.Enum):
+    returned = 'returned'
+    picked = 'picked'
+    ready = 'ready'
+    
+def inventory_id(context):
+    with context.connection.begin() as conn:
+        id = conn.execute(select(Asset.inventory_id).where(Asset.__table__.c.id==context.get_current_parameters()["asset_id"])).scalar()
+        if id:
+            raise IntegrityError('no inventory available for asset', 'inventory_id', 'could not resolve inventory_id from asset')
+        return id
 
 class Request(BaseMixin, Base):
     '''Request Model'''
-    __tablename__ = 'requests'
-    # __table_args__ = (
-        # check constraint on item being returnable to have certain fields eg. return date 
-    # )
+    __tablename__ = "requests"
+    # __table_args__ = (CheckConstraint('COALESCE(department_id, inventory_id) IS NOT NULL', name='_target_handlers_'),) 
 
-    # end_date = Column(DateTime, nullable=True)
-    # start_date = Column(DateTime, nullable=False)
-    pickup_date = Column(DateTime, nullable=True)
-    return_date = Column(DateTime, nullable=True)
+    status = Column(Enum(RequestStatus), default=RequestStatus.active, nullable=False) 
+    justication = Column(String, nullable=True)
+
+    inventory_id = Column(Integer, ForeignKey("inventories.id"), nullable=True, default=inventory_id)
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+    priority_id = Column(Integer, ForeignKey('priorities.id'), nullable=False)
+    author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # add department in order to track what departments re
+
+    departments = relationship("Department", back_populates="requests")
+    inventory = relationship("Inventory", back_populates="requests")
+    author = relationship("User", back_populates="requests")
+    consumables = relationship("ConsumableRequest")
+    assets = relationship("AssetRequest")
+    priority = relationship("Priority")
+
+class AssetRequest(BaseMixin, Base):
+    '''Asset Request Model'''
+    __tablename__ = "asset_requests"
+    
+    asset_id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
+    request_id = Column(Integer, ForeignKey('requests.id'), primary_key=True)
+    catalogue_id = Column(Integer, ForeignKey('catalogues.id'))
 
     pickup_deadline = Column(DateTime, nullable=True)
 
-    status = Column(Enum(RequestStatus), default=RequestStatus.active, nullable=False) 
+    returned_at = Column(DateTime, nullable=True)
+    picked_at = Column(DateTime, nullable=True)
+
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=True)
+
+    action = Column(Enum(AssetTransferAction)) 
     
-    author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    id=None
 
-    priority_id = Column(Integer, ForeignKey('priorities.id'), nullable=False)
-    priority = relationship("Priority")
+class ConsumableRequest(BaseMixin, Base):
+    '''Consumable Request Model'''
+    __tablename__ = "consumable_requests"
 
-    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
-    department = relationship("Department", back_populates="requests")
+    consumable_id = Column(Integer, ForeignKey('consumables.id'), primary_key=True)
+    request_id = Column(Integer, ForeignKey('requests.id'), primary_key=True)
 
-    inventory_id = Column(Integer, ForeignKey("inventories.id"), nullable=True)
-    inventory = relationship("Inventory", back_populates="requests")
+    pickup_deadline = Column(DateTime, nullable=True)
+    action = Column(Enum(ConsumableTransferAction)) 
+    start_date = Column(DateTime, nullable=False)
 
-    activities = relationship("Activity", order_by="Activity.created")
+    picked_at = Column(DateTime, nullable=True)
+    quantity = Column(Integer, nullable=False)
+       
+    id=None
 
-class RequestAsset():
-    pass
+# use set for date fields for scheduling
 
 @event.listens_for(Request, 'before_insert') 
 @event.listens_for(Request, 'before_update') 
-def one_req_per_user_per_item(mapper, connection, target):
-    res = connection.execute(
-        Request.__table__.select().where(
-            Request.__table__.c.asset_id==target.asset_id, Request.__table__.c.author_id==target.author_id, Request.__table__.c.status==RequestStatus.active, 
-        )
-    ).rowcount
-    if res: raise IntegrityError('Author already has an active request for given Asset...', '[asset_id, author_id, status]', 'IntegrityError')
+def one_active_request_per_user_per_asset(mapper, connection, target):
+    with connection.begin():
+        pass
+    # res = connection.execute(
+#         Request.__table__.select().where(
+#             Request.__table__.c.asset_id==target.asset_id, Request.__table__.c.author_id==target.author_id, Request.__table__.c.status==RequestStatus.active, 
+        # )
+#     ).rowcount
+#     if res: raise IntegrityError('Author already has an active request for given Asset...', '[asset_id, author_id, status]', 'IntegrityError')
+
+# # transfer actions
+# class Action(enum.Enum):
+#     ready = 'ready'
+#     picked = 'picked'
+#     created = 'created'
+#     returned = 'returned'
+#     accepted = 'accepted'
+#     declined = 'declined'
+#     completed = 'completed'

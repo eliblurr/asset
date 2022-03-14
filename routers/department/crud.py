@@ -2,40 +2,32 @@ from . import models, schemas
 from typing import List
 from cls import CRUD
 
-from routers.inventory.crud import inventory
-from routers.proposal.crud import proposal
-from routers.user.account.crud import user
-from routers.request.crud import request
-from routers.asset.crud import asset
-
 department = CRUD(models.Department)
+base_department = CRUD(models.BaseDepartment)
 
-scheme = {
-    schemas.DResource.staff: (user, getattr(models.Department, 'staff')),
-    schemas.DResource.assets: (asset, getattr(models.Department, 'assets')),
-    schemas.DResource.requests: (request, getattr(models.Department, 'requests')),
-    schemas.DResource.proposals: (proposal, getattr(models.Department, 'proposals')),
-    schemas.DResource.inventories: (inventory, getattr(models.Department, 'inventories'))
-}
+# from routers.asset.crud import asset
 
-async def add_to_department(id:int, ids:List[int], child:schemas.DResource, db):
-    scheme = scheme.get(child)
-    dep = await department.read_by_id(id, db)
-    if dep:
-        obj = await scheme[0].read_by_id(id, db)
-        if obj and (obj not in scheme[1]):
-            scheme[1].append(obj)
-        db.commit()
-        db.refresh(dep)
-        return dep
+async def read_department_assets(id, params, db):
+    pass
 
-async def rem_from_department(id:int, ids:List[int], child:schemas.DResource, db):
-    scheme = scheme.get(child)
-    dep = await department.read_by_id(id, db)
-    if dep:
-        obj = await scheme[0].read_by_id(id, db)
-        if obj and (obj in scheme[1]):
-            scheme[1].remove(obj)
-        db.commit()
-        db.refresh(dep)
-        return dep
+# asset.join(inv).filter(inv.did=did)
+
+# try:
+#         base = db.query(models.Item)
+#         if loc_id:
+#             q1, q2, q3 = base.join(Department).filter(Department.location_id==loc_id), \
+#             base.join(Inventory).filter(Inventory.location_id==loc_id), base.join(Inventory).join(Department).filter(Department.location_id==loc_id)
+#             base = q1.union(q2).union(q3)
+#         bk_size = base.count()
+#         if search and value:
+#             try:
+#                 if models.Item.__table__.c[search].type.python_type==bool or models.Item.__table__.c[search].type.python_type==int or models.Item.__table__.c[search].type.python_type==models.DepreciationAlgorithm:
+#                     base = base.filter(models.Item.__table__.c[search]==value)
+#                 else:
+#                     base = base.filter(models.Item.__table__.c[search].like("%" + value + "%"))
+#             except KeyError:
+#                 pass
+#         data = base.offset(skip).limit(limit).all()
+#         return {'bk_size':bk_size, 'pg_size':data.__len__(), 'data':data}
+#     except:
+#         raise HTTPException(status_code=422, detail="{}: {}".format(sys.exc_info()[0], sys.exc_info()[1]))

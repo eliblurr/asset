@@ -1,16 +1,17 @@
 from typing import Optional, List, Union
-import routers.category.models as m
 from pydantic import BaseModel, Field
+import routers.category.models as m
 import datetime, enum
 
-class Resource(str, enum.Enum):
-    assets='assets'
-    vendors='vendors'
+class RelatedResource(str, enum.Enum):
+    assets = 'assets'
+    vendors = 'vendors'
+    consumables = 'consumables'
 
 class CategoryBase(BaseModel):
     title: str
+    scheme: Optional[str]
     metatitle: Optional[str]
-    tenant_key: Optional[str]
     description: Optional[str]
     
     class Config:
@@ -22,10 +23,9 @@ class CategoryBase(BaseModel):
 class CreateCategory(CategoryBase):
     pass
     
-class UpdateCategory(BaseModel):
+class UpdateCategory(CategoryBase):
     title: Optional[str]
     metatitle: Optional[str]
-    tenant_key: Optional[str]
     description: Optional[str]
     
 class Category(CategoryBase):
@@ -38,10 +38,14 @@ class CategoryList(BaseModel):
     pg_size: int
     data:  Union[List[Category], list]
 
-class CategoryAsset(BaseModel):
-    asset_id:int = Field(..., gt=0, alias='c_id')
-    category_id: int
-
 class CategoryVendor(BaseModel):
+    category_id:int
     vendor_id:int = Field(..., gt=0, alias='c_id')
-    category_id: int
+
+class CategoryConsumable(BaseModel):
+    category_id:int
+    consumable_id:int = Field(..., gt=0, alias='c_id')
+
+class CategoryAsset(BaseModel):
+    category_id:int
+    asset_id:int = Field(..., gt=0, alias='c_id')

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Boolean, Integer, BigInteger, JSON
+from sqlalchemy import Column, DateTime, Boolean, Integer, BigInteger, JSON, String
 from passlib.hash import pbkdf2_sha256 as sha256
 from datetime import datetime
 from utils import gen_code
@@ -9,10 +9,6 @@ class BaseMethodMixin(object):
     def c(cls):
         return [
             (c.name, c.type.python_type) if not isinstance(c.type, File) else (c.name, str) for c in cls.__table__.columns
-            # if c.name!='__ts_vector__' 
-            # or not isinstance(c.type, File)
-            # if any((c.name=='__ts_vector__', not isinstance(c.type, File))) # needs fixing
-            # else (c.name, None) for c in cls.__table__.columns
         ]
 
 class BaseMixin(BaseMethodMixin):    
@@ -20,6 +16,9 @@ class BaseMixin(BaseMethodMixin):
     created = Column(DateTime, default=datetime.utcnow)
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class GenCodeMixin(object):
+    code = Column(String, unique=False, default=gen_code)
 
 class HashMethodMixin(object):
     @classmethod
@@ -30,19 +29,21 @@ class HashMethodMixin(object):
     def verify_hash(self, data, hash):
         return sha256.verify(data, hash)
 
-class PermissionMixin(object):
-    permissions = Column(BigInteger, nullable=False, default=0)
+# from sqlalchemy.orm import declared_attr, declarative_mixin, relationship
 
-    def has(self, perm):
-        return self.permissions & perm == perm
+# @declarative_mixin
+# class RefTargetMixin:
+#     # @declared_attr
+#     # def target_id(cls):
+#     #     return Column('target_id', ForeignKey('target.id'))
 
-    def add(self, perm):
-        if not self.has(perm):
-            self.permissions += perm
+#     @declared_attr
+#     def target(cls):
+#         return relationship("Permission")
 
-    def delete(self, perm):
-        if self.has(perm):
-            self.permissions -= perm
+#     def has_perm(self, perm):
+#         return perm in self.permissions
 
-    def reset(self):
-        self.permissions = 0    
+#     def add_perm(self, perm):
+#         if not self.has(perm):
+#             self.permissions += perm

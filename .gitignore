@@ -8,3 +8,4 @@ logs/
 *.db
 *.log
 .env
+x64js/
