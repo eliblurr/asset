@@ -4,7 +4,7 @@ services:
 
   app:
     build:
-      context: ./asset
+      context: ./app
       dockerfile: dockerfile
     restart: always
     container_name: asset-app
