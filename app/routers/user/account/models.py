@@ -48,7 +48,7 @@ class User(BaseMixin, HashMethodMixin, Base):
 class Administrator(BaseMixin, HashMethodMixin, Base):
     '''System Administrator Model'''
     __tablename__ = "administrators"
-    # __table_args__ = ({'schema':'public'},)
+    __table_args__ = ({'schema':'public'},)
 
     is_active = Column(Boolean, default=False)
     email = Column(String, unique=True, index=True)

@@ -1,6 +1,6 @@
+from pydantic import BaseModel, constr, validator
 import routers.tenant.models as m, datetime
 from typing import Optional, List, Union
-from pydantic import BaseModel, constr
 from constants import PHONE, EMAIL
 from utils import as_form
 
@@ -23,7 +23,9 @@ class TenantBase(BaseModel):
 
 @as_form
 class CreateTenant(TenantBase):
-    pass
+    @validator('sub_domain')
+    def remove_all_spaces(cls, v):
+        return v.replace(' ','')
 
 @as_form
 class UpdateTenant(TenantBase):
