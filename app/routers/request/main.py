@@ -35,7 +35,10 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
         #     obj = crud.validate_catalogue(payload.obj.id, db)
         #     kwargs = {'catalogues':payload.obj}
 
-        return await request.create(payload.copy(exclude={'obj'}), db, **kwargs)
+        req = await request.create(payload.copy(exclude={'obj'}), db, **kwargs)
+        if req: 
+            'send notifications here'
+        return req
     
     except Exception as e:
         print(e)
