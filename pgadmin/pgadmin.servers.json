@@ -5,7 +5,7 @@
             "Group": "Asset Server Group",
 	    	"Port": 5432,
             "Username":"postgres",
-	    	"Host": "db",
+	    	"Host": "postgres",
 	    	"SSLMode": "prefer",
 	    	"MaintenanceDB": "postgres"
 		}

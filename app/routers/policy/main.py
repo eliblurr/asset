@@ -15,7 +15,6 @@ async def create(payload:schemas.CreatePolicy, db:Session=Depends(get_db)):
 @router.get('/', response_model=schemas.PolicyList, name='Policy')
 @ContentQueryChecker(crud.policy.model.c(), None)
 async def read(db:Session=Depends(get_db), **params):
-    print(params)
     return await crud.policy.read(params, db)
 
 @router.get('/{id}', response_model=Union[schemas.Policy, dict], name='Policy')

@@ -42,8 +42,8 @@ class Asset(BaseMixin, Base):
     code = Column(String, nullable=False, unique=True, default=gen_code)
     depreciation_algorithm = Column(Enum(DepreciationAlgorithm), nullable=True)
     
-    categories = relationship("Category", secondary='CategoryAsset.__table__', back_populates="assets")
-    catalogues = relationship("Catalogue", secondary='CatalogueAsset.__table__', back_populates="assets")
+    categories = relationship("Category", secondary='asset_categories', back_populates="assets")
+    catalogues = relationship("Catalogue", secondary='catalogue_assets', back_populates="assets")
     subscriptions = relationship("Subscription", back_populates="asset")
     inventory = relationship("Inventory", back_populates="assets")
     sold_by = relationship("Vendor", back_populates="assets_sold")

@@ -2,8 +2,8 @@ FROM tiangolo/uvicorn-gunicorn-fastapi:python3.7
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE 1
-RUN mkdir -p /home/www/app
-ENV APP_HOME=/home/www/app
+RUN mkdir -p /home/app
+ENV APP_HOME=/home/app/web
 RUN mkdir $APP_HOME
 
 WORKDIR $APP_HOME
@@ -13,4 +13,4 @@ COPY . /$APP_HOME
 RUN python3 -m pip install -r $APP_HOME/requirements.txt
 EXPOSE 80
 
-CMD [ "uvicorn", "main:api", "--workers" ,"4","--host", "0.0.0.0", "--port", "80"]
+CMD [ "uvicorn", "main:app", "--workers" ,"4","--host", "0.0.0.0", "--port", "80"]
