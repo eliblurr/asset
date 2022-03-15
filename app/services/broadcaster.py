@@ -1,12 +1,12 @@
 from broadcaster import Broadcast
 from pydantic import BaseModel
-from config import settings
+from config import REDIS_URL
 
 class Publish(BaseModel):
     channel: str
     message: str
 
-broadcast = Broadcast(settings.REDIS_URL) 
+broadcast = Broadcast(REDIS_URL) 
 
 async def chatroom_ws_receiver(websocket, channel):
     async for message in websocket.iter_text():

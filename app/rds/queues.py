@@ -1,10 +1,10 @@
+from config import REDIS_URL
 from redis import from_url
-from config import settings
 from rq import Queue
 
 REDIS_QUEUES = ["default","file","email","sms","notification","broadcaster"]
 
-redis = from_url(settings.REDIS_URL)
+redis = from_url(REDIS_URL)
 
 queues = {
     q:Queue(

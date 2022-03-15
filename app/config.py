@@ -98,17 +98,16 @@ class Settings(BaseSettings):
     AWS_STORAGE_BUCKET_NAME: str = "asset-dev-1990"
     AWS_S3_OBJECT_CACHE_CONTROL: str = "max-age=86400"
 
-    REDIS_HOST:str = "127.0.0.1"
-    REDIS_PORT:str = "6379"
-    REDIS_PASSWORD:str = ''
-    REDIS_USER:str = ''
-    REDIS_NODE:str = "0" 
+    REDIS_HOST:str="127.0.0.1"
+    REDIS_PORT:str='6379'
+    REDIS_PASSWORD:str=''
+    REDIS_USER:str=''
+    REDIS_NODE:str=0
     REDIS_MAX_RETRIES:int = 3
     REDIS_RETRY_INTERVAL:int=10
-    REDIS_URL:str=f"redis://{REDIS_USER}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_NODE}"
 
     class Config:
-        env_file = ".env"
+        # env_file = '.env'
         secrets_dir = KEY_ROOT
 
 DER_BASE64_ENCODED_PRIVATE_KEY_FILE_PATH = os.path.join(KEY_ROOT, "private.txt")
@@ -129,8 +128,11 @@ except:
 if not (os.path.isfile(DER_BASE64_ENCODED_PRIVATE_KEY_FILE_PATH) and os.path.isfile(DER_BASE64_ENCODED_PUBLIC_KEY_FILE_PATH)):
     os.system(f'sh keys.sh -r {KEY_ROOT}')
 
+# @lru_cache()
 def get_settings():
-    return Settings()
+    if os.getenv('DOCKER') in ['True', 'true', 1, '1', True]:
+        return Settings(_env_file="docker.env")
+    return Settings(_env_file=".env")
 
 settings = get_settings()
 
@@ -159,3 +161,5 @@ with open(DER_BASE64_ENCODED_PRIVATE_KEY_FILE_PATH, "r+") as private:
 
 with open(DER_BASE64_ENCODED_PUBLIC_KEY_FILE_PATH, "r+") as public:
     VAPID_PUBLIC_KEY = public.readline().strip("\n")
+
+REDIS_URL:str=f"redis://{settings.REDIS_USER}:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_NODE}"
