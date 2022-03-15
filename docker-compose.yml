@@ -7,6 +7,7 @@ services:
     build:
       context: ./app
       dockerfile: dockerfile
+    image: master-image
     restart: always
     container_name: asset-app
     expose: 
@@ -24,7 +25,7 @@ services:
     environment:
       REDIS_HOST: 'redis'
       REDIS_PORT: 6379
-      DOCKER: 1
+      DOCKER: 'true'
       DATABASE_URL: 'postgres://${DB_USER}:${DB_PASSWORD}@postgres/${DB_NAME}'
 
   pgadmin:
@@ -62,8 +63,8 @@ services:
 
   redis:
     restart: always
-    image: redis:3.0
-    command: redis-server --save 20 1 --loglevel warning
+    image: redis:latest
+    command: redis-server --save 60 1 --loglevel warning
     expose:
       - 6379
     networks: 
@@ -72,6 +73,22 @@ services:
       - redis_data:/data
     env_file:
       - docker.env
+
+  worker:
+    image: master-image
+    depends_on:
+      - redis
+    command: python3 -m rds.worker
+    networks: 
+      - asset-network
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_USER: ${REDIS_USER}
+      REDIS_NODE: ${REDIS_NODE}
+      REDIS_MAX_RETRIES: ${REDIS_MAX_RETRIES}
+      REDIS_RETRY_INTERVAL: ${REDIS_RETRY_INTERVAL}
 
   nginx:
     build:
