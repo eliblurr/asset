@@ -43,15 +43,15 @@ async def update(request:Request, id:int, payload:schemas.UpdateDepartment, db:S
 async def update(id:int, payload:schemas.UpdateBaseDepartment, db:Session=Depends(get_db)):
     return await crud.base_department.update(id, payload, db)
 
-@router.delete('/{id}', name='Delete Department')
-@router.delete('-base/{id}', name='Delete Base Department')
-@router.delete('/{id}/branches/{branch_id}', name='Delete Branch Department')
+@router.delete('/{id}', name='Delete Department', status_code=204)
+@router.delete('-base/{id}', name='Delete Base Department', status_code=204)
+@router.delete('/{id}/branches/{branch_id}', name='Delete Branch Department', status_code=204)
 async def delete(request:Request, id:int, branch_id:int, db:Session=Depends(get_db)):
     if re.search(r'^(/departments-base)', request.url.path):
-        return await crud.base_department.delete(id, db)
+        await crud.base_department.delete(id, db)
     if id and branch_id:
-        return await crud.department.bk_delete_2(db, branch_id=branch_id, id=id)
-    return await crud.department.delete(id, db)
+        await crud.department.bk_delete_2(db, branch_id=branch_id, id=id)
+    await crud.department.delete(id, db)
 
 from routers.asset.crud import asset
 from routers.inventory.crud import inventory

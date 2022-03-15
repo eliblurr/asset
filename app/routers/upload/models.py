@@ -7,7 +7,6 @@ from utils import today_str
 from database import Base
 from ctypes import File
 import enum
-# from ..asset.crud import asset
 
 UploadType = enum.Enum('UploadType', {v:v for v in UPLOAD_EXTENSIONS.keys()})
     

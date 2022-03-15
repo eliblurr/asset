@@ -16,7 +16,7 @@ async def verify_user(payload:schemas.Login, account:schemas.Account, db:Session
         return user
     raise HTTPException(status_code=401, detail=raise_exc("password", "wrong credentials", "Unauthorized"))
 
-async def read_by_id(id:str, account:schemas.Account, db:Session):
+def read_by_id(id:str, account:schemas.Account, db:Session):
     model = User if account=="users" else Administrator
     return db.query(model).get(id)
 

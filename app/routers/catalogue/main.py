@@ -26,13 +26,13 @@ async def read_by_id(id:int, fields:List[str]=r_fields(crud.catalogue.model), db
 async def update(id:int, payload:schemas.UpdateCatalogue, db:Session=Depends(get_db)):
     return await crud.catalogue.update(id, payload, db)
 
-@router.delete('/{id}', name='Catalogues')
+@router.delete('/{id}', name='Catalogues', status_code=204)
 async def delete(id:int, db:Session=Depends(get_db)):
     await crud.catalogue.delete(id, db)
 
-@router.delete('/', name='Catalogues')
+@router.delete('/', name='Catalogues', status_code=204)
 async def delete(ids:int, db:Session=Depends(get_db)):
-    return await crud.catalogue.bk_delete(ids, db)
+    await crud.catalogue.bk_delete(ids, db)
 
 @router.put('/{resource_id}/remove-asset', name='Catalogues')
 @router.put('/{resource_id}/append-asset', name='Catalogues')

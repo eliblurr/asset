@@ -40,6 +40,8 @@ async def update_password_with_code(id, account:schemas.Account, payload:schemas
         
     user.password = payload.password
 
+    db.commit()
+
 async def email_exist(email, db:Session):
     db.query()
     return True

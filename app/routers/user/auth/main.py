@@ -7,6 +7,8 @@ from utils import raise_exc, urljoin
 from sqlalchemy.orm import Session
 from . import schemas, crud
 from config import settings
+from utils import logger
+from typing import Union
 
 router = APIRouter()
 
@@ -20,9 +22,7 @@ async def authenticate(data:schemas.Login, account:schemas.Account, db:Session=D
     if not user.is_verified:
         raise HTTPException(status_code=417, detail="account is not verified")
 
-    data = {"id":user.id}
-    if account.value=="users":
-        data.update({"role_id":user.role.id})
+    data = {"id":user.id, "account":account.value}
 
     # make sure tenant checks
 
@@ -51,20 +51,23 @@ async def refresh_token(payload:schemas.RefreshToken, db:Session=Depends(get_db)
 
     raise HTTPException(status_code=417)
 
-@router.get('/current-user', response_model=schemas.User, name='JWT User')
-async def get_current_user(data:str=Depends(validate_bearer), db:Session=Depends(get_db)):
-    return await crud.read_by_id(data['user']['id'], data['account'], db)
+@router.get('/current-user', response_model=Union[schemas.Admin, schemas.User], name='JWT User')
+def get_current_user(data:str=Depends(validate_bearer), db:Session=Depends(get_db)):
+    return crud.read_by_id(data['id'], data['account'], db)
 
 @router.post("/send-email-verification-code", name='Request Email verification code')
 async def request_email_verification_code(payload:schemas.EmailBase, account:schemas.Account, db:Session=Depends(get_db)):
     obj = await crud.add_email_verification_code(payload.email, account, db)
     crud.schedule_del_code(obj.email)
-    if async_send_email(mail={
-        "subject":"Email Verification",
-        "recipients":[obj.email],
-        "body":f"your verification code is: {obj.code}",
-        "template_name":"email.html"
-    }):return 'you will receive code shortly'
+    try:
+        if async_send_email(mail={
+            "subject":"Email Verification",
+            "recipients":[obj.email],
+            "body":f"your verification code is: {obj.code}",
+            "template_name":"email.html"
+        }):return 'you will receive code shortly'
+    except Exception as e:
+        logger(__name__, e, 'critical')
     raise HTTPException(status_code=417)
 
 @router.post('/send-forgot-password-link', name='Request Forgot Password link')
@@ -73,10 +76,13 @@ async def forgot_password(request:Request, payload:schemas.EmailBase, account:sc
     if user:
         data = {"id":user.id, "account":account.value}
         token = create_jwt(data, exp=settings.PASSWORD_RESET_TOKEN_DURATION_IN_MINUTES)
-        if async_send_email(mail={
-            "subject":"Forgot Password",
-            "recipients":[obj.email],
-            "body":f"your password reset link is: {urljoin(request.base_url, settings.VERIFICATION_PATH)}" 
-        }):return 'you will receive link shortly'
+        try:
+            if async_send_email(mail={
+                "subject":"Forgot Password",
+                "recipients":[obj.email],
+                "body":f"your password reset link is: {urljoin(request.base_url, settings.VERIFICATION_PATH)}" 
+            }):return 'you will receive link shortly'
+        except Exception as e:
+            logger(__name__, e, 'critical')
         raise HTTPException(status_code=417)
     raise HTTPException(status_code=404, detail=raise_exc("email", "user not found", "NotFound"))

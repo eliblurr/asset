@@ -5,10 +5,9 @@ from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
 from dependencies import get_db
 from typing import Union, List
+from config import settings
 from . import crud, schemas
 import re
-
-from config import settings
 
 router = APIRouter()
 
@@ -36,7 +35,7 @@ async def create(request:Request, data=Depends(verify_payload), db:Session=Depen
     mailing_list = users if isinstance(users, list) else [users]
 
     for user in mailing_list:
-        token = await crud.gen_token(user.id, data['account'])
+        token = await crud.gen_token(user.id, data['account'], revoke_after=True)
 
         try:
             async_send_email(mail={
@@ -71,7 +70,7 @@ async def read_by_id(id:int, fields:List[str]=r_fields(crud.administrator.model)
 async def update(id:int, account:schemas.Account, payload:schemas.UpdateUser, db:Session=Depends(get_db)):
     obj = crud.administrator if account.value == "administrators" else crud.user
     if payload.password:
-        await crud.update_password_with_code(id, account, payload, db)
+        await crud.update_password_with_code(id, account, payload.password, db)
     return await obj.update(id, payload.copy(exclude={'password'}), db)
 
 @router.patch('/update-password', name='User Account')
@@ -90,8 +89,8 @@ async def update(request:Request, payload:schemas.PasswordBase, data=Depends(cru
     db.commit()
     return 'password updated'
 
-@router.delete('/{account}/{id}', name='User/Administrator')
+@router.delete('/{account}/{id}', name='User/Administrator', status_code=204)
 async def delete(id:int, account:schemas.Account, db:Session=Depends(get_db)):
     if account.value == "administrators":
-        return await crud.administrator.delete(id, db)
-    return await crud.user.delete(id, db)
+        await crud.administrator.delete(id, db)
+    await crud.user.delete(id, db)

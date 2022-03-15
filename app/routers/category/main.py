@@ -27,13 +27,13 @@ async def read_by_id(id:int, fields:List[str]=r_fields(crud.category.model), db:
 async def update(id:int, payload:schemas.UpdateCategory, db:Session=Depends(get_db)):
     return await crud.category.update(id, payload, db)
 
-@router.delete('/{id}', name='Categories')
+@router.delete('/{id}', name='Categories', status_code=204)
 async def delete(id:int, db:Session=Depends(get_db)):
-    return await crud.category.delete(id, db)
+    await crud.category.delete(id, db)
 
-@router.delete('/', name='Categories')
+@router.delete('/', name='Categories', status_code=204)
 async def delete(ids:int, db:Session=Depends(get_db)):
-    return await crud.category.bk_delete(ids, db)
+    await crud.category.bk_delete(ids, db)
 
 @router.put('/{resource_id}/remove-{resource}', name='Categories')
 @router.put('/{resource_id}/append-{resource}', name='Categories')

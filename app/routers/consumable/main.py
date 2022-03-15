@@ -25,6 +25,6 @@ async def read_by_id(id:int, fields:List[str]=r_fields(crud.consumable.model), d
 async def update(id:int, payload:schemas.UpdateConsumable, db:Session=Depends(get_db)):
     return await crud.consumable.update(id, payload, db)
 
-@router.delete('/{id}', name='Consumable')
+@router.delete('/{id}', name='Consumable', status_code=204)
 async def delete(id:int, db:Session=Depends(get_db)):
-    return await crud.consumable.delete(id, db)
+    await crud.consumable.delete(id, db)

@@ -9,7 +9,7 @@ class RolePermission(Base):
     __tablename__ = "role_permissions"
 
     role_id = Column(Integer, ForeignKey('roles.id'), primary_key=True)
-    permission_id = Column(Integer, ForeignKey('permissions.id'), primary_key=True) # public.permissions.id
+    permission_id = Column(Integer, ForeignKey('public.permissions.id'), primary_key=True)
 
 class Role(BaseMixin, Base):
     '''Roles Model'''
@@ -38,9 +38,9 @@ class Role(BaseMixin, Base):
             self.permissions.remove(perm)
         db.commit()
 
-    # def reset_perm(self, db):
-    #     for perm in self.permissions:
-    #         self.permissions = []  
+    def reset_perm(self, db):
+        self.permissions.clear()
+        db.commit() 
 
 def after_create(target, connection, **kw):
     connection.execute(

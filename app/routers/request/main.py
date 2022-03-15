@@ -35,8 +35,7 @@ async def read_by_id(id:int, fields:List[str]=r_fields(crud.request.model), db:S
 # async def update(id:int, payload:schemas.UpdateFAQ, db:Session=Depends(get_db)):
 #     return await crud.faq.update(id, payload, db)
 
-@router.delete('/{id}', name='Request')
+@router.delete('/{id}', name='Request', status_code=204)
 async def delete(id:int, db:Session=Depends(get_db)):
-    res = await crud.request.delete(id, db)
+    await crud.request.delete(id, db)
     crud.remove_scheduled_jobs(id)
-    return res

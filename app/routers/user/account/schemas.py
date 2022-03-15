@@ -16,6 +16,7 @@ class PasswordBase(BaseModel):
 
 class UpdatePassword(PasswordBase):
     code: str
+    password: constr(min_length=8)
     
 class CreateAdmin(EmailBase):
     password: constr(min_length=8) = None

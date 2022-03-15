@@ -11,7 +11,7 @@ from config import settings
 
 router = APIRouter()
 
-@router.post('/', response_model=schemas.Tenant, status_code=201, name='Tenant/Organization')
+@router.post('/', response_model=schemas.Tenant, status_code=201, name='Tenant/Organization') # perm is system administrator
 async def create(request:Request, payload:schemas.CreateTenant=Depends(schemas.CreateTenant.as_form), logo:UploadFile=File(...), bg_image:UploadFile=File(None), db:Session=Depends(get_db)):
     tenant = await crud.tenant.create(payload, db, logo=logo, bg_image=bg_image)
     if tenant: 
@@ -24,16 +24,16 @@ async def create(request:Request, payload:schemas.CreateTenant=Depends(schemas.C
         except Exception as e:logger(__name__, e, 'critical')
     return tenant
 
-@router.get('/', response_model=schemas.TenantList, name='Tenant/Organization')
+@router.get('/', response_model=schemas.TenantList, name='Tenant/Organization') # perm is system administrator
 @ContentQueryChecker(crud.tenant.model.c(), None)
 async def read(db:Session=Depends(get_db), **params):
     return await crud.tenant.read(params, db)
 
-@router.get('/{id}', response_model=Union[schemas.Tenant, dict], name='Tenant/Organization')
+@router.get('/{id}', response_model=Union[schemas.Tenant, dict], name='Tenant/Organization') # perm is admin for tenant/system administrator
 async def read_by_id(id:int, fields:List[str]=r_fields(crud.tenant.model), db:Session=Depends(get_db)):
     return await crud.tenant.read_by_id(id, db, fields)
 
-@router.patch('/activate-tenant', name='Activate/Verify Tenant')
+@router.patch('/activate-tenant', name='Activate/Verify Tenant') 
 async def update(data=Depends(decode_token), db:Session=Depends(get_db)):
     obj = await crud.tenant.read_by_id(data['id'], db)
     if not obj:
@@ -42,10 +42,10 @@ async def update(data=Depends(decode_token), db:Session=Depends(get_db)):
     db.commit()
     return {'status':'success', 'message':'tenant verified and activated'}
 
-@router.patch('/{id}', response_model=schemas.Tenant, name='Tenant/Organization')
+@router.patch('/{id}', response_model=schemas.Tenant, name='Tenant/Organization') # perm is admin for tenant/system administrator
 async def update(id:int, payload:schemas.UpdateTenant=Depends(schemas.UpdateTenant.as_form), logo:UploadFile=File(None), bg_image:UploadFile=File(None), db:Session=Depends(get_db)):
     return await crud.tenant.update_2(id, payload, db, logo=logo, bg_image=bg_image)
    
-@router.delete('/{id}', description='', name='Tenant/Organization', status_code=204)
+@router.delete('/{id}', description='', name='Tenant/Organization', status_code=204) # perm is admin for tenant/system administrator
 async def delete(id:int, db:Session=Depends(get_db)):
     return await crud.tenant.delete_2(id, db)
