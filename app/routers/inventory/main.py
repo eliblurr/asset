@@ -23,6 +23,7 @@ async def read_by_id(id:int, fields:List[str]=r_fields(crud.inventory.model), db
 
 @router.patch('/{id}', response_model=schemas.Inventory, name='Inventory') # is authenticated, if role in []
 async def update(id:int, payload:schemas.UpdateInventory, db:Session=Depends(get_db)):
+    # inventory transfer of ownership -> add activity, push notification to new user
     return await crud.inventory.update(id, payload, db)
 
 @router.delete('/{id}', name='Inventory', status_code=204) # is authenticated, if role in []

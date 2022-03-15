@@ -24,14 +24,13 @@ class AssetTransferAction(enum.Enum):
 def inventory_id(context):
     with context.connection.begin() as conn:
         id = conn.execute(select(Asset.inventory_id).where(Asset.__table__.c.id==context.get_current_parameters()["asset_id"])).scalar()
-        if id:
-            raise IntegrityError('no inventory available for asset', 'inventory_id', 'could not resolve inventory_id from asset')
+        if id:raise IntegrityError('no inventory available for asset', 'inventory_id', 'could not resolve inventory_id from asset')
         return id
 
 class Request(BaseMixin, Base):
     '''Request Model'''
     __tablename__ = "requests"
-    # __table_args__ = (CheckConstraint('COALESCE(department_id, inventory_id) IS NOT NULL', name='_target_handlers_'),) 
+    __table_args__ = (CheckConstraint('COALESCE(department_id, inventory_id) IS NOT NULL', name='_target_handlers_'),) 
 
     status = Column(Enum(RequestStatus), default=RequestStatus.active, nullable=False) 
     justication = Column(String, nullable=True)
@@ -40,8 +39,6 @@ class Request(BaseMixin, Base):
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
     priority_id = Column(Integer, ForeignKey('priorities.id'), nullable=False)
     author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-
-    # add department in order to track what departments re
 
     departments = relationship("Department", back_populates="requests")
     inventory = relationship("Inventory", back_populates="requests")
@@ -57,17 +54,12 @@ class AssetRequest(BaseMixin, Base):
     asset_id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
     request_id = Column(Integer, ForeignKey('requests.id'), primary_key=True)
     catalogue_id = Column(Integer, ForeignKey('catalogues.id'))
-
     pickup_deadline = Column(DateTime, nullable=True)
-
     returned_at = Column(DateTime, nullable=True)
-    picked_at = Column(DateTime, nullable=True)
-
     start_date = Column(DateTime, nullable=False)
+    picked_at = Column(DateTime, nullable=True)
     end_date = Column(DateTime, nullable=True)
-
     action = Column(Enum(AssetTransferAction)) 
-    
     id=None
 
 class ConsumableRequest(BaseMixin, Base):
@@ -76,14 +68,11 @@ class ConsumableRequest(BaseMixin, Base):
 
     consumable_id = Column(Integer, ForeignKey('consumables.id'), primary_key=True)
     request_id = Column(Integer, ForeignKey('requests.id'), primary_key=True)
-
     pickup_deadline = Column(DateTime, nullable=True)
     action = Column(Enum(ConsumableTransferAction)) 
     start_date = Column(DateTime, nullable=False)
-
     picked_at = Column(DateTime, nullable=True)
     quantity = Column(Integer, nullable=False)
-       
     id=None
 
 # use set for date fields for scheduling

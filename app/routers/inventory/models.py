@@ -13,6 +13,7 @@ class Inventory(BaseMixin, Base):
     title = Column(String, nullable=False, unique=True)
     manager_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     department = relationship("Department", back_populates="inventories")
+    consumables = relationship("Consumable", back_populates="inventory")
     proposals = relationship("Proposal", back_populates="inventory")
     requests = relationship("Request", back_populates="inventory")
     department_id = Column(Integer, ForeignKey('departments.id'))

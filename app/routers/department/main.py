@@ -37,6 +37,7 @@ async def create(payload:schemas.CreateDepartment2, db:Session=Depends(get_db)):
 
 @router.patch('/{id}', response_model=schemas.Department, name='update department')
 async def update(request:Request, id:int, payload:schemas.UpdateDepartment, db:Session=Depends(get_db)):
+    # department transfer of ownership -> add activity, push notification to new user
     return await crud.department.update(id, payload, db)
 
 @router.patch('-base/{id}', response_model=schemas.BaseDepartment, name='update base-department')

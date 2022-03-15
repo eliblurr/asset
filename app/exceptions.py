@@ -20,6 +20,9 @@ class BlacklistedToken(BaseException):
 class MaxOccurrenceError(BaseException):
     pass
 
+class BadRequestError(BaseException):
+    pass
+
 class FileNotSupported(BaseException):
     pass
 

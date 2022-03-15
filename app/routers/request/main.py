@@ -1,39 +1,55 @@
-from fastapi import APIRouter, Depends
+from exceptions import NotFound, OperationNotAllowed, BadRequestError
+from fastapi import APIRouter, Depends, HTTPException
+from utils import r_fields, logger, raise_exc
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
 from dependencies import get_db
 from typing import Union, List
 from . import crud, schemas
-from utils import r_fields
 
 router = APIRouter()
 
-@router.post('/', response_model=Union[schemas.RequestForConsumable, schemas.RequestForAsset], status_code=201, name='Request')
-async def create(payload:Union[schemas.CreateRequestForAsset, schemas.CreateRequestForConsumable], db:Session=Depends(get_db)):
-    res = await crud.request.create(payload, db, exclude_unset=True)
-    if res:pass
-        # manager_id = author.u_department.manager_id if author.u_department else asset.inventory.department.manager_id if asset.inventory.department else asset.department.manager_id if asset.department else asset.inventory.manager_id
-        # if not manager_id:
-        #     raise HTTPException(status_code=400, detail='could not direct your request to anyone')
-        # activity, scheduling
-    return res
+def verify_payload(payload:schemas.CreateRequest, item:schemas.Items):
+    if not payload:raise HTTPException(status_code=422, detail="payload cannot be empty")
+    case1 = item.value=='assets' and isinstance(payload.obj, schemas.CreateConsumableRequest)
+    case2 = item.value=='consumables' and isinstance(payload.obj, schemas.CreateAssetRequest)
+    case3 = item.value=='catalogues' and isinstance(payload.obj, schemas.CreateCatalogueRequest)
+    if not any((case1, case2, case3)):raise HTTPException(status_code=422, detail="payload mismatch with item type")
+    return {'payload':payload, 'item':item.value}
+
+@router.post('/{item}', response_model=Union[schemas.ConsumableRequest, schemas.AssetRequest], status_code=201, name='Request')
+async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
+    try:
+        
+        await crud.validate_priority(payload.priority_id, db)
+
+        if payload['item']=='consumables':
+            manager = crud.validate_consumable(payload.obj.consumable_id, payload.obj.quantity, db)
+            kwargs = {'consumables':payload.obj}
+
+        if payload['item']=='assets':
+            manager = crud.validate_asset(payload.obj.asset_id, db)
+            kwargs = {'assets':payload.obj}
+
+        # if payload['item']=='catalogues':
+        #     obj = crud.validate_catalogue(payload.obj.id, db)
+        #     kwargs = {'catalogues':payload.obj}
+
+        return await request.create(payload.copy(exclude={'obj'}), db, **kwargs)
+    
+    except Exception as e:
+        print(e)
+        logger(__name__, e, 'critical')
+        raise HTTPException(status_code=400, detail=raise_exc(msg=f"{e}", type=f"{e.__class__}"))
 
 @router.get('/', response_model=schemas.RequestList, name='Request')
 @ContentQueryChecker(crud.request.model.c(), None)
 async def read(db:Session=Depends(get_db), **params):
     return await crud.request.read(params, db)
 
-@router.get('/{id}', response_model=Union[schemas.RequestForAsset, schemas.RequestForConsumable, dict], name='Request')
+@router.get('/{id}', response_model=Union[schemas.AssetRequest, schemas.ConsumableRequest, dict], name='Request')
 async def read_by_id(id:int, fields:List[str]=r_fields(crud.request.model), db:Session=Depends(get_db)):
     return await crud.request.read_by_id(id, db, fields)
-
-# @router.patch('/{id}', response_model=schemas.FAQ, name='FAQ')
-# async def update(id:int, payload:schemas.UpdateFAQ, db:Session=Depends(get_db)):
-#     return await crud.faq.update(id, payload, db)
-
-# @router.patch('/{id}', response_model=schemas.FAQ, name='FAQ')
-# async def update(id:int, payload:schemas.UpdateFAQ, db:Session=Depends(get_db)):
-#     return await crud.faq.update(id, payload, db)
 
 @router.delete('/{id}', name='Request', status_code=204)
 async def delete(id:int, db:Session=Depends(get_db)):
