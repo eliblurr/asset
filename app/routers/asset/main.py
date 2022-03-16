@@ -11,15 +11,15 @@ router = APIRouter()
 @router.post('/', response_model=Union[schemas.Asset, List[schemas.Asset]], status_code=201, name='Asset')
 async def create(payload:Union[schemas.CreateAsset, List[schemas.CreateAsset]], db:Session=Depends(get_db)):
     if isinstance(payload, list):
-        return await crud.asset.bk_create(payload, db)
-    return await crud.asset.create(payload, db)
+        return await crud.asset.bk_create([payload.copy(exclude={'category_ids'}) for payload in payload], db)
+    return await crud.asset.create(payload.copy(exclude={'category_ids'}), db)
 
 @router.get('/', response_model=schemas.AssetList, name='Asset')
 @ContentQueryChecker(crud.asset.model.c(), None)
 async def read(db:Session=Depends(get_db), **params):
     return await crud.asset.read(params, db)
 
-@router.get('/{id}', response_model=Union[schemas.Asset, dict], name='Asset')
+@router.get('/{id}', response_model=Union[schemas.Asset, dict], name='Asset') #response_model=Union[schemas.Asset, dict], 
 async def read_by_id(id:int, fields:List[str]=r_fields(crud.asset.model), db:Session=Depends(get_db)):
     return await crud.asset.read_by_id(id, db, fields)
 

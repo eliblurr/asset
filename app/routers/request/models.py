@@ -43,9 +43,12 @@ class Request(BaseMixin, Base):
     departments = relationship("Department", back_populates="requests")
     inventory = relationship("Inventory", back_populates="requests")
     author = relationship("User", back_populates="requests")
-    consumables = relationship("ConsumableRequest")
-    assets = relationship("AssetRequest")
+    consumable = relationship("ConsumableRequest", uselist=False)
+    '''catalogue = relationship("CatalogueRequest", uselist=False)'''
+    asset = relationship("AssetRequest", uselist=False)
     priority = relationship("Priority")
+
+    # use hybrid property to return asset obj for pydantic
 
 class AssetRequest(BaseMixin, Base):
     '''Asset Request Model'''
@@ -53,13 +56,14 @@ class AssetRequest(BaseMixin, Base):
     
     asset_id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
     request_id = Column(Integer, ForeignKey('requests.id'), primary_key=True)
-    catalogue_id = Column(Integer, ForeignKey('catalogues.id'))
-    pickup_deadline = Column(DateTime, nullable=True)
+    """catalogue_id = Column(Integer, ForeignKey('catalogues.id'))"""
+    pickup_deadlne = Column(DateTime, nullable=True)
     returned_at = Column(DateTime, nullable=True)
     start_date = Column(DateTime, nullable=False)
     picked_at = Column(DateTime, nullable=True)
     end_date = Column(DateTime, nullable=True)
     action = Column(Enum(AssetTransferAction)) 
+    asset = relationship('Asset')
     id=None
 
 class ConsumableRequest(BaseMixin, Base):
@@ -73,9 +77,27 @@ class ConsumableRequest(BaseMixin, Base):
     start_date = Column(DateTime, nullable=False)
     picked_at = Column(DateTime, nullable=True)
     quantity = Column(Integer, nullable=False)
+    consumable = relationship('Consumable')
     id=None
 
+"""class CatalogueRequest(BaseMixin, Base):
+    '''Catalogue Request Model'''
+    __tablename__ = "catalogue_requests"
+
+    catalogue_id = Column(Integer, ForeignKey('catalogues.id'), primary_key=True)
+    request_id = Column(Integer, ForeignKey('requests.id'), primary_key=True)
+    pickup_deadline = Column(DateTime, nullable=True)
+    returned_at = Column(DateTime, nullable=True)
+    start_date = Column(DateTime, nullable=False)
+    picked_at = Column(DateTime, nullable=True)
+    end_date = Column(DateTime, nullable=True)
+    action = Column(Enum(AssetTransferAction)) 
+    catalogue = relationship('Catalogue')
+    id=None"""
+
 # use set for date fields for scheduling
+# inventory_id -> Transfer notifications
+# department_id -> Transfer notifications
 
 @event.listens_for(Request, 'before_insert') 
 @event.listens_for(Request, 'before_update') 

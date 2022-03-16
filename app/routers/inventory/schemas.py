@@ -14,7 +14,6 @@ class InventoryBase(BaseModel):
 class CreateInventory(InventoryBase):
     manager_id:int
     department_id:Optional[int]
-    branch_id:Optional[int]
     
 class UpdateInventory(InventoryBase):
     title: Optional[str]

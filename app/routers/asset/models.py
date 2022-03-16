@@ -1,13 +1,14 @@
 from sqlalchemy import Column, String, Float, event, DateTime, Enum, Boolean, CheckConstraint, ForeignKey, Integer
 from routers.subscription.models import Subscription
 from sqlalchemy.ext.hybrid import hybrid_property
+from dateutil.relativedelta import relativedelta
 from rds.tasks import async_remove_file
 from sqlalchemy.orm import relationship
 from utils import today_str, gen_code
 from mixins import BaseMixin
 from config import THUMBNAIL
 from database import Base
-import enum
+import enum, datetime
 
 class DepreciationAlgorithm(enum.Enum):
     straight_line_depreciation = 'straight_line_depreciation'
@@ -18,7 +19,7 @@ class Asset(BaseMixin, Base):
     __tablename__ = "assets"
     __table_args__ = (
         CheckConstraint('salvage_price<=price', name='_price_salvage_price_'), # tbd
-        CheckConstraint('decommission is TRUE AND decommission_justification IS NOT NULL'),
+        # CheckConstraint('decommission is TRUE AND decommission_justification IS NOT NULL', name='_decommission_justification_'),
         CheckConstraint("depreciation_algorithm='declining_balance_depreciation' AND dep_factor IS NOT NULL", name='_verify_dpa_'),
     )
 
@@ -51,16 +52,16 @@ class Asset(BaseMixin, Base):
     author = relationship("User")
 
     inventory_id = Column(Integer, ForeignKey('inventories.id'), nullable=False)
-    currency_id = Column(Integer, ForeignKey('currencies.id'))
+    currency_id = Column(Integer, ForeignKey('currencies.id'), nullable=False)
     vendor_id = Column(Integer, ForeignKey('vendors.id'))
     author_id = Column(Integer, ForeignKey('users.id'))
 
     @hybrid_property
     def depreciation(self):
         amount, percentage=0, 0
-        years = relativedelta(datetime.datetime.utcnow(), self.created_at).years
+        years = relativedelta(datetime.datetime.utcnow(), self.created).years
         if years >= self.lifespan:
-            return {'percentage':(self.price-self.salvage_price)/self.price, 'amount':self.salvage_price}
+            return {'percentage':(self.price-self.salvage_price)/self.price, 'amount':self.salvage_price}   
         if self.depreciation_algorithm == DepreciationAlgorithm.declining_balance_depreciation:
             bal = self.price
             annual_dep_rate = 1/self.lifespan

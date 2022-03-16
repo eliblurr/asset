@@ -2,6 +2,7 @@ from pydantic import BaseModel, ValidationError, validator
 from typing import Optional, List, Union, Callable
 import datetime, routers.asset.models as m
 from utils import timestamp_to_datetime
+from fastapi import HTTPException
 
 class Validator(BaseModel):
     _service_date_ = validator('service_date', allow_reuse=True, check_fields=False)(timestamp_to_datetime)
@@ -10,27 +11,31 @@ class Validator(BaseModel):
 
     @validator('salvage_price', check_fields=False)
     def _check_price_(cls, v, values):
-        if v<=values['price']:
-            raise ValidationError('salvage_price must be lower than price')
+        if v>=values['price']:           
+            raise ValueError('salvage_price must be lower than price')
         return v
    
     @validator('decommission_justification', check_fields=False)
     def _check_decommission_(cls, v, values):
         if v==None and values['decommission']:
-            raise ValidationError('decommission_justification required for decommission')
+            raise ValueError('decommission_justification required for decommission')
         return v
     
     @validator('depreciation_algorithm', check_fields=False)
     def _check_d_a_(cls, v, values):
+        bool(values['dep_factor'])
+        print(v)
         if v==m.DepreciationAlgorithm.declining_balance_depreciation and not values['dep_factor']:
-            raise ValidationError('declining balance depreciation requires dep_factor')
+            raise ValueError('declining balance depreciation requires dep_factor')
         return v
 
 class AssetBase(BaseModel):
     make: str
     title: str
     model: str
-    lifespan: str
+    price: float
+    lifespan: float
+    serial_number: str
     dep_factor: Optional[float]
     metatitle: Optional[str]
     description: Optional[str]
@@ -39,8 +44,6 @@ class AssetBase(BaseModel):
     purchase_date: Optional[int]
     warranty_deadline: Optional[int]
     purchase_order_number: Optional[str]
-    price: float
-    serial_number: str
     depreciation_algorithm:Optional[m.DepreciationAlgorithm]
 
     class Config:
@@ -50,7 +53,7 @@ class AssetBase(BaseModel):
         model=m.Asset
 
 class CreateAsset(Validator, AssetBase):
-    category_ids:List[int]
+    category_ids:List[int]=[]
     currency_id: int
     vendor_id: Optional[int]
     inventory_id: Optional[int]
@@ -72,16 +75,19 @@ class Asset(AssetBase):
     created: datetime.datetime
     updated: datetime.datetime
     depreciation: Optional[dict]
-    # formatted_price: Callable[str, None]
-    # formatted_salvage_price: Callable[str, None]
+    formatted_price: Callable[str, None]
+    formatted_salvage_price: Callable[str, None]
+    service_date: Optional[datetime.datetime]
+    purchase_date: Optional[datetime.datetime]
+    warranty_deadline: Optional[datetime.datetime]
 
-    # @validator('formatted_price')
-    # def format_price(cls, v):
-    #     return v()
+    @validator('formatted_price')
+    def format_price(cls, v):
+        return v()
     
-    # @validator('formatted_salvage_price')
-    # def format_salvage_price(cls, v):
-    #     return v()
+    @validator('formatted_salvage_price')
+    def format_salvage_price(cls, v):
+        return v()
 
 class AssetList(BaseModel):
     bk_size: int

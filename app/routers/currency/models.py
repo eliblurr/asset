@@ -13,10 +13,10 @@ class Currency(BaseMixin, Base):
     currency = Column(Enum(CurrencyChoice), nullable=False, unique=True, default=True)
 
     def get_currency_symbol(self):
-        return get_currency_symbol(self.currency)
+        return get_currency_symbol(self.currency.value)
 
     def format_currency(self, value:float):
-        return format_currency(value, self.currency)
+        return format_currency(value, self.currency.value)
 
 def after_create(target, connection, **kw):
     with connection.begin():

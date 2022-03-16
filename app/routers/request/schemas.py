@@ -1,5 +1,5 @@
 from routers.priority.schemas import Priority
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, root_validator
 from typing import Optional, List, Union
 from utils import timestamp_to_datetime
 import routers.request.models as m
@@ -24,6 +24,9 @@ class AssetRequestBase(BaseModel):
     start_date: int
     end_date: Optional[int]
 
+    _normalize_start_date_ = validator('start_date', allow_reuse=True)(timestamp_to_datetime)
+    _normalize_end_date_ = validator('end_date', allow_reuse=True)(timestamp_to_datetime)
+
     class Config:
         orm_mode = True
 
@@ -35,11 +38,27 @@ class ConsumableRequestBase(BaseModel):
     consumable_id: int
     start_date: int
 
+    _normalize_start_date_ = validator('start_date', allow_reuse=True)(timestamp_to_datetime)
+
     class Config:
         orm_mode = True
 
     class Meta:
         model = m.ConsumableRequest
+
+'''class CatalogueRequestBase(BaseModel):
+    catalogue_id: int
+    start_date: int
+    end_date: Optional[int]
+
+    _normalize_start_date_ = validator('start_date', allow_reuse=True)(timestamp_to_datetime)
+    _normalize_end_date_ = validator('end_date', allow_reuse=True)(timestamp_to_datetime)
+
+    class Config:
+        orm_mode = True
+
+    class Meta:
+        model = m.CatalogueRequest'''
 
 class CreateAssetRequest(AssetRequestBase):
     pass
@@ -47,59 +66,47 @@ class CreateAssetRequest(AssetRequestBase):
 class CreateConsumableRequest(ConsumableRequestBase):
     pass
 
+'''class CreateCatalogueRequest(CatalogueRequestBase):
+    pass'''
+
 class CreateRequest(RequestBase):
     author_id: int
     priority_id: int
-    obj: Union[CreateAssetRequest, CreateConsumableRequest]
+    obj: Union[CreateAssetRequest, CreateConsumableRequest] # CreateCatalogueRequest
+
+    @root_validator
+    def rename_obj(cls, values):
+        if isinstance(values['obj'], CreateAssetRequest):
+            values['asset'] = values['obj']
+        if isinstance(values['obj'], CreateConsumableRequest):
+            values['consumable'] = values['obj']
+        return values
+
 
 class Request(RequestBase):
     updated: datetime.datetime
-    start_date: datetime.datetime 
-    action: m.AssetTransferAction
-    end_date: Optional[datetime.datetime]
-    pickup_date: Optional[datetime.datetime]
-    return_date: Optional[datetime.datetime]
     created: datetime.datetime
     status: m.RequestStatus
     priority: Priority
     id: int
 
 class AssetRequest(Request):
-    assets: dict
+    asset: dict
+    start_date: datetime.datetime 
+    action: m.AssetTransferAction
+    end_date: Optional[datetime.datetime]
+    pickup_date: Optional[datetime.datetime]
+    return_date: Optional[datetime.datetime]
     
 class ConsumableRequest(Request):
-    consumables: dict
+    consumable: dict
  
 class RequestList(BaseModel):
     bk_size: int
     pg_size: int
     data: Union[List[ConsumableRequest], List[AssetRequest], list]
 
-# class CreateCatalogueRequest(BaseModel):
-#     catalogue_id: int
-   
-# class CreateAssetRequest(AssetRequestBase):
-#     asset_id: int
-   
-# class CreateConsumableRequest(ConsumableRequestBase):
-#     consumable_id: int
-#     quantity: int
 
-#     class Config:
-#         orm_mode = True
-
-#     class Meta:
-#         model = m.ConsumableRequest
-
-# class CreateRequest(BaseModel):
-#     author_id: int
-#     start_date: int
-#     priority_id: int
-#     end_date: Optional[int]
-#     obj: Union[CreateAssetRequest, CreateCatalogueRequest, CreateConsumableRequest]
-
-#     _normalize_start_date_ = validator('start_date', allow_reuse=True)(timestamp_to_datetime)
-#     _normalize_end_date_ = validator('end_date', allow_reuse=True)(timestamp_to_datetime)
 
 # class RequestBase(BaseModel):
 #     justication: Optional[str]

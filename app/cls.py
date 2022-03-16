@@ -1,4 +1,4 @@
-from exceptions import MaxOccurrenceError, FileNotSupported, UploadNotAllowed, NotFound
+from exceptions import MaxOccurrenceError, FileNotSupported, UploadNotAllowed, NotFound, BadRequestError
 import enum, re, datetime, pathlib, pandas as pd, numpy as np, os, asyncio, shutil
 from sqlalchemy import and_, or_, func, distinct, Date, union_all, extract
 from utils import schema_to_model, raise_exc, logger, parse_activity_meta
@@ -10,6 +10,7 @@ from inspect import Parameter, Signature, signature
 from fastapi import Query, WebSocket, HTTPException
 from pydantic import BaseModel, conint, constr
 from psycopg2.errors import UndefinedTable
+from sqlalchemy.exc import DBAPIError
 from services.aws import s3_upload
 from sqlalchemy.orm import Session
 from config import UPLOAD_ROOT
@@ -39,12 +40,19 @@ class CRUD:
             db.commit()
             db.refresh(obj) 
         except Exception as e:
-            logger(__name__, e, 'error')
-            print('exception: ', e, type(e))
-            raise HTTPException(
-                status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e, UndefinedTable) or isinstance(e, AssertionError) else 500, 
-                detail=raise_exc(msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e, UndefinedTable) else  e}", type=f"{e.__class__}"),
-            )
+            
+            # print(e)
+
+            status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
+            if isinstance(e, DBAPIError):
+                status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
+                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+            else:
+                status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
+                msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
+            logger(__name__, e, 'critical')
+            raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
+            
         else:
             if activity:
                 for activity in activity:
@@ -118,13 +126,24 @@ class CRUD:
             data = base.offset(params['offset']).limit(params['limit']).all()
             return {'bk_size':base.count(), 'pg_size':data.__len__(), 'data':data}
         except Exception as e:
-            status_code = 500
-            print(e)
-            # if getattr(e, 'orig'):
-                # status_code = 400 if isinstance(e.orig, UndefinedTable) else 500
+
+            # print(e)
+
+            status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
+            if isinstance(e, DBAPIError):
+                status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
+                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+            else:
+                status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
+                msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
+            logger(__name__, e, 'critical')
+            raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
+            # print(e)
+            # # if getattr(e, 'orig'):
+            #     # status_code = 400 if isinstance(e.orig, UndefinedTable) else 500
             
-            # msg = 'tenant header required for this op' if isinstance(e.orig, UndefinedTable) else f"{e._message()}"
-            raise HTTPException(status_code=status_code, detail=raise_exc(msg=f'{e}', type= e.__class__.__name__))
+            # # msg = 'tenant header required for this op' if isinstance(e.orig, UndefinedTable) else f"{e._message()}"
+            # raise HTTPException(status_code=status_code, detail=raise_exc(msg=f'{e}', type= e.__class__.__name__))
 
     async def read_by_id(self, id, db:Session, fields:List[str]=None, use_extra_models:bool=False):
         try:
@@ -133,11 +152,19 @@ class CRUD:
             if not obj:
                 raise NotFound(f'object with id:{id} not found')
             return obj
-        except NotFound as e:
-            print(e)
-            raise HTTPException(status_code=404, detail=raise_exc(msg=e._message(), type= e.__class__.__name__))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=raise_exc(msg=f'{e}', type= e.__class__.__name__))
+
+            # print(e)
+
+            status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
+            if isinstance(e, DBAPIError):
+                status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
+                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+            else:
+                status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
+                msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
+            logger(__name__, e, 'critical')
+            raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
     
     async def read_by_kwargs(self, db:Session, fields:List[str]=None, **kwargs):
         try:
@@ -154,10 +181,23 @@ class CRUD:
             db.commit()
             return rows.first()
         except Exception as e:
-            raise HTTPException(
-                status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e, AssertionError) else 500,
-                detail=raise_exc(msg=e._message(), type= e.__class__.__name__)
-            )
+
+            # print(e)
+
+            status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
+            if isinstance(e, DBAPIError):
+                status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
+                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+            else:
+                status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
+                msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
+            logger(__name__, e, 'critical')
+            raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
+
+            # raise HTTPException(
+            #     status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e, AssertionError) else 500,
+            #     detail=raise_exc(msg=e._message(), type= e.__class__.__name__)
+            # )
             # raise HTTPException(
             #     status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e.orig, UndefinedTable) or isinstance(e, AssertionError) else 500, 
             #     detail=raise_exc(
@@ -176,21 +216,34 @@ class CRUD:
             [setattr(obj, k, v) for k, v in data.items()]
             db.commit()
             db.refresh(obj)  
-        except NotFound as e:
-            print(e)
-            raise HTTPException(status_code=404, detail=raise_exc(msg=e._message(), type= e.__class__.__name__))
-        except IntegrityError as e:
-            print(e)
-            raise HTTPException(status_code=409, detail=raise_exc(msg=e._message(), type= e.__class__.__name__))
-        except MaxOccurrenceError as e:
-            print(e)
-            raise HTTPException(status_code=409, detail=raise_exc(msg=e._message(), type= e.__class__.__name__))
-        except AssertionError as e:
-            print(e)
-            raise HTTPException(status_code=400, detail=raise_exc(msg=f"{e}", type= e.__class__.__name__))
+        # except NotFound as e:
+        #     print(e)
+        #     raise HTTPException(status_code=404, detail=raise_exc(msg=e._message(), type= e.__class__.__name__))
+        # except IntegrityError as e:
+        #     print(e)
+        #     raise HTTPException(status_code=409, detail=raise_exc(msg=e._message(), type= e.__class__.__name__))
+        # except MaxOccurrenceError as e:
+        #     print(e)
+        #     raise HTTPException(status_code=409, detail=raise_exc(msg=e._message(), type= e.__class__.__name__))
+        # except AssertionError as e:
+        #     print(e)
+        #     raise HTTPException(status_code=400, detail=raise_exc(msg=f"{e}", type= e.__class__.__name__))
         except Exception as e:
-            print(e)
-            raise HTTPException(status_code=500, detail=raise_exc(msg=f"{e}", type= e.__class__.__name__))
+            # print(e)
+            # raise HTTPException(status_code=500, detail=raise_exc(msg=f"{e}", type= e.__class__.__name__))
+
+            # print(e)
+
+            status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
+            if isinstance(e, DBAPIError):
+                status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
+                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+            else:
+                status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
+                msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
+            logger(__name__, e, 'critical')
+            raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
+
         else: 
             if activity:
                 for activity in activity:
@@ -205,13 +258,25 @@ class CRUD:
             return "success", {"info":f"{rows} row(s) deleted"}
         except Exception as e:
             # log here
-            raise HTTPException(
-                status_code=500, 
-                detail=raise_exc(
-                    msg=f"{e}", 
-                    type=f"{e.__class__}"
-                ),
-            )
+            # raise HTTPException(
+            #     status_code=500, 
+            #     detail=raise_exc(
+            #         msg=f"{e}", 
+            #         type=f"{e.__class__}"
+            #     ),
+            # )
+
+            # print(e)
+
+            status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
+            if isinstance(e, DBAPIError):
+                status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
+                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+            else:
+                status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
+                msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
+            logger(__name__, e, 'critical')
+            raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def delete_2(self, id, db:Session, use_field:str=None):
         try:
@@ -223,7 +288,19 @@ class CRUD:
             db.commit()
             return
         except Exception as e:
-            raise HTTPException(status_code=500, detail=raise_exc(msg=f"{e}", type= e.__class__.__name__))
+            # raise HTTPException(status_code=500, detail=raise_exc(msg=f"{e}", type= e.__class__.__name__))
+
+            # print(e)
+
+            status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
+            if isinstance(e, DBAPIError):
+                status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
+                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+            else:
+                status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
+                msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
+            logger(__name__, e, 'critical')
+            raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def bk_create(self, payload, db:Session):
         try:
@@ -235,11 +312,23 @@ class CRUD:
                 db.commit()
                 return rows.fetchall()
         except Exception as e:
-            code = 400 if isinstance(e, AssertionError) else 409 if any((
-                isinstance(e, IntegrityError),
-                isinstance(e, MaxOccurrenceError)
-            )) else 500
-            raise HTTPException(status_code=code, detail=http_exception_detail(msg=e._message(), type= e.__class__.__name__))
+            # code = 400 if isinstance(e, AssertionError) else 409 if any((
+            #     isinstance(e, IntegrityError),
+            #     isinstance(e, MaxOccurrenceError)
+            # )) else 500
+            # raise HTTPException(status_code=code, detail=http_exception_detail(msg=e._message(), type= e.__class__.__name__))
+
+            # print(e)
+
+            status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
+            if isinstance(e, DBAPIError):
+                status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
+                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+            else:
+                status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
+                msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
+            logger(__name__, e, 'critical')
+            raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def bk_update(self, payload, db:Session, **kwargs):
         try:
@@ -248,13 +337,25 @@ class CRUD:
             return "success", {"info":f"{rows} row(s) updated"}
         except Exception as e:
             # log here
-            raise HTTPException(
-                status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e.orig, UndefinedTable) or isinstance(e, AssertionError) else 500, 
-                detail=raise_exc(
-                    msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e.orig, UndefinedTable) else  e.orig}", 
-                    type=f"{e.__class__}"
-                ),
-            )
+            # raise HTTPException(
+            #     status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e.orig, UndefinedTable) or isinstance(e, AssertionError) else 500, 
+            #     detail=raise_exc(
+            #         msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e.orig, UndefinedTable) else  e.orig}", 
+            #         type=f"{e.__class__}"
+            #     ),
+            # )
+
+            # print(e)
+
+            status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
+            if isinstance(e, DBAPIError):
+                status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
+                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+            else:
+                status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
+                msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
+            logger(__name__, e, 'critical')
+            raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def bk_delete(self, ids:list, db:Session, use_field:str=None, **kwargs):
         try:
@@ -262,12 +363,24 @@ class CRUD:
             rows = db.query(self.model).filter(subq).filter_by(**kwargs).delete(synchronize_session=False)
             db.commit()
             return f"{rows} row(s) deleted"
-        except IntegrityError as e:
-            raise HTTPException(status_code=409, detail=http_exception_detail(msg=e._message().split('DETAIL:  ', 1)[1], type= e.__class__.__name__))
-        except MaxOccurrenceError as e:
-            raise HTTPException(status_code=409, detail=http_exception_detail(msg=e._message(), type= e.__class__.__name__))
+        # except IntegrityError as e:
+        #     raise HTTPException(status_code=409, detail=http_exception_detail(msg=e._message().split('DETAIL:  ', 1)[1], type= e.__class__.__name__))
+        # except MaxOccurrenceError as e:
+        #     raise HTTPException(status_code=409, detail=http_exception_detail(msg=e._message(), type= e.__class__.__name__))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=http_exception_detail(msg=f"{e}", type= e.__class__.__name__))
+            # raise HTTPException(status_code=500, detail=http_exception_detail(msg=f"{e}", type= e.__class__.__name__))
+
+            # print(e)
+
+            status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
+            if isinstance(e, DBAPIError):
+                status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
+                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+            else:
+                status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
+                msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
+            logger(__name__, e, 'critical')
+            raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def bk_delete_2(self, db:Session, **kwargs):
         try:
@@ -276,13 +389,25 @@ class CRUD:
             return "success", {"info":f"{rows} row(s) deleted"}
         except Exception as e:
             # log here
-            raise HTTPException(
-                status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e.orig, UndefinedTable) or isinstance(e, AssertionError) else 500, 
-                detail=raise_exc(
-                    msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e.orig, UndefinedTable) else  e.orig}", 
-                    type=f"{e.__class__}"
-                ),
-            )
+            # raise HTTPException(
+            #     status_code=409 if isinstance(e, IntegrityError) or isinstance(e, MaxOccurrenceError) else 400 if isinstance(e.orig, UndefinedTable) or isinstance(e, AssertionError) else 500, 
+            #     detail=raise_exc(
+            #         msg=f"{'(psycopg2.errors.UndefinedTable) This may be due to missing tenant' if isinstance(e.orig, UndefinedTable) else  e.orig}", 
+            #         type=f"{e.__class__}"
+            #     ),
+            # )
+
+            # print(e)
+
+            status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
+            if isinstance(e, DBAPIError):
+                status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
+                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+            else:
+                status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
+                msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
+            logger(__name__, e, 'critical')
+            raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def exists(self, db, **kwargs):
         try:

@@ -12,12 +12,12 @@ from cls import CRUD
 request = CRUD(models.Request)
 
 async def validate_author(id, db:Session):
-    obj = db.query(models.User).filter_by(id=id).first()
+    obj = db.query(User).filter_by(id=id).first()
     if not obj:raise NotFound(f'user with id:{id} not found')
     return obj.department.head_of_department if obj.department else None
 
 async def validate_priority(id, db:Session):
-    obj = db.query(models.Priority).filter_by(id=id).first()
+    obj = db.query(Priority).filter_by(id=id).first()
     if not obj:raise NotFound(f'priority with id:{id} not found')
     return True
 
@@ -25,24 +25,19 @@ async def validate_asset(id:int, db:Session):
     obj = db.query(models.Asset).filter_by(id=id).first()
     if not obj:raise NotFound(f'asset with id:{id} not found')
     if not obj.available:raise BadRequestError(f'asset with id:{id} not available')
-    return obj.inventory.department.head_of_department if obj.inventory.department else obj.inventory.manager
+    return obj.inventory.department.head_of_department if obj.inventory.department else obj.inventory.manager, {'title':obj.title, 'code':obj.code, 'id':id, 'type':'assets'}
 
 async def validate_consumable(id, quantity, db:Session):
     obj = db.query(Consumable).filter_by(id=id).first()
     if not obj:raise NotFound(f'consumable with id:{id} not found')
     obj.validate_quantity(quantity, db)
-    return obj.inventory.department.head_of_department if obj.inventory.department else obj.inventory.manager
-
+    return obj.inventory.department.head_of_department if obj.inventory.department else obj.inventory.manager, {'title':obj.title, 'quantity':obj.quantity, 'id':id, 'type':'consumables'}
+"""
 async def validate_catalogue(id, db:Session):
     obj = db.query(Catalogue).filter_by(id=id).first()
     if not obj:raise NotFound(f'catalogue with id:{id} not found')
-    available, unavailable = [], [] 
-    for asset in obj.assets:
-        if await validate_asset(asset.id, db):available.append(asset.id)
-        else:unavailable.append(asset.id)
-    # manager_id, inventory
-    return available, unavailable
-
+    return [await validate_asset(asset.id, db) for asset in obj.assets],  {'title':obj.title, 'quantity':obj.quantity, 'id':id, 'type':''}
+"""
 def remove_scheduled_jobs(id:int):
     map(scheduler.remove_job, [job.id for job in scheduler.get_jobs() if job.split('_',1)[0]==str(id)])
 
@@ -62,28 +57,8 @@ asset inventory department manager
 asset inventory manager
 '''
 
-# asset, author, priority, mannager, inventory
-# payload.department_id = asset.inventory.department_id if asset.inventory.department_id else asset.department_id if asset.department_id else payload.department_id
-# manager_id = author.u_department.manager_id if author.u_department else asset.inventory.department.manager_id if asset.inventory.department else asset.department.manager_id if asset.department else asset.inventory.manager_id
-
-# if payload['account']=='consumables':
-#     pass
-# if payload['account']=='catalogues':
-#     pass
-# if payload['account']=='assets':
-#     pass
-# print(payload)
-#     # 'catalogue operation here -> get assets from catalogue, perform validations, create request for assets available, return response'
-# res = await crud.request.create(payload, db, exclude_unset=True)
-# if res:pass
-#     # manager_id = author.u_department.manager_id if author.u_department else asset.inventory.department.manager_id if asset.inventory.department else asset.department.manager_id if asset.department else asset.inventory.manager_id
-#     # if not manager_id:
-#     #     raise HTTPException(status_code=400, detail='could not direct your request to anyone')
-#     # activity, scheduling
-# return res
-
 # async def update_request(id:int, payload:schemas.UpdateRequest, db:Session):
-#     req = await request.read_by_id(id, db)
+    # req = await request.read_by_id(id, db)
 #     if not req:
 #         raise HTTPException(status_code=404, detail='request not found')
 
