@@ -46,7 +46,7 @@ class CRUD:
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
-                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+                msg=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
@@ -133,7 +133,7 @@ class CRUD:
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
-                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+                msg=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
@@ -160,7 +160,7 @@ class CRUD:
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
-                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+                msg=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
@@ -188,7 +188,7 @@ class CRUD:
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
-                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+                msg=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
@@ -238,7 +238,7 @@ class CRUD:
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
-                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+                msg=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
@@ -272,7 +272,7 @@ class CRUD:
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
-                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+                msg=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
@@ -296,7 +296,7 @@ class CRUD:
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
-                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+                msg=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
@@ -324,7 +324,7 @@ class CRUD:
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
-                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+                msg=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
@@ -351,7 +351,7 @@ class CRUD:
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
-                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+                msg=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
@@ -376,7 +376,7 @@ class CRUD:
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
-                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+                msg=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
@@ -403,7 +403,7 @@ class CRUD:
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
-                msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+                msg=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  

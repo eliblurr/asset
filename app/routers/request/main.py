@@ -51,7 +51,7 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
         status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
         if isinstance(e, DBAPIError):
             status_code = 400
-            msg=f'(UndefinedTable) This may be due to missing tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
+            msg=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
         else:
             status_code = 400 if isinstance(e, BadRequestError) else 404 if isinstance(e, NotFound) else status_code
             msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound,)) else msg   
