@@ -1,4 +1,4 @@
-amqp==5.0.6
+# amqp==5.0.6
 xlrd==2.0.1
 Babel==2.9.1
 pyjwt==2.1.0
@@ -27,6 +27,7 @@ psycopg2-binary==2.9.1
 python-dateutil==2.8.2
 python-multipart==0.0.5
 SQLAlchemy-Utils==0.38.2
+typing_extensions==4.1.1
 redis==4.0.2
 rq==1.10.1
 xattr==0.9.9
