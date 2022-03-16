@@ -75,19 +75,19 @@ class Asset(AssetBase):
     created: datetime.datetime
     updated: datetime.datetime
     depreciation: Optional[dict]
-    # formatted_price: Callable[str, None]
-    # formatted_salvage_price: Callable[str, None]
+    formatted_price: Callable[str, None]
+    formatted_salvage_price: Callable[str, None]
     service_date: Optional[datetime.datetime]
     purchase_date: Optional[datetime.datetime]
     warranty_deadline: Optional[datetime.datetime]
 
-    # @validator('formatted_price')
-    # def format_price(cls, v):
-    #     return v()
+    @validator('formatted_price')
+    def format_price(cls, v):
+        return v()
     
-    # @validator('formatted_salvage_price')
-    # def format_salvage_price(cls, v):
-    #     return v()
+    @validator('formatted_salvage_price')
+    def format_salvage_price(cls, v):
+        return v()
 
 class AssetList(BaseModel):
     bk_size: int

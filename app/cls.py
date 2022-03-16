@@ -94,7 +94,8 @@ class CRUD:
             dte_filters = {x:params[x] for x in params if x in dt_cols and params[x] is not None} 
             ex_filters = {x:params[x] for x in params if x  in ex_cols and  params[x] is not None}
             ext_filters = {x:params[x] for x in params if x not in ["offset", "limit", "q", "sort", "action", "fields", *dt_cols, *ex_cols] and params[x] is not None}
-            filters = [ getattr(model_to_filter, k).match(v) if v!='null' else getattr(model_to_filter, k)==None for k,v in ext_filters.items()]
+            # filters = [ getattr(model_to_filter, k).match(v) if v!='null' else getattr(model_to_filter, k)==None for k,v in ext_filters.items()]
+            filters = [ getattr(model_to_filter, k)==v if v!='null' else getattr(model_to_filter, k)==None for k,v in ext_filters.items()]
             filters.extend([getattr(model_to_filter, k)==v if v!='null' else getattr(model_to_filter, k)==None for k,v in ex_filters.items()])
             filters.extend([
                 getattr(model_to_filter, k) >= str_to_datetime(val.split(":", 1)[1]) if val.split(":", 1)[0]=='gte'
@@ -116,10 +117,10 @@ class CRUD:
                 q_or, fts = [], []
                 [ q_or.append(item) if re.search(Q_STR_X, item) else fts.append(item) for item in params['q'] ]
 
-                if db.bind.dialect.name=='sqlite':
-                    q_or = or_(*[getattr(model_to_filter, q.split(':')[0])==q.split(':')[1] if q.split(':')[1]!='null' else getattr(model_to_filter, q.split(':')[0])==None for q in q_or])
-                else:
-                    q_or = or_(*[getattr(model_to_filter, q.split(':')[0]).match(q.split(':')[1]) if q.split(':')[1]!='null' else getattr(model_to_filter, q.split(':')[0])==None for q in q_or])                
+                # if db.bind.dialect.name=='sqlite':
+                q_or = or_(*[getattr(model_to_filter, q.split(':')[0])==q.split(':')[1] if q.split(':')[1]!='null' else getattr(model_to_filter, q.split(':')[0])==None for q in q_or])
+                # else:
+                #     q_or = or_(*[getattr(model_to_filter, q.split(':')[0]).match(q.split(':')[1]) if q.split(':')[1]!='null' else getattr(model_to_filter, q.split(':')[0])==None for q in q_or])                
                 
                 fts = or_(*[getattr(model_to_filter, col[0]).ilike(f'%{val}%') for col in model_to_filter.c() if any((col[1]==str, issubclass(col[1], enum.Enum))) for val in fts])
                 base = base.filter(fts).filter(q_or)
