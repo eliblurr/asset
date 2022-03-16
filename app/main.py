@@ -43,14 +43,13 @@ async def shutdown_event():
 
 @app.middleware("http")
 async def tenant_session(request:Request, call_next):
-    db = SessionLocal(bind=engine.execution_options(schema_translate_map={None: request.headers.get('tenant_key'), 'global': request.headers.get('tenant_key')})) if request.headers.get('tenant_key', None) else SessionLocal()
+    db = SessionLocal(bind=engine.execution_options(schema_translate_map={None: request.headers.get('tenant-key'), 'global': request.headers.get('tenant-key')})) if request.headers.get('tenant-key', None) else SessionLocal()
     request.state.db = db
     response = await call_next(request)
     return response
 
 from urls import *
 
-# 
 # on_startup=[broadcast.connect], on_shutdown=[broadcast.disconnect]
 # # from sockets import broadcast, chatroom_ws_receiver, chatroom_ws_sender
 

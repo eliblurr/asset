@@ -39,6 +39,7 @@ class UpdateTenant(TenantBase):
 class Tenant(TenantBase):
     id: int
     logo: str
+    scheme: str
     bg_image: Optional[str]
     created: datetime.datetime
     updated: datetime.datetime

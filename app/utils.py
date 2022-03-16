@@ -32,13 +32,17 @@ def logger(path, e, level:str):
     " path should be __name__ "
     " e.g.logger(__name__, 'some error', 'error')"
 
+    
     def set_entry(level:str):
         file = f"{date.today().strftime('%Y-%m-%d')}.log"
         path = os.path.join(LOG_ROOT, file)
 
+        os.chmod(path, 777)
+
         file = xattr.xattr(path)
         entry = xattr.getxattr(path, level) if level in file.keys() else 0
         xattr.setxattr(path, level, f'{int(entry)+1}'.encode())
+    
 
     logger = logging.getLogger(f'asset.{path}')
     if level.lower()=='info':logger.info(e)
@@ -47,7 +51,11 @@ def logger(path, e, level:str):
     elif level.lower()=='warning':logger.warning(e)
     elif level.lower()=='critical':logger.critical(e)
     
-    set_entry(level.lower())
+    try:
+        
+        set_entry(level.lower())
+    except Exception as e:
+        logger.critical(e)
 
 def create_jwt(data:dict, exp:timedelta=None):
     data.update({'exp':datetime.utcnow() + timedelta(minutes=exp if exp else settings.DEFAULT_TOKEN_DURATION_IN_MINUTES)})
