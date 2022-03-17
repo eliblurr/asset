@@ -45,6 +45,7 @@ class CreateUser(EmailBase):
         model = m.User
 
 class UpdateUser(EmailBase):
+    role_id:Optional[int]
     last_name:Optional[str]
     first_name:Optional[str]
     middle_name:Optional[str]

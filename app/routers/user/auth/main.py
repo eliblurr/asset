@@ -25,14 +25,12 @@ async def authenticate(payload:schemas.Login, account:schemas.Account, db:Sessio
 
     data = {"id":user.id, "account":account.value}
 
-    try:
-        return {
+    return {
         "access_token":create_jwt(data=data, exp=settings.ACCESS_TOKEN_DURATION_IN_MINUTES),
         "refresh_token":create_jwt(data=data, exp=settings.REFRESH_TOKEN_DURATION_IN_MINUTES),
         "account":account.value,
         "user":user
     }
-    except Exception as e:print(e)
 
 @router.post("/logout", name='Logout')
 async def logout(payload:schemas.Logout, db:Session=Depends(get_db)):
