@@ -44,7 +44,7 @@ class CreateUser(EmailBase):
     class Meta:
         model = m.User
 
-class UpdateUser(EmailBase):
+class UpdateUser(BaseModel):
     role_id:Optional[int]
     last_name:Optional[str]
     first_name:Optional[str]
