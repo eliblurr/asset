@@ -13,8 +13,9 @@ from typing import Union
 router = APIRouter()
 
 @router.post('/login', response_model=schemas.LoginResponse, name='Login')
-async def authenticate(data:schemas.Login, account:schemas.Account, db:Session=Depends(get_db)):
-    user = await crud.verify_user(payload, account, db)
+async def authenticate(payload:schemas.Login, account:schemas.Account, db:Session=Depends(get_db)):
+    
+    user = await crud.verify_user(payload, account.value, db)
 
     if not user.is_active:
         raise HTTPException(status_code=417, detail="account is not active")
@@ -23,8 +24,6 @@ async def authenticate(data:schemas.Login, account:schemas.Account, db:Session=D
         raise HTTPException(status_code=417, detail="account is not verified")
 
     data = {"id":user.id, "account":account.value}
-
-    # make sure tenant checks
 
     return {
         "access_token":create_jwt(data=data, exp=timedelta(minutes=settings.ACCESS_TOKEN_DURATION_IN_MINUTES)),
