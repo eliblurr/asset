@@ -25,12 +25,14 @@ async def authenticate(payload:schemas.Login, account:schemas.Account, db:Sessio
 
     data = {"id":user.id, "account":account.value}
 
-    return {
-        "access_token":create_jwt(data=data, exp=timedelta(minutes=settings.ACCESS_TOKEN_DURATION_IN_MINUTES)),
-        "refresh_token":create_jwt(data=data, exp=timedelta(minutes=settings.REFRESH_TOKEN_DURATION_IN_MINUTES)),
+    try:
+        return {
+        "access_token":create_jwt(data=data, exp=settings.ACCESS_TOKEN_DURATION_IN_MINUTES),
+        "refresh_token":create_jwt(data=data, exp=settings.REFRESH_TOKEN_DURATION_IN_MINUTES),
         "account":account.value,
-        "user":data
+        "user":user
     }
+    except Exception as e:print(e)
 
 @router.post("/logout", name='Logout')
 async def logout(payload:schemas.Logout, db:Session=Depends(get_db)):
@@ -44,8 +46,8 @@ async def refresh_token(payload:schemas.RefreshToken, db:Session=Depends(get_db)
     if await crud.revoke_token(payload, db):
         data = decode_jwt(token=payload.refresh_token)
         return {
-            "access_token":create_jwt(data=data, exp=timedelta(minutes=settings.ACCESS_TOKEN_DURATION_IN_MINUTES)),
-            "refresh_token":create_jwt(data=data, exp=timedelta(minutes=settings.REFRESH_TOKEN_DURATION_IN_MINUTES)),
+            "access_token":create_jwt(data=data, exp=settings.ACCESS_TOKEN_DURATION_IN_MINUTES),
+            "refresh_token":create_jwt(data=data, exp=settings.REFRESH_TOKEN_DURATION_IN_MINUTES),
         }
 
     raise HTTPException(status_code=417)
@@ -68,6 +70,31 @@ async def request_email_verification_code(payload:schemas.EmailBase, account:sch
     except Exception as e:
         logger(__name__, e, 'critical')
     raise HTTPException(status_code=417)
+
+from routers.user.account.crud import gen_token
+
+@router.post('/get-activation-link', name='Request For account activation link')
+async def get_activation_link(request:Request, email, account:schemas.Account, db:Session=Depends(get_db)):
+
+    user = await crud.read_by_email(email, account.value, db)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="account is not verified")
+    
+    if not user.is_active and user.is_verified:
+        raise HTTPException(status_code=404, detail="account with email not found")
+
+    token = await gen_token(user.id, account.value, revoke_after=True)       
+
+    try:
+        async_send_email(mail={
+            "subject":"Account Activation",
+            "recipients":[user.email],
+            "body":f"your password reset link is: {urljoin(request.base_url, settings.VERIFICATION_PATH)}?token={token}" 
+        })
+    except Exception as e:
+        logger(__name__, e, 'critical')
+
 
 @router.post('/send-forgot-password-link', name='Request Forgot Password link')
 async def forgot_password(request:Request, payload:schemas.EmailBase, account:schemas.Account, db:Session=Depends(get_db)):

@@ -25,7 +25,7 @@ def read_by_id(id:str, account:schemas.Account, db:Session):
     model = User if account=="users" else Administrator
     return db.query(model).get(id)
 
-async def read_by_email(email:str, account:schemas.Account, db:Session):
+async def read_by_email(email:str, account:str, db:Session):
     model = User if account=="users" else Administrator
     return db.query(model).filter_by(email=email).first()
 
