@@ -1,3 +1,4 @@
+from routers.user.role.schemas import Role
 from typing import Optional, List, Union
 import routers.user.account.models as m
 from pydantic import BaseModel, constr
@@ -62,6 +63,7 @@ class User(EmailBase):
     last_name:str
     first_name:str
     is_active:bool
+    role: Role
     middle_name:Optional[str]
     created: datetime.datetime
     updated: datetime.datetime
