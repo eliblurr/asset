@@ -8,7 +8,7 @@ class ProposalStatus(enum.Enum):
     active = 'active'
     accepted = 'accepted'
     declined = 'declined'
-    delivered = 'delivered'
+    delivered = 'delivered' # procured = 'procured' change delivered to procured
 
 class Proposal(BaseMixin, Base):
     '''Proposal Model'''

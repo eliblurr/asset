@@ -111,6 +111,7 @@ class Request(RequestBase):
     created: datetime.datetime
     status: m.RequestStatus
     priority: Priority
+    code: str
     id: int
 
     asset: Optional[AssetRequest]

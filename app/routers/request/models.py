@@ -3,6 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 from routers.asset.models import Asset
 from mixins import BaseMixin
+from utils import gen_code
 from database import Base
 import enum
 
@@ -34,6 +35,7 @@ class Request(BaseMixin, Base):
     __table_args__ = (CheckConstraint('COALESCE(department_id, inventory_id) IS NOT NULL', name='_target_handlers_'),) 
 
     status = Column(Enum(RequestStatus), default=RequestStatus.active, nullable=False) 
+    code = Column(String, nullable=False, unique=True, default=gen_code)
     justication = Column(String, nullable=True)
 
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)

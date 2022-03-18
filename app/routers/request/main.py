@@ -38,17 +38,8 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
         # " kwargs = {'catalogues':payload.obj}"
 
         kw.update(tmp_kw)
-
-        req = await crud.request.create(payload.copy(exclude={'obj'}), db, **kw)
-        
-        if req: 
-            msg = msg.update({'key':'request', 'id':req.id})
-            'send notifications here'
-        
-        return req
     
     except Exception as e:
-        print(e)
         status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
         if isinstance(e, DBAPIError):
             status_code = 400
@@ -58,6 +49,17 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
             msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound,)) else msg   
         logger(__name__, e, 'critical')
         raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
+
+    req = await crud.request.create(payload.copy(exclude={'obj'}), db, **kw)
+        
+    if req: 
+        msg = msg.update({'key':'request', 'id':req.id})
+        try:
+            'send notifications here'
+        except Exception as e:
+            logger(__name__, e, 'critical')
+            
+    return req
 
 @router.get('/', response_model=schemas.RequestList, name='Request')
 @ContentQueryChecker(crud.request.model.c(), None)
