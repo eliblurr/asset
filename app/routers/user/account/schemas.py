@@ -35,6 +35,7 @@ class Admin(EmailBase):
         orm_mode = True
 
 class CreateUser(EmailBase):
+    role_id:int
     last_name:str
     first_name:str
     middle_name:Optional[str]
@@ -63,7 +64,7 @@ class User(EmailBase):
     last_name:str
     first_name:str
     is_active:bool
-    role: Role
+    role: Optional[Role]
     middle_name:Optional[str]
     created: datetime.datetime
     updated: datetime.datetime

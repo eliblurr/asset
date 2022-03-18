@@ -41,7 +41,7 @@ class CRUD:
             db.refresh(obj) 
         except Exception as e:
             
-            # print(e)
+            print(e)
 
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
@@ -49,7 +49,7 @@ class CRUD:
                 msg=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header' if isinstance(e.orig, UndefinedTable) else f'{e.orig}'
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
-                msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
+                msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else f'{e.orig}' if hasattr(e, 'orig')  else msg 
             logger(__name__, e, 'critical')
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
             

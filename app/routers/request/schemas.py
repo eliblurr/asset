@@ -1,4 +1,6 @@
 from routers.priority.schemas import Priority
+from routers.asset.schemas import AssetSummary
+from routers.consumable.schemas import ConsumableSummary
 from pydantic import BaseModel, validator, root_validator
 from typing import Optional, List, Union
 from utils import timestamp_to_datetime
@@ -6,9 +8,9 @@ import routers.request.models as m
 import datetime, enum
 
 class Items(str, enum.Enum):
-    assets = 'assets'
     consumables = 'consumables'
     catalogues = 'catalogues'
+    assets = 'assets'
 
 class RequestBase(BaseModel):
     justication: Optional[str]
@@ -78,10 +80,31 @@ class CreateRequest(RequestBase):
     def rename_obj(cls, values):
         if isinstance(values['obj'], CreateAssetRequest):
             values['asset'] = values['obj']
-        if isinstance(values['obj'], CreateConsumableRequest):
+        elif isinstance(values['obj'], CreateConsumableRequest):
             values['consumable'] = values['obj']
         return values
 
+class AssetRequest(BaseModel):
+    asset: AssetSummary
+    start_date: Optional[datetime.datetime]
+    action: Optional[m.AssetTransferAction]
+    end_date: Optional[datetime.datetime]
+    pickup_date: Optional[datetime.datetime]
+    return_date: Optional[datetime.datetime]
+
+    class Config:
+        orm_mode=True
+
+class ConsumableRequest(BaseModel):
+    consumable: ConsumableSummary
+    start_date: Optional[datetime.datetime]
+    pickup_deadline: Optional[datetime.datetime]
+    action: Optional[m.ConsumableTransferAction]
+    picked_at: Optional[datetime.datetime]
+    quantity: int
+
+    class Config:
+        orm_mode=True
 
 class Request(RequestBase):
     updated: datetime.datetime
@@ -90,21 +113,21 @@ class Request(RequestBase):
     priority: Priority
     id: int
 
-class AssetRequest(Request):
-    asset: dict
-    start_date: datetime.datetime 
-    action: m.AssetTransferAction
-    end_date: Optional[datetime.datetime]
-    pickup_date: Optional[datetime.datetime]
-    return_date: Optional[datetime.datetime]
-    
-class ConsumableRequest(Request):
-    consumable: dict
+    asset: Optional[AssetRequest]
+    consumable: Optional[ConsumableRequest]
+    info: Optional[Union[AssetRequest, ConsumableRequest]]
+
+    @root_validator
+    def get_obj(cls, values):
+        asset = values.pop('asset')
+        consumable = values.pop('consumable')
+        values['info'] = asset if asset else consumable if consumable else values['info']
+        return values
  
 class RequestList(BaseModel):
     bk_size: int
     pg_size: int
-    data: Union[List[ConsumableRequest], List[AssetRequest], list]
+    data: Union[List[Request], list]
 
 
 

@@ -1,8 +1,8 @@
 from sqlalchemy.schema import CreateSchema, DropSchema
 from sqlalchemy import Column, String, event, Boolean
+from utils import gen_hex, today_str, logger
 from rds.tasks import async_remove_file
 from sqlalchemy.orm import validates
-from utils import gen_hex, today_str
 from constants import PHONE, EMAIL
 from database import Base, engine
 from mixins import BaseMixin
@@ -54,4 +54,7 @@ def receive_after_delete(mapper, connection, target):
 @event.listens_for(Tenant.logo, 'set', propagate=True)
 @event.listens_for(Tenant.bg_image, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
-    if oldvalue:async_remove_file(oldvalue)
+    try:
+        if oldvalue:async_remove_file(oldvalue)
+    except Exception as e:
+        logger(__name__, e, 'critical')

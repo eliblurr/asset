@@ -41,15 +41,17 @@ class Consumable(BaseMixin, Base):
 
 @event.listens_for(Consumable.quantity_base_limit, 'set', propagate=True)
 def set_quantity(target, value, oldvalue, initiator):
-    if value <= target.quantity:
-        'send notification here'
-        pass
+    if value is not None:
+        if value <= target.quantity:
+            'send notification here'
+            pass
 
-@event.listens_for(Consumable.quantity, 'set', propagate=True)
-def set_quantity(target, value, oldvalue, initiator):
-    if value <= target.quantity_base_limit:
-        'send notification here'
-        pass
+# @event.listens_for(Consumable.quantity, 'set', propagate=True) # use after insert instead
+# def set_quantity(target, value, oldvalue, initiator):
+#     print(target.quantity_base_limit)
+#     if value <= target.quantity_base_limit:
+#         'send notification here'
+#         pass
 
 @event.listens_for(Consumable.inventory_id, 'set', propagate=True)
 def set_quantity(target, value, oldvalue, initiator):

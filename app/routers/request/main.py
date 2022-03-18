@@ -5,7 +5,7 @@ from psycopg2.errors import UndefinedTable
 from sqlalchemy.exc import DBAPIError
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
-from dependencies import get_db
+from dependencies import get_db, get_db_2
 from typing import Union, List
 from . import crud, schemas
 
@@ -15,39 +15,40 @@ def verify_payload(payload:schemas.CreateRequest, item:schemas.Items):
     if not payload:raise HTTPException(status_code=422, detail="payload cannot be empty")
     case1 = item.value=='consumables' and isinstance(payload.obj, schemas.CreateConsumableRequest)
     case2 = item.value=='assets' and isinstance(payload.obj, schemas.CreateAssetRequest)
-    # case3 = item.value=='catalogues' and isinstance(payload.obj, schemas.CreateCatalogueRequest)
+    '''case3 = item.value=='catalogues' and isinstance(payload.obj, schemas.CreateCatalogueRequest)'''
 
     if not any((case1, case2)):raise HTTPException(status_code=422, detail="payload mismatch with item type")
     return {'payload':payload, 'item':item.value}
 
-@router.post('/{item}', response_model=Union[schemas.ConsumableRequest, schemas.AssetRequest], status_code=201, name='Request')
+@router.post('/{item}', response_model=schemas.Request, status_code=201, name='Request')
 async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
     try:
-
-        payload, item, data = payload['payload'], payload['item'], {}
-        
-        await crud.validate_author(payload.author_id, db)
+        payload, item, msg, tmp_kw = payload['payload'], payload['item'], {}, {}              
+        recipient, kw = await crud.validate_author(payload.author_id, db) # if recipient send request to inventory manager for operation
         await crud.validate_priority(payload.priority_id, db)        
         
         if item=='consumables':
-            managers, data = await crud.validate_consumable(payload.obj.consumable_id, payload.obj.quantity, db)
+            managers, msg, tmp_kw = await crud.validate_consumable(payload.obj.consumable_id, payload.obj.quantity, db)
 
         if item=='assets':
-            managers, data = await crud.validate_asset(payload.obj.asset_id, db)
-
-        "if payload['item']=='catalogues':"
-        "managers, data = crud.validate_catalogue(payload.obj.catalogue_id, db)"
-        " kwargs = {'catalogues':payload.obj}"
-
-        req = await crud.request.create(payload.copy(exclude={'obj'}), db)
+            managers, msg, tmp_kw = await crud.validate_asset(payload.obj.asset_id, db)
         
-        # if req: 
-        #     data = data.update({'key':'request', 'id':req.id})
-        #     'send notifications here'
+        # "if payload['item']=='catalogues':"
+        # "managers, data = crud.validate_catalogue(payload.obj.catalogue_id, db)"
+        # " kwargs = {'catalogues':payload.obj}"
+
+        kw.update(tmp_kw)
+
+        req = await crud.request.create(payload.copy(exclude={'obj'}), db, **kw)
         
-        # return req
+        if req: 
+            msg = msg.update({'key':'request', 'id':req.id})
+            'send notifications here'
+        
+        return req
     
     except Exception as e:
+        print(e)
         status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
         if isinstance(e, DBAPIError):
             status_code = 400
@@ -63,7 +64,7 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
 async def read(db:Session=Depends(get_db), **params):
     return await crud.request.read(params, db)
 
-@router.get('/{id}', response_model=Union[schemas.AssetRequest, schemas.ConsumableRequest, dict], name='Request')
+@router.get('/{id}', response_model=schemas.Request, name='Request')
 async def read_by_id(id:int, fields:List[str]=r_fields(crud.request.model), db:Session=Depends(get_db)):
     return await crud.request.read_by_id(id, db, fields)
 

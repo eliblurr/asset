@@ -38,6 +38,15 @@ class Consumable(ConsumableBase):
     # @validator('sub_total')
     # def total(cls, v):
     #     return v()
+
+class ConsumableSummary(BaseModel):
+    id: int
+    title: str
+    metatitle: Optional[str]
+    description: Optional[str]
+
+    class Config:
+        orm_mode = True
     
 class ConsumableList(BaseModel):
     bk_size: int

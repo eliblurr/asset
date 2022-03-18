@@ -14,7 +14,9 @@ request = CRUD(models.Request)
 async def validate_author(id, db:Session):
     obj = db.query(User).filter_by(id=id).first()
     if not obj:raise NotFound(f'user with id:{id} not found')
-    return obj.department.head_of_department if obj.department else None
+    if obj.department:
+        return obj.department.head_of_department, {"department_id":obj.department.id} 
+    return None, {}
 
 async def validate_priority(id, db:Session):
     obj = db.query(Priority).filter_by(id=id).first()
@@ -25,19 +27,21 @@ async def validate_asset(id:int, db:Session):
     obj = db.query(models.Asset).filter_by(id=id).first()
     if not obj:raise NotFound(f'asset with id:{id} not found')
     if not obj.available:raise BadRequestError(f'asset with id:{id} not available')
-    return obj.inventory.department.head_of_department if obj.inventory.department else obj.inventory.manager, {'title':obj.title, 'code':obj.code, 'id':id, 'type':'assets'}
+    return obj.inventory.department.head_of_department if obj.inventory.department else obj.inventory.manager, {'title':obj.title, 'code':obj.code, 'id':id, 'type':'assets'}, {"inventory_id":obj.inventory.id}
 
 async def validate_consumable(id, quantity, db:Session):
     obj = db.query(Consumable).filter_by(id=id).first()
     if not obj:raise NotFound(f'consumable with id:{id} not found')
     obj.validate_quantity(quantity, db)
-    return obj.inventory.department.head_of_department if obj.inventory.department else obj.inventory.manager, {'title':obj.title, 'quantity':obj.quantity, 'id':id, 'type':'consumables'}
+    return obj.inventory.department.head_of_department if obj.inventory.department else obj.inventory.manager, {'title':obj.title, 'quantity':obj.quantity, 'id':id, 'type':'consumables'}, {"inventory_id":obj.inventory.id}
+
 """
 async def validate_catalogue(id, db:Session):
     obj = db.query(Catalogue).filter_by(id=id).first()
     if not obj:raise NotFound(f'catalogue with id:{id} not found')
     return [await validate_asset(asset.id, db) for asset in obj.assets],  {'title':obj.title, 'quantity':obj.quantity, 'id':id, 'type':''}
 """
+
 def remove_scheduled_jobs(id:int):
     map(scheduler.remove_job, [job.id for job in scheduler.get_jobs() if job.split('_',1)[0]==str(id)])
 

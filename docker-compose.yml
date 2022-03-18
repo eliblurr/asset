@@ -78,6 +78,7 @@ services:
     image: master-image
     depends_on:
       - redis
+      - app
     command: python3 -m rds.worker
     networks: 
       - asset-network

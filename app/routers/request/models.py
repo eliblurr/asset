@@ -20,13 +20,14 @@ class AssetTransferAction(enum.Enum):
     returned = 'returned'
     picked = 'picked'
     ready = 'ready'
-    
+
+'''deprecated'''
 def inventory_id(context):
-    with context.connection.begin() as conn:
+    with context.connection as conn:
         id = conn.execute(select(Asset.inventory_id).where(Asset.__table__.c.id==context.get_current_parameters()["asset_id"])).scalar()
         if id:raise IntegrityError('no inventory available for asset', 'inventory_id', 'could not resolve inventory_id from asset')
         return id
-
+        
 class Request(BaseMixin, Base):
     '''Request Model'''
     __tablename__ = "requests"
@@ -35,8 +36,8 @@ class Request(BaseMixin, Base):
     status = Column(Enum(RequestStatus), default=RequestStatus.active, nullable=False) 
     justication = Column(String, nullable=True)
 
-    inventory_id = Column(Integer, ForeignKey("inventories.id"), nullable=True, default=inventory_id)
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+    inventory_id = Column(Integer, ForeignKey("inventories.id"), nullable=True)
     priority_id = Column(Integer, ForeignKey('priorities.id'), nullable=False)
     author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
@@ -44,9 +45,10 @@ class Request(BaseMixin, Base):
     inventory = relationship("Inventory", back_populates="requests")
     author = relationship("User", back_populates="requests")
     consumable = relationship("ConsumableRequest", uselist=False)
-    '''catalogue = relationship("CatalogueRequest", uselist=False)'''
     asset = relationship("AssetRequest", uselist=False)
     priority = relationship("Priority")
+
+    '''catalogue = relationship("CatalogueRequest", uselist=False)'''
 
     # use hybrid property to return asset obj for pydantic
 
@@ -54,17 +56,19 @@ class AssetRequest(BaseMixin, Base):
     '''Asset Request Model'''
     __tablename__ = "asset_requests"
     
-    asset_id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
     request_id = Column(Integer, ForeignKey('requests.id'), primary_key=True)
-    """catalogue_id = Column(Integer, ForeignKey('catalogues.id'))"""
+    
+    asset_id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
     pickup_deadlne = Column(DateTime, nullable=True)
     returned_at = Column(DateTime, nullable=True)
     start_date = Column(DateTime, nullable=False)
     picked_at = Column(DateTime, nullable=True)
     end_date = Column(DateTime, nullable=True)
     action = Column(Enum(AssetTransferAction)) 
-    asset = relationship('Asset')
+    asset = relationship('Asset', uselist=False)
     id=None
+
+    """catalogue_id = Column(Integer, ForeignKey('catalogues.id'))"""
 
 class ConsumableRequest(BaseMixin, Base):
     '''Consumable Request Model'''

@@ -89,6 +89,18 @@ class Asset(AssetBase):
     def format_salvage_price(cls, v):
         return v()
 
+class AssetSummary(BaseModel):
+    id: int
+    make: str
+    title: str
+    model: str
+    serial_number: str
+    metatitle: Optional[str]
+    description: Optional[str]
+
+    class Config:
+        orm_mode = True
+
 class AssetList(BaseModel):
     bk_size: int
     pg_size: int
