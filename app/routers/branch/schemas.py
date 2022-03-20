@@ -40,6 +40,9 @@ class Branch(BranchBase):
 class BranchSummary(BaseModel):
     id: int
     title: str
+
+    class Config:
+        orm_mode = True
     
 class BranchList(BaseModel):
     bk_size: int

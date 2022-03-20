@@ -13,12 +13,12 @@ class BaseDepartment(BaseMixin, Base):
 class Department(BaseMixin, Base):
     '''Department Model'''
     __tablename__ = 'departments'
-    __table_args__ = (UniqueConstraint('id', 'branch_id', name='_id_branch_id_'),)
+    __table_args__ = (UniqueConstraint('base_department_id', 'branch_id', name='_base_department_id_branch_id_'),)
 
     info = relationship("BaseDepartment", cascade="all, delete")
     branch_id = Column(Integer, ForeignKey('branches.id'))
     head_of_department_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    id = Column(Integer, ForeignKey('base_departments.id'), nullable=False, primary_key=True) 
+    base_department_id = Column(Integer, ForeignKey('base_departments.id'), nullable=False) 
     head_of_department = relationship('User', foreign_keys="Department.head_of_department_id")
     staff = relationship('User', back_populates="department", foreign_keys="[User.department_id]")
     inventories = relationship('Inventory', back_populates="department")
