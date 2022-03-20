@@ -84,6 +84,9 @@ class CreateRequest(RequestBase):
             values['consumable'] = values['obj']
         return values
 
+class UpdateRequest(RequestBase):
+    pass
+
 class AssetRequest(BaseModel):
     asset: AssetSummary
     start_date: Optional[datetime.datetime]

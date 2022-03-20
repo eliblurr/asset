@@ -41,7 +41,7 @@ class CreateDepartment(DepartmentBase):
 
 class CreateDepartment2(BaseModel):
     base_department_id: int
-    branch_id: int
+    branch_id: Optional[int]
     head_of_department_id: int
 
 class UpdateDepartment(BaseModel):    

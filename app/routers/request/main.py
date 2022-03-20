@@ -20,6 +20,9 @@ def verify_payload(payload:schemas.CreateRequest, item:schemas.Items):
     if not any((case1, case2)):raise HTTPException(status_code=422, detail="payload mismatch with item type")
     return {'payload':payload, 'item':item.value}
 
+def verify_update_payload(payload:schemas.UpdateRequest, item:schemas.Items):
+    pass
+
 @router.post('/{item}', response_model=schemas.Request, status_code=201, name='Request')
 async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
     try:
@@ -55,7 +58,8 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
     if req: 
         msg = msg.update({'key':'request', 'id':req.id})
         try:
-            'send notifications here'
+            'send notifications here [webpush[B] to managers]'
+            'set jobs and reminders [set expire[send notification in here] to start_date if start_date, set reminder about request expiration for manager ]'
         except Exception as e:
             logger(__name__, e, 'critical')
             
@@ -70,6 +74,10 @@ async def read(db:Session=Depends(get_db), **params):
 async def read_by_id(id:int, fields:List[str]=r_fields(crud.request.model), db:Session=Depends(get_db)):
     return await crud.request.read_by_id(id, db, fields)
 
+@router.patch('/{item}/{id}', description='update request', response_model=schemas.Request)
+async def update_request(id:int,payload=Depends(verify_update_payload), db:Session=Depends(get_db)):
+    return await crud.update_request(id, payload, db)
+     
 @router.delete('/{id}', name='Request', status_code=204)
 async def delete(id:int, db:Session=Depends(get_db)):
     await crud.request.delete(id, db)

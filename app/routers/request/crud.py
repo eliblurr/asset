@@ -50,7 +50,15 @@ def expire(id:int, email:str, asset_name:str, db=SessionLocal()):
     if request: 
         request.status=schemas.RequestStatus.expired
         db.commit()
-    # notify here -> send_async_email.delay(mail=Mail(email=[email], content={'asset_name':asset_name}).json(), template=email('inactive-request'))    
+        
+    # notify here -> send_async_email.delay(mail=Mail(email=[email], content={'asset_name':asset_name}).json(), template=email('inactive-request')) 
+    # try:     
+    #     async_send_email(mail={
+    #         "subject":"Account Activation", "recipients":[tenant.email],
+    #         "body":f"your password reset link is: {urljoin(request.base_url, settings.VERIFICATION_PATH)}?token={token}" 
+    #     })
+    # except Exception as e:logger(__name__, e, 'critical')
+
     remove_scheduled_jobs(id)
 
 
@@ -61,10 +69,10 @@ asset inventory department manager
 asset inventory manager
 '''
 
-# async def update_request(id:int, payload:schemas.UpdateRequest, db:Session):
-    # req = await request.read_by_id(id, db)
-#     if not req:
-#         raise HTTPException(status_code=404, detail='request not found')
+async def update_request(id:int, payload:schemas.UpdateRequest, db:Session):
+    req = await request.read_by_id(id, db)
+    if not req:
+        raise NotFound(f'request with id:{id} not found')
 
 #     notify = lambda data, id : emit_event('private-message', {'message':{'data':data}, 'client_id':id})
 #     terminate_reminders = lambda id : [scheduler.remove_job(job.id) for job in scheduler.get_jobs() if job.split('_',1)[0]==str(id)]
