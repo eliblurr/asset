@@ -87,6 +87,7 @@ class UpdateRequest(RequestBase):
     status: Optional[m.RequestStatus]
     inventory_id: Optional[int]
     department_id: Optional[int]
+    tranfer: Optional[Union[AssetTransfer, ConsumableTransfer]]
 
 class AssetRequest(BaseModel):
     asset: AssetSummary
@@ -133,35 +134,3 @@ class RequestList(BaseModel):
     bk_size: int
     pg_size: int
     data: Union[List[Request], list]
-
-
-
-# class RequestBase(BaseModel):
-#     justication: Optional[str]
-#     priority_id: int
-#     author_id: int # to be retrieved from request
-    
-#     class Config:
-#         orm_mode = True
-
-#     class Meta:
-#         model = m.Request
-
-# class CreateRequestForAsset(RequestBase):
-#     assets: List[CreateAssetRequest]
-
-# class CreateRequestForConsumable(RequestBase):
-#     consumables: List[CreateConsumableRequest]
-
-# class UpdateRequestForAsset(BaseModel):pass
-
-# class UpdateRequestForConsumable(BaseModel):pass
-
-# class AssetRequest(RequestBase):pass
-
-# class ConsumableRequest(BaseModel):pass
-
-# class RequestCatalogue(BaseModel):pass
-
-
-

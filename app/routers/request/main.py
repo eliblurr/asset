@@ -73,10 +73,6 @@ async def read_by_id(id:int, fields:List[str]=r_fields(crud.request.model), db:S
 async def update_request(id:int, payload:schemas.UpdateRequest, db:Session=Depends(get_db)):
     return await crud.update_request(id, payload, db)
 
-@router.patch('/{id}/transfer', response_model=schemas.Request, name='Transfer Actions')
-async def transfer(id:int, payload:Union[schemas.AssetTransfer, schemas.ConsumableTransfer], db:Session=Depends(get_db)):
-    return await crud.transfer(id, payload, db)
-     
 @router.delete('/{id}', name='Request', status_code=204)
 async def delete(id:int, db:Session=Depends(get_db)):
     await crud.request.delete(id, db)
