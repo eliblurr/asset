@@ -67,20 +67,20 @@ class CreateRequest(RequestBase):
             values['consumable'] = values['obj']
         return values
 
-class UpdateObjBase(BaseModel):
+class TranferBase(BaseModel):
     picked_at: Optional[int]
     pickup_deadline: Optional[int]
 
     _normalize_start_date_ = validator('picked_at', allow_reuse=True)(timestamp_to_datetime)
     _normalize_deadline_date_ = validator('pickup_deadline', allow_reuse=True)(timestamp_to_datetime)
 
-class UpdateAssetRequest(UpdateObjBase):
+class AssetTransfer(TranferBase):
     returned_at: Optional[int]
     action: Optional[m.AssetTransferAction]
 
     _normalize_returned_at_ = validator('returned_at', allow_reuse=True)(timestamp_to_datetime)
 
-class UpdateConsumableRequest(UpdateObjBase):
+class ConsumableTransfer(TranferBase):
     action: Optional[m.ConsumableTransferAction]
 
 class UpdateRequest(RequestBase):

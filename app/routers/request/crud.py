@@ -10,8 +10,6 @@ from . import models, schemas
 from cls import CRUD
 
 request = CRUD(models.Request)
-asset_request = CRUD(models.AssetRequest)
-consumable_request = CRUD(models.ConsumableRequest)
 
 async def validate_author(id, db:Session):
     obj = db.query(User).filter_by(id=id).first()

@@ -74,7 +74,7 @@ async def update_request(id:int, payload:schemas.UpdateRequest, db:Session=Depen
     return await crud.update_request(id, payload, db)
 
 @router.patch('/{id}/transfer', response_model=schemas.Request, name='Transfer Actions')
-async def transfer(id:int, payload:schemas.UpdateRequest, db:Session=Depends(get_db)):
+async def transfer(id:int, payload:Union[schemas.AssetTransfer, schemas.ConsumableTransfer], db:Session=Depends(get_db)):
     return await crud.transfer(id, payload, db)
      
 @router.delete('/{id}', name='Request', status_code=204)
