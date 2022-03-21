@@ -10,6 +10,8 @@ from . import models, schemas
 from cls import CRUD
 
 request = CRUD(models.Request)
+asset_request = CRUD(models.AssetRequest)
+consumable_request = CRUD(models.ConsumableRequest)
 
 async def validate_author(id, db:Session):
     obj = db.query(User).filter_by(id=id).first()
@@ -54,13 +56,8 @@ def expire(id:int, email:str, asset_name:str, db=SessionLocal()):
 
     remove_scheduled_jobs(id)
 
-
-'''
-target for request [manager]
-author department manager
-asset inventory department manager
-asset inventory manager
-'''
+async def transfer(*args, **kwargs):
+    pass
 
 async def update_request(id:int, payload:schemas.UpdateRequest, db:Session):
     req = await request.read_by_id(id, db)
@@ -175,3 +172,10 @@ async def update_request(id:int, payload:schemas.UpdateRequest, db:Session):
 #                 i+=1
 #     return req_u
     
+
+'''
+target for request [manager]
+author department manager
+asset inventory department manager
+asset inventory manager
+'''

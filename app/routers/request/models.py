@@ -7,6 +7,10 @@ from utils import gen_code
 from database import Base
 import enum
 
+class Tag(enum.Enum):
+    consumable = 'consumable'
+    asset = 'asset'
+
 class RequestStatus(enum.Enum):
     active = 'active'
     expired = 'expired'
@@ -22,13 +26,6 @@ class AssetTransferAction(enum.Enum):
     picked = 'picked'
     ready = 'ready'
 
-'''deprecated'''
-def inventory_id(context):
-    with context.connection as conn:
-        id = conn.execute(select(Asset.inventory_id).where(Asset.__table__.c.id==context.get_current_parameters()["asset_id"])).scalar()
-        if id:raise IntegrityError('no inventory available for asset', 'inventory_id', 'could not resolve inventory_id from asset')
-        return id
-        
 class Request(BaseMixin, Base):
     '''Request Model'''
     __tablename__ = "requests"
@@ -50,16 +47,15 @@ class Request(BaseMixin, Base):
     asset = relationship("AssetRequest", uselist=False)
     priority = relationship("Priority")
 
-    # use hybrid property to return asset obj for pydantic
+    tag = Column(Enum(Tag), nullable=False)
 
 class AssetRequest(BaseMixin, Base):
     '''Asset Request Model'''
     __tablename__ = "asset_requests"
     
     request_id = Column(Integer, ForeignKey('requests.id'), primary_key=True)
-    
     asset_id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
-    pickup_deadlne = Column(DateTime, nullable=True)
+    pickup_deadline = Column(DateTime, nullable=True)
     returned_at = Column(DateTime, nullable=True)
     start_date = Column(DateTime, nullable=False)
     picked_at = Column(DateTime, nullable=True)
@@ -80,6 +76,7 @@ class ConsumableRequest(BaseMixin, Base):
     picked_at = Column(DateTime, nullable=True)
     quantity = Column(Integer, nullable=False)
     consumable = relationship('Consumable')
+    returned_at=None
     id=None
 
 # use set for date fields for scheduling
@@ -107,3 +104,11 @@ def one_active_request_per_user_per_asset(mapper, connection, target):
 #     accepted = 'accepted'
 #     declined = 'declined'
 #     completed = 'completed'
+
+# '''deprecated'''
+# def inventory_id(context):
+#     with context.connection as conn:
+#         id = conn.execute(select(Asset.inventory_id).where(Asset.__table__.c.id==context.get_current_parameters()["asset_id"])).scalar()
+#         if id:raise IntegrityError('no inventory available for asset', 'inventory_id', 'could not resolve inventory_id from asset')
+#         return id
+        

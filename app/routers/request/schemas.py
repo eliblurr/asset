@@ -67,8 +67,26 @@ class CreateRequest(RequestBase):
             values['consumable'] = values['obj']
         return values
 
+class UpdateObjBase(BaseModel):
+    picked_at: Optional[int]
+    pickup_deadline: Optional[int]
+
+    _normalize_start_date_ = validator('picked_at', allow_reuse=True)(timestamp_to_datetime)
+    _normalize_deadline_date_ = validator('pickup_deadline', allow_reuse=True)(timestamp_to_datetime)
+
+class UpdateAssetRequest(UpdateObjBase):
+    returned_at: Optional[int]
+    action: Optional[m.AssetTransferAction]
+
+    _normalize_returned_at_ = validator('returned_at', allow_reuse=True)(timestamp_to_datetime)
+
+class UpdateConsumableRequest(UpdateObjBase):
+    action: Optional[m.ConsumableTransferAction]
+
 class UpdateRequest(RequestBase):
-    pass
+    status: Optional[m.RequestStatus]
+    inventory_id: Optional[int]
+    department_id: Optional[int]
 
 class AssetRequest(BaseModel):
     asset: AssetSummary
@@ -102,13 +120,13 @@ class Request(RequestBase):
 
     asset: Optional[AssetRequest]
     consumable: Optional[ConsumableRequest]
-    info: Optional[Union[AssetRequest, ConsumableRequest]]
+    object: Optional[Union[AssetRequest, ConsumableRequest]]
 
     @root_validator
     def get_obj(cls, values):
         asset = values.pop('asset')
         consumable = values.pop('consumable')
-        values['info'] = asset if asset else consumable if consumable else values['info']
+        values['object'] = asset if asset else consumable if consumable else values['object']
         return values
  
 class RequestList(BaseModel):
