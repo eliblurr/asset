@@ -15,7 +15,6 @@ def verify_payload(payload:schemas.CreateRequest, item:schemas.Items):
     if not payload:raise HTTPException(status_code=422, detail="payload cannot be empty")
     case1 = item.value=='consumables' and isinstance(payload.obj, schemas.CreateConsumableRequest)
     case2 = item.value=='assets' and isinstance(payload.obj, schemas.CreateAssetRequest)
-    '''case3 = item.value=='catalogues' and isinstance(payload.obj, schemas.CreateCatalogueRequest)'''
 
     if not any((case1, case2)):raise HTTPException(status_code=422, detail="payload mismatch with item type")
     return {'payload':payload, 'item':item.value}
@@ -35,11 +34,7 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
 
         if item=='assets':
             managers, msg, tmp_kw = await crud.validate_asset(payload.obj.asset_id, db)
-        
-        # "if payload['item']=='catalogues':"
-        # "managers, data = crud.validate_catalogue(payload.obj.catalogue_id, db)"
-        # " kwargs = {'catalogues':payload.obj}"
-
+      
         kw.update(tmp_kw)
     
     except Exception as e:
@@ -58,7 +53,7 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
     if req: 
         msg = msg.update({'key':'request', 'id':req.id})
         try:
-            'send notifications here [webpush[B] to managers]'
+            'send notifications here [webpush[B] to managers if not author-> reciepient]'
             'set jobs and reminders [set expire[send notification in here] to start_date if start_date, set reminder about request expiration for manager ]'
         except Exception as e:
             logger(__name__, e, 'critical')

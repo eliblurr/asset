@@ -35,13 +35,6 @@ async def validate_consumable(id, quantity, db:Session):
     obj.validate_quantity(quantity, db)
     return obj.inventory.department.head_of_department if obj.inventory.department else obj.inventory.manager, {'title':obj.title, 'quantity':obj.quantity, 'id':id, 'type':'consumables'}, {"inventory_id":obj.inventory.id}
 
-"""
-async def validate_catalogue(id, db:Session):
-    obj = db.query(Catalogue).filter_by(id=id).first()
-    if not obj:raise NotFound(f'catalogue with id:{id} not found')
-    return [await validate_asset(asset.id, db) for asset in obj.assets],  {'title':obj.title, 'quantity':obj.quantity, 'id':id, 'type':''}
-"""
-
 def remove_scheduled_jobs(id:int):
     map(scheduler.remove_job, [job.id for job in scheduler.get_jobs() if job.split('_',1)[0]==str(id)])
 

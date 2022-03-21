@@ -9,7 +9,7 @@ import datetime, enum
 
 class Items(str, enum.Enum):
     consumables = 'consumables'
-    catalogues = 'catalogues'
+    # catalogues = 'catalogues' # to be included in future release 
     assets = 'assets'
 
 class RequestBase(BaseModel):
@@ -48,33 +48,16 @@ class ConsumableRequestBase(BaseModel):
     class Meta:
         model = m.ConsumableRequest
 
-'''class CatalogueRequestBase(BaseModel):
-    catalogue_id: int
-    start_date: int
-    end_date: Optional[int]
-
-    _normalize_start_date_ = validator('start_date', allow_reuse=True)(timestamp_to_datetime)
-    _normalize_end_date_ = validator('end_date', allow_reuse=True)(timestamp_to_datetime)
-
-    class Config:
-        orm_mode = True
-
-    class Meta:
-        model = m.CatalogueRequest'''
-
 class CreateAssetRequest(AssetRequestBase):
     pass
 
 class CreateConsumableRequest(ConsumableRequestBase):
     pass
 
-'''class CreateCatalogueRequest(CatalogueRequestBase):
-    pass'''
-
 class CreateRequest(RequestBase):
     author_id: int
     priority_id: int
-    obj: Union[CreateAssetRequest, CreateConsumableRequest] # CreateCatalogueRequest
+    obj: Union[CreateAssetRequest, CreateConsumableRequest]
 
     @root_validator
     def rename_obj(cls, values):

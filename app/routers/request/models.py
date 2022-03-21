@@ -50,8 +50,6 @@ class Request(BaseMixin, Base):
     asset = relationship("AssetRequest", uselist=False)
     priority = relationship("Priority")
 
-    '''catalogue = relationship("CatalogueRequest", uselist=False)'''
-
     # use hybrid property to return asset obj for pydantic
 
 class AssetRequest(BaseMixin, Base):
@@ -70,8 +68,6 @@ class AssetRequest(BaseMixin, Base):
     asset = relationship('Asset', uselist=False)
     id=None
 
-    """catalogue_id = Column(Integer, ForeignKey('catalogues.id'))"""
-
 class ConsumableRequest(BaseMixin, Base):
     '''Consumable Request Model'''
     __tablename__ = "consumable_requests"
@@ -85,21 +81,6 @@ class ConsumableRequest(BaseMixin, Base):
     quantity = Column(Integer, nullable=False)
     consumable = relationship('Consumable')
     id=None
-
-"""class CatalogueRequest(BaseMixin, Base):
-    '''Catalogue Request Model'''
-    __tablename__ = "catalogue_requests"
-
-    catalogue_id = Column(Integer, ForeignKey('catalogues.id'), primary_key=True)
-    request_id = Column(Integer, ForeignKey('requests.id'), primary_key=True)
-    pickup_deadline = Column(DateTime, nullable=True)
-    returned_at = Column(DateTime, nullable=True)
-    start_date = Column(DateTime, nullable=False)
-    picked_at = Column(DateTime, nullable=True)
-    end_date = Column(DateTime, nullable=True)
-    action = Column(Enum(AssetTransferAction)) 
-    catalogue = relationship('Catalogue')
-    id=None"""
 
 # use set for date fields for scheduling
 # inventory_id -> Transfer notifications
