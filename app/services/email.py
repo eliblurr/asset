@@ -2,6 +2,7 @@ from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from pydantic import EmailStr, BaseModel, validator
 from typing import List, Optional, Union
 from config import settings, BASE_DIR
+from fastapi import Request
 import os
 
 fm = FastMail(
@@ -32,7 +33,7 @@ class Mail(BaseModel):
             raise ValueError('body should be of type dict')
         return v
         
-async def email(mail:Union[Mail, dict], *args, **kwargs):
+async def email(mail:Union[Mail, dict], request:Request=None, *args, **kwargs):
     mail = Mail.parse_obj(mail) if isinstance(mail, dict) else mail
     message = MessageSchema(
         subject=mail.subject,
@@ -42,5 +43,5 @@ async def email(mail:Union[Mail, dict], *args, **kwargs):
     if mail.template_name:
         message.template_body = mail.dict().get("body")
     else:
-        message.body, message.subtype  = mail.body, "html"
+        message.body, message.subtype  = str(mail.dict().get("body")), "html"
     await fm.send_message(message, template_name=mail.template_name)

@@ -4,7 +4,7 @@ from services.webpush import send_web_push
 from config import settings, UPLOAD_ROOT
 from services.sms import send_sms
 from services.email import email
-from utils import delete_path
+from utils import delete_path, logger
 from .queues import get_queue
 import os, shutil, re
 from rq import Retry
@@ -55,6 +55,10 @@ def async_send_web_push(*args, **kwargs):
     q = get_queue('notification')
     if q:return q.enqueue(send_web_push,*args, **kwargs, **params)  
 
-def async_send_broadcast_notification(*args, **kwargs):
+def async_send_message(*args, **kwargs):
     q = get_queue('braodcaster')
     if q:return q.enqueue(send_message, *args, **kwargs, **params)  
+
+def async_logger(*args, **kwargs):
+    q = get_queue('file')
+    if q:return q.enqueue(logger, *args, **kwargs, **params)  

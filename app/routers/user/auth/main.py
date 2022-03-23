@@ -55,15 +55,15 @@ def get_current_user(data:str=Depends(validate_bearer), db:Session=Depends(get_d
     return crud.read_by_id(data['id'], data['account'], db)
 
 @router.post("/send-email-verification-code", name='Request Email verification code')
-async def request_email_verification_code(payload:schemas.EmailBase, account:schemas.Account, db:Session=Depends(get_db)):
+async def request_email_verification_code(request:Request, payload:schemas.EmailBase, account:schemas.Account, db:Session=Depends(get_db)):
     obj = await crud.add_email_verification_code(payload.email, account, db)
     crud.schedule_del_code(obj.email)
     try:
         if async_send_email(mail={
             "subject":"Email Verification",
             "recipients":[obj.email],
-            "body":f"your verification code is: {obj.code}",
-            "template_name":"email.html"
+            "body":{'code': f'{obj.code}', 'base_url':request.base_url},
+            "template_name":"verification-code.html"
         }):return 'you will receive code shortly'
     except Exception as e:
         logger(__name__, e, 'critical')
@@ -88,7 +88,8 @@ async def get_activation_link(request:Request, email, account:schemas.Account, d
         async_send_email(mail={
             "subject":"Account Activation",
             "recipients":[user.email],
-            "body":f"your password reset link is: {urljoin(request.base_url, settings.VERIFICATION_PATH)}?token={token}" 
+            "body": {'verification_link': f'{urljoin(request.base_url, settings.VERIFICATION_PATH)}?token={token}', 'base_url':request.base_url},            
+            "template_name":"account-activation.html"
         })
     except Exception as e:
         logger(__name__, e, 'critical')
@@ -104,7 +105,8 @@ async def forgot_password(request:Request, payload:schemas.EmailBase, account:sc
             if async_send_email(mail={
                 "subject":"Forgot Password",
                 "recipients":[obj.email],
-                "body":f"your password reset link is: {urljoin(request.base_url, settings.VERIFICATION_PATH)}" 
+                "body": {'verification_link': f'{urljoin(request.base_url, settings.VERIFICATION_PATH)}?token={token}', 'base_url':request.base_url},            
+                "template_name":"password-reset.html"
             }):return 'you will receive link shortly'
         except Exception as e:
             logger(__name__, e, 'critical')

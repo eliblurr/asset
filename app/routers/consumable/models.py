@@ -1,8 +1,8 @@
 from sqlalchemy import Column, String, Integer, CheckConstraint, Float, ForeignKey, event
 from sqlalchemy.orm import relationship
+from utils import today_str, gen_code
 from config import THUMBNAIL
 from mixins import BaseMixin
-from utils import today_str
 from database import Base
 from ctypes import File
 
@@ -23,6 +23,7 @@ class Consumable(BaseMixin, Base):
     inventory = relationship("Inventory", back_populates="consumables")
     currency_id = Column(Integer, ForeignKey('currencies.id'))
     currency = relationship("Currency")
+    # code = Column(String, nullable=False, unique=True, default=gen_code)
 
     def give_away(self, quantity, db):
         self.validate_quantity(quantity, db)
@@ -40,7 +41,7 @@ class Consumable(BaseMixin, Base):
         return price
 
 @event.listens_for(Consumable.quantity_base_limit, 'set', propagate=True)
-def set_quantity(target, value, oldvalue, initiator):
+def set_quantity_base(target, value, oldvalue, initiator):
     if value is not None:
         if value <= target.quantity:
             'send notification here'

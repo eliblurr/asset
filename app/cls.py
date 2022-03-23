@@ -13,6 +13,7 @@ from psycopg2.errors import UndefinedTable
 from sqlalchemy.exc import DBAPIError
 from services.aws import s3_upload
 from sqlalchemy.orm import Session
+from rds.tasks import async_logger
 from config import UPLOAD_ROOT
 from functools import wraps
 from pathlib import Path
@@ -50,7 +51,7 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else f'{e.orig}' if hasattr(e, 'orig')  else msg 
-            logger(__name__, e, 'critical')
+            async_logger(__name__, e, 'critical')
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
             
         else:
@@ -95,8 +96,8 @@ class CRUD:
             ex_filters = {x:params[x] for x in params if x  in ex_cols and  params[x] is not None}
             ext_filters = {x:params[x] for x in params if x not in ["offset", "limit", "q", "sort", "action", "fields", *dt_cols, *ex_cols] and params[x] is not None}
             # filters = [ getattr(model_to_filter, k).match(v) if v!='null' else getattr(model_to_filter, k)==None for k,v in ext_filters.items()]
-            filters = [ getattr(model_to_filter, k)==v if v!='null' else getattr(model_to_filter, k)==None for k,v in ext_filters.items()]
-            filters.extend([getattr(model_to_filter, k)==v if v!='null' else getattr(model_to_filter, k)==None for k,v in ex_filters.items()])
+            filters = [ getattr(model_to_filter, k)==v if v not in ['null',0] else getattr(model_to_filter, k)==None for k,v in ext_filters.items()]
+            filters.extend([getattr(model_to_filter, k)==v if v not in ['null',0] else getattr(model_to_filter, k)==None for k,v in ex_filters.items()])
             filters.extend([
                 getattr(model_to_filter, k) >= str_to_datetime(val.split(":", 1)[1]) if val.split(":", 1)[0]=='gte'
                 else getattr(model_to_filter, k) <= str_to_datetime(val.split(":", 1)[1]) if val.split(":", 1)[0]=='lte'
@@ -118,9 +119,9 @@ class CRUD:
                 [ q_or.append(item) if re.search(Q_STR_X, item) else fts.append(item) for item in params['q'] ]
 
                 # if db.bind.dialect.name=='sqlite':
-                q_or = or_(*[getattr(model_to_filter, q.split(':')[0])==q.split(':')[1] if q.split(':')[1]!='null' else getattr(model_to_filter, q.split(':')[0])==None for q in q_or])
+                q_or = or_(*[getattr(model_to_filter, q.split(':')[0])==q.split(':')[1] if q.split(':')[1] not in ['null',0] else getattr(model_to_filter, q.split(':')[0])==None for q in q_or])
                 # else:
-                #     q_or = or_(*[getattr(model_to_filter, q.split(':')[0]).match(q.split(':')[1]) if q.split(':')[1]!='null' else getattr(model_to_filter, q.split(':')[0])==None for q in q_or])                
+                #     q_or = or_(*[getattr(model_to_filter, q.split(':')[0]).match(q.split(':')[1]) if q.split(':')[1] not in ['null',0] else getattr(model_to_filter, q.split(':')[0])==None for q in q_or])                
                 
                 fts = or_(*[getattr(model_to_filter, col[0]).ilike(f'%{val}%') for col in model_to_filter.c() if any((col[1]==str, issubclass(col[1], enum.Enum))) for val in fts])
                 base = base.filter(fts).filter(q_or)
@@ -137,7 +138,7 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            logger(__name__, e, 'critical')
+            async_logger(__name__, e, 'critical')
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
             # print(e)
             # # if getattr(e, 'orig'):
@@ -164,7 +165,7 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            logger(__name__, e, 'critical')
+            async_logger(__name__, e, 'critical')
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
     
     async def read_by_kwargs(self, db:Session, fields:List[str]=None, **kwargs):
@@ -192,7 +193,7 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            logger(__name__, e, 'critical')
+            async_logger(__name__, e, 'critical')
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
             # raise HTTPException(
@@ -242,7 +243,7 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            logger(__name__, e, 'critical')
+            async_logger(__name__, e, 'critical')
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
         else: 
@@ -276,7 +277,7 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            logger(__name__, e, 'critical')
+            async_logger(__name__, e, 'critical')
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def delete_2(self, id, db:Session, use_field:str=None):
@@ -300,7 +301,7 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            logger(__name__, e, 'critical')
+            async_logger(__name__, e, 'critical')
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def bk_create(self, payload, db:Session):
@@ -328,7 +329,7 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            logger(__name__, e, 'critical')
+            async_logger(__name__, e, 'critical')
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def bk_update(self, payload, db:Session, **kwargs):
@@ -355,7 +356,7 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            logger(__name__, e, 'critical')
+            async_logger(__name__, e, 'critical')
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def bk_delete(self, ids:list, db:Session, use_field:str=None, **kwargs):
@@ -380,7 +381,7 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            logger(__name__, e, 'critical')
+            async_logger(__name__, e, 'critical')
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def bk_delete_2(self, db:Session, **kwargs):
@@ -407,7 +408,7 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            logger(__name__, e, 'critical')
+            async_logger(__name__, e, 'critical')
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def exists(self, db, **kwargs):

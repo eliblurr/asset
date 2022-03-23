@@ -87,7 +87,7 @@ class UpdateRequest(RequestBase):
     status: Optional[m.RequestStatus]
     inventory_id: Optional[int]
     department_id: Optional[int]
-    tranfer: Optional[Union[AssetTransfer, ConsumableTransfer]]
+    # tranfer: Optional[Union[AssetTransfer, ConsumableTransfer]]
 
 class AssetRequest(BaseModel):
     asset: AssetSummary
@@ -96,6 +96,8 @@ class AssetRequest(BaseModel):
     end_date: Optional[datetime.datetime]
     pickup_date: Optional[datetime.datetime]
     return_date: Optional[datetime.datetime]
+    pickup_deadline: Optional[datetime.datetime]
+    return_deadline: Optional[datetime.datetime]
 
     class Config:
         orm_mode=True
@@ -119,15 +121,15 @@ class Request(RequestBase):
     code: str
     id: int
 
-    asset: Optional[AssetRequest]
-    consumable: Optional[ConsumableRequest]
+    asset_rq: Optional[AssetRequest]
+    consumable_rq: Optional[ConsumableRequest]
     object: Optional[Union[AssetRequest, ConsumableRequest]]
 
     @root_validator
     def get_obj(cls, values):
-        asset = values.pop('asset')
-        consumable = values.pop('consumable')
-        values['object'] = asset if asset else consumable if consumable else values['object']
+        asset_rq = values.pop('asset_rq')
+        consumable_rq = values.pop('consumable_rq')
+        values['object'] = asset_rq if asset_rq else consumable_rq if consumable_rq else values['object']
         return values
  
 class RequestList(BaseModel):

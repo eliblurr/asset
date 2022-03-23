@@ -1,7 +1,9 @@
-from sqlalchemy import Column, DateTime, Integer, Enum, CheckConstraint, ForeignKey, event, String, select
+from sqlalchemy import Column, DateTime, Integer, Enum, CheckConstraint, ForeignKey, event, String, select, func
+from routers.user.account.models import User
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 from routers.asset.models import Asset
+from .utils import emit_action
 from mixins import BaseMixin
 from utils import gen_code
 from database import Base
@@ -43,8 +45,8 @@ class Request(BaseMixin, Base):
     departments = relationship("Department", back_populates="requests")
     inventory = relationship("Inventory", back_populates="requests")
     author = relationship("User", back_populates="requests")
-    consumable = relationship("ConsumableRequest", uselist=False)
-    asset = relationship("AssetRequest", uselist=False)
+    consumable_rq = relationship("ConsumableRequest", uselist=False)
+    asset_rq = relationship("AssetRequest", uselist=False)
     priority = relationship("Priority")
 
     tag = Column(Enum(Tag), nullable=False)
@@ -53,10 +55,11 @@ class AssetRequest(BaseMixin, Base):
     '''Asset Request Model'''
     __tablename__ = "asset_requests"
     
-    request_id = Column(Integer, ForeignKey('requests.id'), primary_key=True)
+    request_id = Column(Integer, ForeignKey('requests.id'), primary_key=True) #unique=True
     asset_id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
     pickup_deadline = Column(DateTime, nullable=True)
-    returned_at = Column(DateTime, nullable=True)
+    return_deadline = Column(DateTime, nullable=True)
+    returned_at = Column(DateTime, nullable=True) # replace this with activity
     start_date = Column(DateTime, nullable=False)
     picked_at = Column(DateTime, nullable=True)
     end_date = Column(DateTime, nullable=True)
@@ -79,36 +82,64 @@ class ConsumableRequest(BaseMixin, Base):
     returned_at=None
     id=None
 
-# use set for date fields for scheduling
-# inventory_id -> Transfer notifications
-# department_id -> Transfer notifications
+@event.listens_for(Request.inventory_id, 'set', propagate=True)
+def receive_set(target, value, oldvalue, initiator):
+    if value != oldvalue:
+        emit_action(target, 'notify', ) # add kwargs
 
-@event.listens_for(Request, 'before_insert') 
-@event.listens_for(Request, 'before_update') 
-def one_active_request_per_user_per_asset(mapper, connection, target):
-    with connection.begin():
-        pass
-    # res = connection.execute(
-#         Request.__table__.select().where(
-#             Request.__table__.c.asset_id==target.asset_id, Request.__table__.c.author_id==target.author_id, Request.__table__.c.status==RequestStatus.active, 
-        # )
-#     ).rowcount
-#     if res: raise IntegrityError('Author already has an active request for given Asset...', '[asset_id, author_id, status]', 'IntegrityError')
+@event.listens_for(Request.department_id, 'set', propagate=True)
+def receive_set(target, value, oldvalue, initiator):
+    if value != oldvalue:
+        emit_action(target, 'notify', ) # add kwargs
 
-# # transfer actions
-# class Action(enum.Enum):
-#     ready = 'ready'
-#     picked = 'picked'
-#     created = 'created'
-#     returned = 'returned'
-#     accepted = 'accepted'
-#     declined = 'declined'
-#     completed = 'completed'
+@event.listens_for(Request.status, 'set', propagate=True)
+def receive_set(target, value, oldvalue, initiator):    
+    if value != oldvalue:
+        emit_action(target, value)
+        if value=='accepted':
+            target.asset_rq.asset.available = False
+            target.inventory_id = target.asset_rq.asset.inventory_id
 
-# '''deprecated'''
-# def inventory_id(context):
-#     with context.connection as conn:
-#         id = conn.execute(select(Asset.inventory_id).where(Asset.__table__.c.id==context.get_current_parameters()["asset_id"])).scalar()
-#         if id:raise IntegrityError('no inventory available for asset', 'inventory_id', 'could not resolve inventory_id from asset')
-#         return id
+@event.listens_for(Request, 'before_update', propagate=True) 
+def cancel_all_other_active_request_for_obj(mapper, connection, target):
+    if target.status==RequestStatus.accepted:
+        join = (AssetRequest, Request.asset_rq) if target.asset_rq else (ConsumableRequest, Request.consumable_rq)
+        filters = (
+            Request.tag==target.tag,
+            Request.id != target.id, Request.author_id==target.author_id, Request.status==RequestStatus.active, 
+            AssetRequest.asset_id==target.asset_rq.asset_id if target.asset_rq else ConsumableRequest.consumable_id==target.consumable_rq.consumable_id 
+        )
+        u_stmt = Request.__table__.update().where(*filters).values(status=RequestStatus.declined)
+        s_stmt = select(User.email).join(Request).where(Request.id != target.id, Request.author_id==target.author_id, Request.status==RequestStatus.active, ).join(*join).where(*filters)
         
+        connection.execute(u_stmt)
+        res = connection.execute(s_stmt)
+
+        email_list = [email[0] for email in res.all()]
+        emit_action(target, 'bk_notify', email_list=email_list) # add kwargs
+    
+@event.listens_for(Request, 'before_insert', propagate=True) 
+def one_active_request_per_user_per_asset(mapper, connection, target):
+    join = (AssetRequest, Request.asset_rq) if target.asset_rq else (ConsumableRequest, Request.consumable_rq)
+    stmt = select(func.count(Request.id)).join(*join).where(
+        Request.author_id==target.author_id, Request.status==RequestStatus.active, 
+       AssetRequest.asset_id==target.asset_rq.asset_id if target.asset_rq else ConsumableRequest.consumable_id==target.consumable_rq.consumable_id 
+    )
+    with connection.begin():res = connection.execute(stmt).scalar()
+    if res: raise IntegrityError('IntegrityError', '[object, author, status]', 'author already has an active request for object')
+
+@event.listens_for(AssetRequest.pickup_deadline, 'set', propagate=True)
+@event.listens_for(ConsumableRequest.pickup_deadline, 'set', propagate=True)
+def receive_set(target, value, oldvalue, initiator):
+    if value != oldvalue:
+        emit_action(target, 'schedule-job', ) # add kwargs
+
+@event.listens_for(AssetRequest.return_deadline, 'set', propagate=True)
+def receive_set(target, value, oldvalue, initiator):
+    if value != oldvalue:
+        emit_action(target, 'schedule-job', ) # add kwargs
+
+@event.listens_for(AssetRequest.action, 'set', propagate=True)
+def receive_set(target, value, oldvalue, initiator):
+    if action is returned:
+        target.asset.available=True
