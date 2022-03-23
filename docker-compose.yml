@@ -64,6 +64,7 @@ services:
   redis:
     restart: always
     image: redis:latest
+    container_name: asset-redis-server
     command: redis-server --save 60 1 --loglevel warning
     expose:
       - 6379
