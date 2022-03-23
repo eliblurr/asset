@@ -10,8 +10,6 @@ terminate_reminder = lambda id, name : [scheduler.remove_job(job.id) for job in 
 send_mail = lambda recipients, subject, body, template_name : async_send_email(mail=Mail(subject=subject, recipients=recipients, body=body, template_name=template_name))
 email_reminder = lambda id, date, name, recipients, subject, body, template_name : scheduler.add_job(send_mail, kwargs={'recipients':recipients, 'body':body, 'subject':subject, 'template_name':template_name}, id=f'{id}_ID{gen_code(10)}', trigger='date', run_date=date, name=name)
 
-
-# obj is either asset or consumable and req is AssetReq or CReq
 op_switcher = lambda target: { 
     'expired':{
         'func':(terminate_reminders, send_mail),
@@ -80,10 +78,20 @@ op_switcher = lambda target: {
 
 def emit_action(target, op, *args, **kwargs):
     print(target, op)
+    if op=='bk_notify':
+        pass
+        return
+    if op=='notify':
+        pass
+        return
+    if op=='schedule-job':
+        pass
+        return
     if op in ['schedule-job', 'notify', 'bk_notify']:
         return
-    # func, params = op_switcher.get(op).get('func', None), op_switcher.get(op).get('params', None)
-    # if func and params:
-    #     for func in func:
-    #         func(*params[i])
-    #         i+=1
+    
+    func, params = op_switcher.get(op).get('func', None), op_switcher.get(op).get('params', None)
+    if func and params:
+        for func in func:
+            func(*params[i])
+            i+=1

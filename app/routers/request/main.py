@@ -71,10 +71,12 @@ async def read_by_id(id:int, fields:List[str]=r_fields(crud.request.model), db:S
 
 @router.patch('/{id}', response_model=schemas.Request, name='Request')
 async def update_request(id:int, payload:schemas.UpdateRequest, db:Session=Depends(get_db)):
+    # activities here
     return await crud.request.update_2(id, payload, db)
 
 @router.patch('/{id}/transfer', response_model=schemas.Request, name='Transfer')
 async def transfer(id:int, payload:Union[schemas.AssetTransfer, schemas.ConsumableTransfer], db:Session=Depends(get_db)):
+    # activities here
     return await crud.transfer(id, payload, db)
 
 @router.delete('/{id}', name='Request', status_code=204)
