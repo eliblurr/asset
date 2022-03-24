@@ -1,9 +1,8 @@
 from rds.tasks import async_send_email, async_send_message, async_send_web_push
-from services.broadcaster import Publish
 from scheduler import scheduler
 from utils import gen_code
 
-notify = lambda id, message : async_send_message(Publish(channel=id, message=message)) # channel is user_id
+notify = lambda push_id, message : async_send_message(channel=push_id, message=message) # channel is user_id
 web_push = lambda subscription_info, message : async_send_web_push(subscription_info=subscription_info, message_body=message) 
 terminate_reminders = lambda id : [scheduler.remove_job(job.id) for job in scheduler.get_jobs() if job.split('_',1)[0]==str(id)]
 terminate_reminder = lambda id, name : [scheduler.remove_job(job.id) for job in scheduler.get_jobs() if job.split('_',1)[0]==str(id) and job.name==name]

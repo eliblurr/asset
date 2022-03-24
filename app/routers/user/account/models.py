@@ -5,7 +5,7 @@ from sqlalchemy.orm import validates
 from constants import PHONE, EMAIL
 from utils import gen_code
 from database import Base
-import re
+import re, uuid
 
 class User(BaseMixin, HashMethodMixin, Base):
     '''User Model'''
@@ -23,10 +23,11 @@ class User(BaseMixin, HashMethodMixin, Base):
     branch = relationship("Branch", back_populates="staff")
     branch_id = Column(Integer, ForeignKey('branches.id'))
     role_id  = Column(Integer, ForeignKey('roles.id'), nullable=False)
+    push_id = Column(String, unique=True, nullable=False, default=uuid.uuid4)
     department_id = Column(Integer, ForeignKey('departments.id', use_alter=True))
     department = relationship("Department", back_populates="staff", foreign_keys="User.department_id")
     proposals = relationship("Proposal", back_populates="author")
-    requests = relationship("Request", back_populates="author")
+    requests = relationship("Request", back_populates="author")    
 
     @validates('password', include_removes=True)
     def validate_password(self, key, value, is_remove):
@@ -54,6 +55,7 @@ class Administrator(BaseMixin, HashMethodMixin, Base):
     email = Column(String, unique=True, index=True)
     is_verified = Column(Boolean, default=False)
     password = Column(String, nullable=True)
+    push_id = Column(String, unique=True, nullable=False, default=uuid.uuid4)
 
     @validates('password', include_removes=True)
     def validate_password(self, key, value, is_remove):

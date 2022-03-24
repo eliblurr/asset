@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import close_all_sessions
 from fastapi.staticfiles import StaticFiles
-# from services.broadcaster import broadcast
+from services.broadcaster import broadcast
 from database import SessionLocal, engine
 from fastapi import FastAPI, Request
 from scheduler import scheduler
@@ -33,13 +33,13 @@ app.mount(cfg.UPLOAD_URL, StaticFiles(directory=cfg.UPLOAD_ROOT), name="upload")
 async def startup_event():
     print('service started')
     scheduler.start()
-    # await broadcast.connect()
+    await broadcast.connect()
 
 @app.on_event("shutdown")
 async def shutdown_event():
     close_all_sessions()
     scheduler.shutdown(wait=False)
-    # await broadcast.disconnect()
+    await broadcast.disconnect()
 
 @app.middleware("http")
 async def tenant_session(request:Request, call_next):

@@ -27,6 +27,7 @@ class CreateAdmin(EmailBase):
 
 class Admin(EmailBase):
     id: int
+    push_id: str
     is_active: bool
     created: datetime.datetime
     updated: datetime.datetime
@@ -61,6 +62,7 @@ class UpdateUser(BaseModel):
 class User(EmailBase):
     id: int
     phone:str
+    push_id: str
     last_name:str
     first_name:str
     is_active:bool

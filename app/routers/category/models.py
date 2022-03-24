@@ -1,5 +1,6 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, event, func, select
+from sqlalchemy import Column, String, Integer, ForeignKey, event, func, select, or_
 from sqlalchemy.orm import relationship
+from sqlalchemy.exc import IntegrityError
 from mixins import BaseMixin
 from database import Base
 
@@ -49,4 +50,4 @@ def check_integrity(mapper, connection, target):
         connection.execute(table.update().where(func.lower(table.c.title)==target.title.lower(), table.c.scheme!=None), {"status": False})
         if target.id:
             res = connection.execute(select(func.count()).select_from(table).where(func.lower(table.c.title)==target.title.lower(), or_(table.c.scheme==target.scheme, table.c.scheme==None), table.c.id!=target.id)).scalar()
-        if res:raise IntegrityError('Unacceptable Operation', 'title', 'title and scheme must be unique together')
+        if res:raise IntegrityError('Unacceptable Operation', '[title, scheme]', 'title and scheme must be unique together')

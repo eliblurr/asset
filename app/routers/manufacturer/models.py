@@ -51,4 +51,4 @@ def check_integrity(mapper, connection, target):
         connection.execute(table.update().where(func.lower(table.c.title)==target.title.lower(), table.c.scheme!=None), {"status": False})
         if target.id:
             res = connection.execute(select(func.count()).select_from(table).where(func.lower(table.c.title)==target.title.lower(), or_(table.c.scheme==target.scheme, table.c.scheme==None), table.c.id!=target.id)).scalar()
-        if res:raise IntegrityError('Unacceptable Operation', 'title', 'title and scheme must be unique together')
+        if res:raise IntegrityError('Unacceptable Operation', '[title, scheme]', 'title and scheme must be unique together')
