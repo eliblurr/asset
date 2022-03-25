@@ -2,6 +2,7 @@ from routers.user.account.models import User, Administrator
 from datetime import timedelta, datetime
 from sqlalchemy.orm import Session
 from database import SessionLocal
+from fastapi import HTTPException
 from scheduler import scheduler
 from . import models, schemas
 from utils import raise_exc
