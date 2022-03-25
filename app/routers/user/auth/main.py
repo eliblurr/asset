@@ -14,25 +14,22 @@ router = APIRouter()
 
 @router.post('/login', response_model=schemas.LoginResponse, name='Login')
 async def authenticate(payload:schemas.Login, account:schemas.Account, db:Session=Depends(get_db)):
-    try:
-        user = await crud.verify_user(payload, account.value, db)
+    user = await crud.verify_user(payload, account.value, db)
 
-        if not user.is_active:
-            raise HTTPException(status_code=417, detail="account is not active")
+    if not user.is_active:
+        raise HTTPException(status_code=417, detail="account is not active")
 
-        if not user.is_verified:
-            raise HTTPException(status_code=417, detail="account is not verified")
+    if not user.is_verified:
+        raise HTTPException(status_code=417, detail="account is not verified")
 
-        data = {"id":user.id, "account":account.value}
+    data = {"id":user.id, "account":account.value}
 
-        return {
-            "access_token":create_jwt(data=data, exp=settings.ACCESS_TOKEN_DURATION_IN_MINUTES),
-            "refresh_token":create_jwt(data=data, exp=settings.REFRESH_TOKEN_DURATION_IN_MINUTES),
-            "account":account.value,
-            "user":user
-        }
-    except Exception as e:
-        print(e)
+    return {
+        "access_token":create_jwt(data=data, exp=settings.ACCESS_TOKEN_DURATION_IN_MINUTES),
+        "refresh_token":create_jwt(data=data, exp=settings.REFRESH_TOKEN_DURATION_IN_MINUTES),
+        "account":account.value,
+        "user":user
+    }
 
 @router.post("/logout", name='Logout')
 async def logout(payload:schemas.Logout, db:Session=Depends(get_db)):
