@@ -76,7 +76,7 @@ services:
       - docker.env
 
   worker:
-    image: master-image:latest
+    image: master-image
     container_name: asset-redis-worker
     depends_on:
       - redis
