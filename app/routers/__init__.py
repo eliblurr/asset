@@ -20,6 +20,7 @@ from routers.upload import *
 from routers.asset import *
 from routers.request import *
 from routers.tenant import *
+from routers.rda import *
 
 from database import Base, Model
 
@@ -49,7 +50,10 @@ __all__=[
     'proposal', 
     'asset',
     'request',
-    'catalogue'
+    'catalogue',
+    'aggregation',
+    'dashboard',
+    'report'
 ]
 
 from database import engine

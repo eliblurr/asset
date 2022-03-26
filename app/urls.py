@@ -25,8 +25,11 @@ app.include_router(catalogue, tags=['Catalogues'], prefix='/catalogues')
 app.include_router(category, tags=['Categories'], prefix='/categories')
 app.include_router(currency, tags=['Currencies'], prefix='/currencies')
 app.include_router(priority, tags=['Priorities'], prefix='/priorities')
+app.include_router(aggregation, tags=['Analytics'], prefix='/aggregate')
 app.include_router(activity, tags=['Activities'], prefix='/activities')
+app.include_router(dashboard, tags=['Analytics'], prefix='/dashboard')
 app.include_router(proposal, tags=['Proposals'], prefix='/proposals')
+app.include_router(report, tags=['Analytics'], prefix='/reports')
 app.include_router(branch, tags=['Branches'], prefix='/branches')
 app.include_router(policy, tags=['Policies'], prefix='/policies')
 app.include_router(request, tags=['Requests'], prefix='/request')
@@ -102,18 +105,3 @@ async def websocket_endpoint(websocket: WebSocket, channel:str):
 #     print(broadcast._backend._subscribed)    
 #     await send_message(publish.channel, publish.message)
 #     return publish
-
-'''
-    1. broadcaster
-    2. notification subscription [POST creates a subscription] [GET returns vapid public key which clients uses to send around push notification]
-    3. asset + activities + relations
-    4. [request] + activities
-    5. category
-    6. department + relations
-    7. manufaturer
-    8. branch + relations
-    9. inventory + relations
-'''
-
-# from routers.analytics.main import router as analytics 
-# app.include_router(analytics, tags=['Analytics'], prefix='/analytics')
