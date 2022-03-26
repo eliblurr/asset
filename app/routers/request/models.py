@@ -65,7 +65,7 @@ class AssetRequest(BaseMixin, Base):
     end_date = Column(DateTime, nullable=True)
     action = Column(Enum(AssetTransferAction)) 
     asset = relationship('Asset', uselist=False)
-    request = relationship('Request', uselist=False)
+    # request = relationship('Request', uselist=False)
     id=None
 
 class ConsumableRequest(BaseMixin, Base):
@@ -80,7 +80,7 @@ class ConsumableRequest(BaseMixin, Base):
     picked_at = Column(DateTime, nullable=True)
     quantity = Column(Integer, nullable=False)
     consumable = relationship('Consumable')
-    request = relationship('Request', uselist=False)
+    # request = relationship('Request', uselist=False)
     returned_at=None
     id=None
 
@@ -122,13 +122,13 @@ def one_active_request_per_user_per_asset(mapper, connection, target):
 @event.listens_for(ConsumableRequest.pickup_deadline, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
-        emit_action(target.request, target, 'schedule-email-job', name='smr-pickup-deadline', date=value)
+        # emit_action(target.request, target, 'schedule-email-job', name='smr-pickup-deadline', date=value)
         'schedule notification reminder job for author'
 
 @event.listens_for(AssetRequest.return_deadline, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
-        emit_action(target.request, target, 'schedule-email-job',  name='smr-return-deadline', date=value) # add kwargs
+        # emit_action(target.request, target, 'schedule-email-job',  name='smr-return-deadline', date=value) # add kwargs
         'schedule notification reminder job for author'
 
 'for only assets, no consumables'
@@ -164,6 +164,6 @@ def receive_set(target, value, oldvalue, initiator):
 @event.listens_for(AssetRequest.action, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
-        emit_action(target.request, target, value)
+        # emit_action(target.request, target, value)
         if value=='returned':
             target.asset.available=True
