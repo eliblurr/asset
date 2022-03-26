@@ -76,7 +76,7 @@ services:
       - docker.env
 
   worker:
-    image: master-image
+    image: master-image:latest
     container_name: asset-redis-worker
     depends_on:
       - redis
@@ -92,6 +92,8 @@ services:
       REDIS_NODE: ${REDIS_NODE}
       REDIS_MAX_RETRIES: ${REDIS_MAX_RETRIES}
       REDIS_RETRY_INTERVAL: ${REDIS_RETRY_INTERVAL}
+    links:
+      - redis
 
   nginx:
     build:
