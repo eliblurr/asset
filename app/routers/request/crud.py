@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from database import SessionLocal
 from scheduler import scheduler
-# from .utils import emit_action
 from . import models, schemas
 from typing import Union
 from cls import CRUD

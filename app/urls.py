@@ -4,10 +4,11 @@ from fastapi.openapi.docs import (
     get_swagger_ui_oauth2_redirect_html)
 from services.broadcaster import chatroom_ws_receiver, chatroom_ws_sender
 from fastapi.openapi.utils import get_openapi
-from config import settings, STATIC_URL
-from fastapi import WebSocket
+from fastapi import WebSocket, Depends
+from config import STATIC_URL
 from routers import *
 from main import app
+import config as cfg
 
 app.include_router(faqs, tags=['Frequently Asked Questions'], prefix='/frequently-asked-questions')
 app.include_router(config, tags=['Environment Configuration'], prefix='/configurations')
@@ -36,7 +37,7 @@ app.include_router(logs, tags=['Logs'], prefix='/logs')
 app.include_router(auth, tags=['Authentication'])
 
 def get_openapi_schema(path='/redoc'):
-    description = f""" {settings.DESCRIPTION} \n\n {
+    description = f""" {cfg.settings.DESCRIPTION} \n\n {
     "<a href='/docs' style='color:#c0392b;cursor:help'>Interactive Swagger docs</a>" if path=="/redoc" else 
     "<a href='/'>Official API docs</a>"}"""
     openapi_schema = get_openapi(

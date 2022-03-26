@@ -2,9 +2,9 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseSettings
 from datetime import time, date
 from functools import lru_cache
+import logging, os, config
 from pathlib import Path
 from babel import Locale
-import logging, os
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -51,7 +51,6 @@ locale = Locale(LANGUAGE)
 TEMPLATES = Jinja2Templates(directory=os.path.join(STATIC_ROOT, f'html'))
 
 class Settings(BaseSettings):
-    
     DATABASE_URL: str
     VERSION: str = '2.0.0'
     BASE_URL: str = 'http://localhost'
@@ -107,7 +106,7 @@ class Settings(BaseSettings):
     REDIS_RETRY_INTERVAL:int=10
 
     class Config:
-        # env_file = '.env'
+        env_file = '.env'
         secrets_dir = KEY_ROOT
 
 DER_BASE64_ENCODED_PRIVATE_KEY_FILE_PATH = os.path.join(KEY_ROOT, "private.txt")
@@ -130,27 +129,31 @@ if not (os.path.isfile(DER_BASE64_ENCODED_PRIVATE_KEY_FILE_PATH) and os.path.isf
 
 # @lru_cache()
 def get_settings():
-    if os.getenv('DOCKER') in ['True', 'true', 1, '1', True]:
-        return Settings(_env_file="docker.env")
-    return Settings(_env_file=".env")
+    # if os.getenv('DOCKER') in ['True', 'true', 1, '1', True]:
+    #     return Settings(_env_file="docker.env")
+    # return Settings(_env_file=".env")
 
-settings = get_settings()
+    if os.getenv('DOCKER') in ['True', 'true', 1, '1', True]:
+        Settings.Config.env_file="docker.env"
+    return Settings()
+
+config.settings = get_settings()
 
 VAPID_CLAIMS = {
-    "sub": f"mailto:{settings.ADMIN_EMAIL}"
+    "sub": f"mailto:{config.settings.ADMIN_EMAIL}"
 }
 
-AWS_S3_CUSTOM_DOMAIN = f'https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-AWS_S3_OBJECT_PARAMETERS = {'CacheControl': settings.AWS_S3_OBJECT_CACHE_CONTROL}
+AWS_S3_CUSTOM_DOMAIN = f'https://{config.settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_OBJECT_PARAMETERS = {'CacheControl': config.settings.AWS_S3_OBJECT_CACHE_CONTROL}
 
 logging.atTime = time()
-logging.MAIL_FROM =  settings.MAIL_FROM
-logging.ADMIN_EMAIL = settings.ADMIN_EMAIL
+logging.MAIL_FROM =  config.settings.MAIL_FROM
+logging.ADMIN_EMAIL = config.settings.ADMIN_EMAIL
 logging.logFile = os.path.join(LOG_ROOT, f"{date.today().strftime('%Y-%m-%d')}.log")
-logging.MAIL_PORT = settings.MAIL_PORT
-logging.MAIL_SERVER = settings.MAIL_SERVER
-logging.MAIL_USERNAME = settings.MAIL_USERNAME
-logging.MAIL_PASSWORD = settings.MAIL_PASSWORD
+logging.MAIL_PORT = config.settings.MAIL_PORT
+logging.MAIL_SERVER = config.settings.MAIL_SERVER
+logging.MAIL_USERNAME = config.settings.MAIL_USERNAME
+logging.MAIL_PASSWORD = config.settings.MAIL_PASSWORD
 # logging.config.fileConfig(f'logging.conf')
 
 import logging.config as loggingConfig
@@ -162,4 +165,4 @@ with open(DER_BASE64_ENCODED_PRIVATE_KEY_FILE_PATH, "r+") as private:
 with open(DER_BASE64_ENCODED_PUBLIC_KEY_FILE_PATH, "r+") as public:
     VAPID_PUBLIC_KEY = public.readline().strip("\n")
 
-REDIS_URL:str=f"redis://{settings.REDIS_USER}:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_NODE}"
+REDIS_URL:str=f"redis://{config.settings.REDIS_USER}:{config.settings.REDIS_PASSWORD}@{config.settings.REDIS_HOST}:{config.settings.REDIS_PORT}/{config.settings.REDIS_NODE}"

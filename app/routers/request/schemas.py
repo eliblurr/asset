@@ -9,7 +9,6 @@ import datetime, enum
 
 class Items(str, enum.Enum):
     consumables = 'consumables'
-    # catalogues = 'catalogues' # to be included in future release 
     assets = 'assets'
 
 class RequestBase(BaseModel):
@@ -87,7 +86,6 @@ class UpdateRequest(RequestBase):
     status: Optional[m.RequestStatus]
     inventory_id: Optional[int]
     department_id: Optional[int]
-    # tranfer: Optional[Union[AssetTransfer, ConsumableTransfer]]
 
 class AssetRequest(BaseModel):
     asset: AssetSummary

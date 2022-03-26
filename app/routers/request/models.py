@@ -85,12 +85,25 @@ class ConsumableRequest(BaseMixin, Base):
 @event.listens_for(Request.inventory_id, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
-        emit_action(target, 'notify', ) # add kwargs
+        emit_action(target, 'notify', message={
+            'key':'request',
+        }) 
+
+        # 'key':'request', 
+        #             'id':target.id,
+        #             'title':target.asset_rq.asset.title if target.asset_rq else target.consumable_rq.consumable.title, 
+        #             f'{"asset" if target.asset_rq else "consumable"}_code':target.asset_rq.asset.code if target.asset_rq else target.consumable_rq.consumable.code,
+        #             f'{"asset" if target.asset_rq else "consumable"}_id':target.asset_rq.asset.id if target.asset_rq else target.consumable_rq.consumable.id,
+        #         }
+        'notify inventory owner of request'
 
 @event.listens_for(Request.department_id, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
-        emit_action(target, 'notify', ) # add kwargs
+        emit_action(target, 'notify', message={
+            'key':'request',
+        }) 
+        'notify department head of request'
 
 @event.listens_for(Request.status, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):    
@@ -100,23 +113,26 @@ def receive_set(target, value, oldvalue, initiator):
             target.asset_rq.asset.available = False
             target.inventory_id = target.asset_rq.asset.inventory_id
 
+'for only assets, no consumables'
 @event.listens_for(Request, 'before_update', propagate=True) 
 def cancel_all_other_active_request_for_obj(mapper, connection, target):
     if target.status==RequestStatus.accepted:
-        join = (AssetRequest, Request.asset_rq) if target.asset_rq else (ConsumableRequest, Request.consumable_rq)
-        filters = (
-            Request.tag==target.tag,
-            Request.id != target.id, Request.author_id==target.author_id, Request.status==RequestStatus.active, 
-            AssetRequest.asset_id==target.asset_rq.asset_id if target.asset_rq else ConsumableRequest.consumable_id==target.consumable_rq.consumable_id 
-        )
-        u_stmt = Request.__table__.update().where(*filters).values(status=RequestStatus.declined)
-        s_stmt = select(User.email).join(Request).where(Request.id != target.id, Request.author_id==target.author_id, Request.status==RequestStatus.active, ).join(*join).where(*filters)
-        
-        connection.execute(u_stmt)
-        res = connection.execute(s_stmt)
+        if target.asset_rq:
+            join = (AssetRequest, Request.asset_rq)
+            filters = (
+                Request.tag==target.tag,
+                Request.id != target.id, Request.author_id==target.author_id, Request.status==RequestStatus.active, 
+                AssetRequest.asset_id==target.asset_rq.asset_id
+            )
+            u_stmt = Request.__table__.update().where(*filters).values(status=RequestStatus.declined)
+            s_stmt = select(User.email).join(Request).where(Request.id != target.id, Request.author_id==target.author_id, Request.status==RequestStatus.active, ).join(*join).where(*filters)
+            
+            connection.execute(u_stmt)
+            res = connection.execute(s_stmt)
 
-        email_list = [email[0] for email in res.all()]
-        emit_action(target, 'bk_notify', email_list=email_list) # add kwargs
+            email_list = [email[0] for email in res.all()]
+            emit_action(target, 'bk_notify', email_list=email_list) # add kwargs
+            'notify all reciepients of declined requests'
     
 @event.listens_for(Request, 'before_insert', propagate=True) 
 def one_active_request_per_user_per_asset(mapper, connection, target):
@@ -133,11 +149,13 @@ def one_active_request_per_user_per_asset(mapper, connection, target):
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
         emit_action(target, 'schedule-job', ) # add kwargs
+        'schedule notification reminder job for author'
 
 @event.listens_for(AssetRequest.return_deadline, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
         emit_action(target, 'schedule-job', ) # add kwargs
+        'schedule notification reminder job for author'
 
 @event.listens_for(AssetRequest.action, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):

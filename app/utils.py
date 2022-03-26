@@ -1,6 +1,6 @@
-from config import JWT_ALGORITHM, settings, LOG_ROOT
-import jwt, shutil, logging, pathlib, xattr, os
+import jwt, shutil, logging, pathlib, xattr, os, config
 from datetime import timedelta, datetime, date
+from config import JWT_ALGORITHM, LOG_ROOT
 from babel.numbers import format_currency
 from inspect import Parameter, signature
 from math import ceil, floor, log2
@@ -52,11 +52,11 @@ def logger(path, e, level:str):
     except Exception as e:logger.critical(e)
 
 def create_jwt(data:dict, exp:timedelta=None):
-    data.update({'exp':datetime.utcnow() + timedelta(minutes=exp if exp else settings.DEFAULT_TOKEN_DURATION_IN_MINUTES)})
-    return jwt.encode(data, settings.SECRET, algorithm=JWT_ALGORITHM)
+    data.update({'exp':datetime.utcnow() + timedelta(minutes=exp if exp else config.settings.DEFAULT_TOKEN_DURATION_IN_MINUTES)})
+    return jwt.encode(data, config.settings.SECRET, algorithm=JWT_ALGORITHM)
 
 def decode_jwt(token):
-    return jwt.decode(token, settings.SECRET, JWT_ALGORITHM)
+    return jwt.decode(token, config.settings.SECRET, JWT_ALGORITHM)
 
 def gen_code(nbytes=8):
     return token_urlsafe(nbytes)
@@ -138,7 +138,7 @@ def db_url():
         current version of sqlalchemy does not support [postgres]:// 
         hence change to postgresql to accomodate
     '''
-    db_url = settings.DATABASE_URL
+    db_url = config.settings.DATABASE_URL
     if db_url.split(':', 1)[0] in ['postgres']:
         db_url = 'postgresql:'+db_url.split(':', 1)[1]
     return db_url
@@ -174,4 +174,6 @@ sum_ls = lambda ls : sum(ls)
 today_str =  lambda: today.strftime("%Y/%m/%d")
 r_fields = lambda model : Query(None, regex=f"({'|'.join([_[0] for _ in model.c()])})$") # result fields
 file_ext = lambda filename : pathlib.Path(filename).suffix
-act_url = lambda base_url, id, userType: f"""{base_url}{settings.ACCOUNT_ACTIVATION_PATH}?token={create_jwt(data={'id':id, "userType":userType},exp=timedelta(minutes=settings.ACTIVATION_TOKEN_DURATION_IN_MINUTES))}"""
+
+def act_url(base_url, id, userType):
+    return f"""{base_url}{config.settings.ACCOUNT_ACTIVATION_PATH}?token={create_jwt(data={'id':id, "userType":userType},exp=timedelta(minutes=config.settings.ACTIVATION_TOKEN_DURATION_IN_MINUTES))}"""
