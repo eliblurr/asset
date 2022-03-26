@@ -30,18 +30,18 @@ async def validate_asset(id:int, db:Session):
     obj = db.query(models.Asset).filter_by(id=id).first()
     if not obj:raise NotFound(f'asset with id:{id} not found')
     if not obj.available:raise BadRequestError(f'asset with id:{id} not available')
-    return obj.inventory.department.head_of_department if obj.inventory.department else obj.inventory.manager, {'title':obj.title, 'code':obj.code, 'id':id, 'type':'assets'}, {"inventory_id":obj.inventory.id}
+    return obj.inventory.department.head_of_department if obj.inventory.department else obj.inventory.manager, {'title':obj.title, 'code':obj.code, 'asset_id':id, 'code':obj.code, 'type':'assets'}, {"inventory_id":obj.inventory.id}
 
 async def validate_consumable(id, quantity, db:Session):
     obj = db.query(Consumable).filter_by(id=id).first()
     if not obj:raise NotFound(f'consumable with id:{id} not found')
     obj.validate_quantity(quantity, db)
-    return obj.inventory.department.head_of_department if obj.inventory.department else obj.inventory.manager, {'title':obj.title, 'quantity':obj.quantity, 'id':id, 'type':'consumables'}, {"inventory_id":obj.inventory.id}
+    return obj.inventory.department.head_of_department if obj.inventory.department else obj.inventory.manager, {'title':obj.title, 'quantity':obj.quantity, 'consumable_id':id, 'code':obj.code, 'type':'consumables'}, {"inventory_id":obj.inventory.id}
 
 def remove_scheduled_jobs(id:int):
     map(scheduler.remove_job, [job.id for job in scheduler.get_jobs() if job.split('_',1)[0]==str(id)])
 
-def expire(id:int, email:str, asset_name:str, db=SessionLocal()):
+def expire(id:int, db=SessionLocal()):
     request = db.query(models.Request).filter_by(id=id).first()
     if request: 
         request.status=schemas.RequestStatus.expired

@@ -44,6 +44,9 @@ class User(BaseMixin, HashMethodMixin, Base):
         assert re.search(PHONE, value), 'invalid phone format'
         return value
 
+    def full_name(self):
+        return f'{self.first_name} {f"{self.middle_name} "}{self.last_name}'
+
     status = None
 
 class Administrator(BaseMixin, HashMethodMixin, Base):

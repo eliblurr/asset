@@ -8,7 +8,10 @@ from sqlalchemy.orm import Session
 from dependencies import get_db
 from typing import Union, List
 from . import crud, schemas
+from .utils import notify, notify_reminder
 from re import search
+from scheduler import scheduler
+from utils import gen_code
 
 router = APIRouter()
 
@@ -23,16 +26,16 @@ def verify_payload(payload:schemas.CreateRequest, item:schemas.Items):
 @router.post('/{item}', response_model=schemas.Request, status_code=201, name='Request')
 async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
     try:
-        payload, item, msg, tmp_kw = payload['payload'], payload['item'], {}, {}              
+        payload, item, meta, tmp_kw = payload['payload'], payload['item'], {}, {}              
         recipient, kw = await crud.validate_author(payload.author_id, db) # if recipient send request to inventory manager for operation
         await crud.validate_priority(payload.priority_id, db)        
         
         if item=='consumables':
-            manager, msg, tmp_kw = await crud.validate_consumable(payload.obj.consumable_id, payload.obj.quantity, db)
+            manager, meta, tmp_kw = await crud.validate_consumable(payload.obj.consumable_id, payload.obj.quantity, db)
             tmp_kw.update({'tag':'consumable'})
 
         if item=='assets':
-            manager, msg, tmp_kw = await crud.validate_asset(payload.obj.asset_id, db)
+            manager, meta, tmp_kw = await crud.validate_asset(payload.obj.asset_id, db)
             tmp_kw.update({'tag':'asset'})
       
         kw.update(tmp_kw)
@@ -51,10 +54,20 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
     req = await crud.request.create(payload.copy(exclude={'obj'}), db, **kw)
         
     if req: 
-        msg = msg.update({'key':'request', 'id':req.id})
+        meta = meta.update({'id':req.id})
+        recipient = recipient if not recipient else manager
+
         try:
-            'send notifications here [webpush[B] to manager if not author-> reciepient]'
-            'set jobs and reminders [set expire[send notification in here] to start_date if start_date, set reminder about request expiration for manager ]'
+            notify(push_id=recipient.push_id, message = {'key':'request', 'message': messages['request']['department'],'meta':meta})
+            notify_reminder(id=req.id, date=payload.start_date-timedelta(days=1), name='expiry-notify-reminder', push_id=recipient.push_id, message={'key':'request', 'message': messages['request']['expires'], 'meta':meta.update({'datetime':payload.start_date})})
+            scheduler.add_job( 
+                crud.expire,
+                id=f'{req.id}_ID{gen_code(10)}',
+                name='expire-request', 
+                run_date=payload.start_date, 
+                trigger='date',
+                kwargs={'id':req.id}
+            )
         except Exception as e:
             logger(__name__, e, 'critical')
             
