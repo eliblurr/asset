@@ -81,7 +81,7 @@ services:
     depends_on:
       - redis
       - app
-    command: rq worker --name worker --url redis://redis:6379/0 # python3 -m rds.worker
+    command: python3 -m rds.worker # rq worker --name worker --url redis://redis:6379/0 
     networks: 
       - asset-network
     environment:
