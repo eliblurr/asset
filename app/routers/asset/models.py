@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, Float, event, DateTime, Enum, Boolean, Ch
 from routers.subscription.models import Subscription
 from sqlalchemy.ext.hybrid import hybrid_property
 from dateutil.relativedelta import relativedelta
+from sqlalchemy.exc import IntegrityError
 from rds.tasks import async_remove_file
 from sqlalchemy.orm import relationship
 from utils import today_str, gen_code
@@ -20,7 +21,6 @@ class Asset(BaseMixin, Base):
     __table_args__ = (
         CheckConstraint('salvage_price<=price', name='_price_salvage_price_'), # tbd
         # CheckConstraint('decommission is TRUE AND decommission_justification IS NOT NULL', name='_decommission_justification_'),
-        CheckConstraint("depreciation_algorithm='declining_balance_depreciation' AND dep_factor IS NOT NULL", name='_verify_dpa_'),
     )
 
     make = Column(String, nullable=False)
@@ -96,7 +96,7 @@ def set_up_notification(target, value, oldvalue, initiator):
     # if value > today: schedule join and add activity
     pass
 
-# def validate_phone(target, value, oldvalue, initiator):
-#     "Strip non-numeric characters from a phone number"
-#     return re.sub(r'\D', '', value)
-# event.listen(UserContact.phone, 'set', validate_phone, retval=True)
+@event.listens_for(Asset.depreciation_algorithm, 'set', propagate=True)
+def check_dep_factor(target, value, oldvalue, initiator):
+    if value==DepreciationAlgorithm.declining_balance_depreciation and target.dep_factor is None:
+        raise IntegrityError('Unacceptable Operation', '[depreciation_algorithm, dep_factor]', 'dep_factor must be set for declining balance depreciation')
