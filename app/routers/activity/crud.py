@@ -32,11 +32,19 @@ async def add_activity(object, ref, meta:dict, db:Session=Depends(get_db_2)):
     return await activity.create(payload, db, object=object)
 
 from routers.asset.crud import asset
+from routers.request.crud import request
 from routers.proposal.crud import proposal
+from routers.inventory.crud import inventory
+from routers.department.crud import department
+from routers.consumable.crud import consumable
 
 objects = {
-    'asset': asset,
-    'proposal': proposal
+    'assets': asset,
+    'requests':request,
+    'proposals': proposal,
+    'inventories':inventory,
+    'departments':department,
+    'consumables':consumable
 }
 resources = enum.Enum('Object', {v:v for v in objects.keys()})
 

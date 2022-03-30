@@ -35,5 +35,8 @@
     },
     "department":{
         "update_manager":"manager changed by {author} from {prev_user} to {user} on {datetime}"
+    },
+    "consumable":{
+        "transfer":"consumable item moved to {inventory} on {datetime}"
     }
 }

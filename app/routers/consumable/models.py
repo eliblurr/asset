@@ -1,6 +1,9 @@
-from sqlalchemy import Column, String, Integer, CheckConstraint, Float, ForeignKey, event
+from sqlalchemy import Column, String, Integer, CheckConstraint, Float, ForeignKey, event, select
+from rds.tasks import async_send_email, async_send_message
+from utils import today_str, gen_code, instance_changes
+from routers.inventory.models import Inventory
+from routers.user.account.models import User
 from sqlalchemy.orm import relationship
-from utils import today_str, gen_code
 from config import THUMBNAIL
 from mixins import BaseMixin
 from database import Base
@@ -40,20 +43,34 @@ class Consumable(BaseMixin, Base):
             return self.currency.format_currency(price)
         return price
 
+@event.listens_for(Consumable.quantity, 'set', propagate=True)
 @event.listens_for(Consumable.quantity_base_limit, 'set', propagate=True)
-def set_quantity_base(target, value, oldvalue, initiator):
-    if value is not None:
-        if value <= target.quantity:
-            'send notification here'
-            pass
+def restock_reminder(target, value, oldvalue, initiator):
 
-# @event.listens_for(Consumable.quantity, 'set', propagate=True) # use after insert instead
-# def set_quantity(target, value, oldvalue, initiator):
-#     print(target.quantity_base_limit)
-#     if value <= target.quantity_base_limit:
-#         'send notification here'
-#         pass
+    obj = target.quantity_base_limit if bool(initiator.parent_token==Consumable.quantity_base_limit) else target.quantity
 
-@event.listens_for(Consumable.inventory_id, 'set', propagate=True)
-def set_quantity(target, value, oldvalue, initiator):
-    'notify inventory owner that consumable has been added to inventory'
+    if target.quantity_base_limit:
+        if value<=int(obj) and target.inventory:
+            async_send_email({
+                'subject':f'{target.title} is below base quantity',
+                'template_name':'consumable-quantity.html',
+                'recipients':[target.inventory.manager.email],
+                'body':{'title':target.title, 'code':target.code}
+            })
+
+@event.listens_for(Consumable, "after_update")
+@event.listens_for(Consumable, "after_insert")
+def alert_inventory(mapper, connection, target):
+
+    changes = instance_changes(target)
+    inventory = changes.get('inventory_id', [None])
+
+    if inventory[0]:
+        stmt = select(User.push_id, Inventory.id.label('Inventory_id'), Inventory.title).join(Inventory, Inventory.manager_id==User.id).where(Inventory.id==inventory[0])
+        with connection.begin():
+            data = connection.execute(stmt)
+            data = dict(data.mappings().first())
+        push_id = data.pop('push_id', None)
+        data.update({'consumable_id':target.id, 'code':target.code})
+        if push_id:
+            async_send_message(channel=push_id, message={'key':'consumable', 'message': "This {inventory} is now in charge of {consumable} with code: {code}", 'meta': data})

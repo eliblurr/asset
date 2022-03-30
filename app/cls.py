@@ -42,7 +42,7 @@ class CRUD:
             db.refresh(obj) 
         except Exception as e:
             
-            print(e)
+            # print(e)
 
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
