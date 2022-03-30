@@ -36,6 +36,7 @@ class AssetBase(BaseModel):
     price: float
     lifespan: float
     serial_number: str
+    code: Optional[str]
     dep_factor: Optional[float]
     metatitle: Optional[str]
     description: Optional[str]

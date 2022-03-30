@@ -34,7 +34,7 @@ class Manufacturer(BaseMixin, Base):
         return address
 
     @validates('url')
-    def validate_website(self, key, address):
+    def validate_url(self, key, address):
         assert re.search(URL, address), 'invalid url format'
         return address
 

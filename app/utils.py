@@ -5,8 +5,25 @@ from babel.numbers import format_currency
 from inspect import Parameter, signature
 from math import ceil, floor, log2
 from secrets import token_urlsafe
+from sqlalchemy import inspect
 from fastapi import Form
 from passlib import pwd
+
+def instance_changes(instance):
+    state = inspect(instance)
+    changes = {}
+
+    for attr in state.attrs:
+        hist = attr.load_history()
+
+        if not hist.has_changes():
+            continue
+
+        # hist.deleted holds old value
+        # hist.added holds new value
+        changes[attr.key] = hist.added
+
+    return changes
 
 def parse_activity_meta(obj, meta):
     for k,v in meta.items():
@@ -24,7 +41,6 @@ def parse_activity_meta(obj, meta):
             tmp = getattr(obj, attr[0])
             for x in attr[1:]:
                 tmp = getattr(tmp, x)
-
             meta[k]=str(tmp)
     return meta
 

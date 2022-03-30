@@ -22,7 +22,7 @@ from routers.request import *
 from routers.tenant import *
 from routers.rda import *
 
-from database import Base, Model
+from database import Base
 
 __all__=[
     'Base',
@@ -60,7 +60,7 @@ from database import engine
 
 tables=[table for table in Base.metadata.sorted_tables if table.schema=='public' or table.schema=='global']
 Base.metadata.create_all(bind=engine, tables=tables)
-Model.metadata.create_all(bind=engine)
+# Model.metadata.create_all(bind=engine)
 
 '''
     Do this to order the the way each model interacts with Base from database.py

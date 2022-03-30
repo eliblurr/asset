@@ -27,7 +27,7 @@ async def create(c, ref, meta:dict, resource, resource_id:int, db:Session):
     return await activity.create(payload, db, object=obj)
 
 async def add_activity(object, ref, meta:dict, db:Session=Depends(get_db_2)):
-    db = next(get_db_2())
+    # db = next(get_db_2())
     payload = schemas.ActivityBase(message=get_message(ref), meta=meta)
     return await activity.create(payload, db, object=object)
 

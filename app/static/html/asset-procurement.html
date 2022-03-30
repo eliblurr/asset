@@ -123,7 +123,7 @@
                                         font-size: 14px;
                                       "
                                       ><img
-                                        src="https://telecomschamber.com/images/AITI_LOGO_RGB.png"
+                                        src="{{ base_url }}static/images/logo.ico"
                                         alt="Logo"
                                         style="
                                           display: block;
@@ -242,7 +242,7 @@
                                     "
                                   >
                                     <img
-                                      src="https://kxesnw.stripocdn.email/content/guids/CABINET_c54f20b7f485b1e1ccb584bf9678f370/images/46721618232611116.png"
+                                      src="{{ base_url }}static/images/announce.png"
                                       alt
                                       style="
                                         display: block;
@@ -278,7 +278,7 @@
                                         color: #333333;
                                       "
                                     >
-                                      Requested Asset Available
+                                      Proposed Asset Has Been Procured
                                     </h1>
                                   </td>
                                 </tr>
@@ -304,8 +304,8 @@
                                         font-size: 14px;
                                       "
                                     >
-                                      Your request for item
-                                      <strong>ITEM NAME </strong>is now
+                                      Your proposal for item
+                                      <strong>{{title}}</strong> is now
                                       available.
                                     </p>
                                     <p
@@ -324,13 +324,14 @@
                                     </p>
                                   </td>
                                 </tr>
+
                                 <tr>
                                   <td
                                     align="center"
                                     style="
                                       padding: 0;
                                       margin: 0;
-                                      padding-top: 10px;
+                                      padding-top: 5px;
                                       padding-bottom: 5px;
                                     "
                                   >
@@ -345,17 +346,19 @@
                                         width: auto;
                                       "
                                       ><a
-                                        href="http://196.43.196.108:8092"
+                                        href="{{base_url}}"
                                         target="_blank"
                                         style="
+                                         
                                           text-decoration: none;
                                           -webkit-text-size-adjust: none;
                                           -ms-text-size-adjust: none;
+                                         
                                           color: #333333;
                                           font-size: 18px;
                                           border-style: solid;
                                           border-color: #58afe5;
-                                          border-width: 10px 30px;
+                                          border-width: 10px 30px 10px 30px;
                                           display: inline-block;
                                           background: #58afe5;
                                           border-radius: 15px;
@@ -372,6 +375,7 @@
                                     >
                                   </td>
                                 </tr>
+
                               </table>
                             </td>
                           </tr>
@@ -556,7 +560,7 @@
                                             "
                                             ><img
                                               title="Facebook"
-                                              src="https://kxesnw.stripocdn.email/content/assets/img/social-icons/logo-black/facebook-logo-black.png"
+                                              src="{{ base_url }}static/images/facebook.png"
                                               alt="Fb"
                                               width="32"
                                               height="32"
@@ -590,7 +594,7 @@
                                             "
                                             ><img
                                               title="Twitter"
-                                              src="https://kxesnw.stripocdn.email/content/assets/img/social-icons/logo-black/twitter-logo-black.png"
+                                              src="{{ base_url }}static/images/twitter.png"
                                               alt="Tw"
                                               width="32"
                                               height="32"
@@ -620,7 +624,7 @@
                                             "
                                             ><img
                                               title="Youtube"
-                                              src="https://kxesnw.stripocdn.email/content/assets/img/social-icons/logo-black/youtube-logo-black.png"
+                                              src="{{ base_url }}static/images/youtube.png"
                                               alt="Yt"
                                               width="32"
                                               height="32"

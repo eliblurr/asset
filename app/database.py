@@ -10,5 +10,4 @@ Base = declarative_base(metadata=MetaData(schema=None))
 'future Message presisting'
 'future references/different implementation'
 session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
-Model = declarative_base(name='Model')
-Model.query = session.query_property()
+Base.query = session.query_property()

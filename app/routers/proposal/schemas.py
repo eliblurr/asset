@@ -21,18 +21,20 @@ class ProposalBase(BaseModel):
 
 class CreateProposal(ProposalBase):
     pass
-    # @validator('status')
-    # def _xor_(cls, v, values):
-    #     if v==ProposalStatus.accepted:
-    #         if not values['inventory_id']:
-    #             raise ValueError('inventory id required')
-    #     return v
         
 class UpdateProposal(BaseModel):
     priority_id: Optional[int]
     inventory_id: Optional[int]
     department_id: Optional[int]
+    procured_asset_id: Optional[int]
     status: Optional[m.ProposalStatus]
+
+    @validator('status') # if item is accepted require inventory to handle procurement
+    def _xor_(cls, v, values):
+        if v==m.ProposalStatus.accepted:
+            if not values['inventory_id']:
+                raise ValueError('inventory id required')
+        return v
 
 class Proposal(ProposalBase):
     id: int

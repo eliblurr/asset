@@ -1,8 +1,8 @@
 from sqlalchemy import Column, String, JSON, DateTime, Integer
-from database import Model, session
+from database import Base, session
 from datetime import datetime
 
-class Message(Model):
+class Message(Base):
     __tablename__ = 'messages'
     __table_args__ = ({'schema':'public'},)
 
@@ -30,8 +30,3 @@ class Message(Model):
         session.add(obj)
         session.commit()
         session.close()
-      
-
-# Message.persist_message('push_id', 'message')
-# a = Message.pop_messages('push_id')
-# print(a)

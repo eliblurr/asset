@@ -1,9 +1,10 @@
 from sqlalchemy import Column, DateTime, Integer, Enum, CheckConstraint, ForeignKey, event, String, select, func
 from routers.user.account.models import User
 from sqlalchemy.exc import IntegrityError
+from .utils import emit_action, messages
 from sqlalchemy.orm import relationship
 from routers.asset.models import Asset
-from .utils import emit_action, messages
+from routers.consumable.models import Consumable
 from mixins import BaseMixin
 from utils import gen_code
 from database import Base
@@ -45,8 +46,8 @@ class Request(BaseMixin, Base):
     departments = relationship("Department", back_populates="requests")
     inventory = relationship("Inventory", back_populates="requests")
     author = relationship("User", back_populates="requests")
-    consumable_rq = relationship("ConsumableRequest", uselist=False)
-    asset_rq = relationship("AssetRequest", uselist=False)
+    consumable_rq = relationship("ConsumableRequest", uselist=False, back_populates='request')
+    asset_rq = relationship("AssetRequest", uselist=False, back_populates='request')
     priority = relationship("Priority")
 
     tag = Column(Enum(Tag), nullable=False)
@@ -65,7 +66,7 @@ class AssetRequest(BaseMixin, Base):
     end_date = Column(DateTime, nullable=True)
     action = Column(Enum(AssetTransferAction)) 
     asset = relationship('Asset', uselist=False)
-    # request = relationship('Request', uselist=False)
+    request = relationship('Request', back_populates='asset_rq')
     id=None
 
 class ConsumableRequest(BaseMixin, Base):
@@ -80,30 +81,41 @@ class ConsumableRequest(BaseMixin, Base):
     picked_at = Column(DateTime, nullable=True)
     quantity = Column(Integer, nullable=False)
     consumable = relationship('Consumable')
-    # request = relationship('Request', uselist=False)
+    request = relationship('Request', back_populates='consumable_rq')
     returned_at=None
     id=None
 
 @event.listens_for(Request.inventory_id, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
-    messages = messages()
+    
+    # obj = cls.query.filter(cls.push_id==push_id).order_by(cls.created).all()
+    # obj = Consumable.query.filter(id==target.consumable_rq.consumable_id).first()
+
+    print(target)
+
+    # print(target.consumable_rq.consumable_id)
+    # print(dir(target.consumable_rq.consumable))
+    # print(dir(target.consumable_rq), target.consumable_rq.consumable)
+    # print(obj)
+
+    _messages = messages()
     if value != oldvalue:
         obj = target.asset_rq.asset if target.asset_rq else target.consumable_rq.consumable
         emit_action(target, obj, 'notify', message={
             'key':'request',
-            'message': messages['request']['inventory'],
+            'message': _messages['request']['inventory'],
             'meta': {'type':target.tag, 'request_code':target.code, 'title':obj.title, 'id':obj.id, 'author':target.author.id, 'author_name':f'{target.author.full_name()}'}
         }) 
         'notify inventory owner of request'
 
 @event.listens_for(Request.department_id, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
-    messages = messages()
+    _messages = messages()
     if value != oldvalue:
         obj = target.asset_rq.asset if target.asset_rq else target.consumable_rq.consumable
         emit_action(target, obj, 'notify', message={
             'key':'request',
-            'message': messages['request']['department'],
+            'message': _messages['request']['department'],
             'meta': {'type':target.tag, 'request_code':target.code, 'title':obj.title, 'id':obj.id, 'author':target.author.id, 'author_name':f'{target.author.full_name()}'}
         }) 
         'notify department head of request'
@@ -121,14 +133,15 @@ def one_active_request_per_user_per_asset(mapper, connection, target):
 @event.listens_for(AssetRequest.pickup_deadline, 'set', propagate=True)
 @event.listens_for(ConsumableRequest.pickup_deadline, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
+    print(target)
     if value != oldvalue:
-        # emit_action(target.request, target, 'schedule-email-job', name='smr-pickup-deadline', date=value)
+        emit_action(target.request, target, 'schedule-email-job', name='smr-pickup-deadline', date=value)
         'schedule notification reminder job for author'
 
 @event.listens_for(AssetRequest.return_deadline, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
-        # emit_action(target.request, target, 'schedule-email-job',  name='smr-return-deadline', date=value) # add kwargs
+        emit_action(target.request, target, 'schedule-email-job',  name='smr-return-deadline', date=value) # add kwargs
         'schedule notification reminder job for author'
 
 'for only assets, no consumables'
@@ -164,6 +177,6 @@ def receive_set(target, value, oldvalue, initiator):
 @event.listens_for(AssetRequest.action, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
-        # emit_action(target.request, target, value)
+        emit_action(target.request, target, value)
         if value=='returned':
             target.asset.available=True

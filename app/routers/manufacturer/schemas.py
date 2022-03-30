@@ -9,8 +9,8 @@ class ManufacturerBase(BaseModel):
     scheme: Optional[str]
     metatitle: Optional[str]
     description: Optional[str]
+    url: Optional[constr(regex=URL)]
     email: Optional[constr(regex=EMAIL)]
-    website: Optional[constr(regex=URL)]
     contact: Optional[constr(regex=PHONE)]
 
     class Config:

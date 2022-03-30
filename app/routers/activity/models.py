@@ -7,7 +7,7 @@ class Activity(BaseMixin, Base):
     '''Activity Model'''
     __tablename__ = "activities"
 
-    meta = Column(JSON, nullable=False)
+    meta = Column(JSON, nullable=True)
     message = Column(String, nullable=False)
     
     object_type = Column(Unicode(255))

@@ -28,6 +28,7 @@ async def update(id:int, payload:schemas.UpdateProposal, db:Session=Depends(get_
     if payload.status:
         if payload.status.value=='accepted':activity.append({'func': add_activity, 'args':('proposal.accept', {'user':['author.first_name', 'author.last_name'], 'datetime':'updated','user_id':'author.id',})})
         elif payload.status.value=='declined':activity.append({'func': add_activity, 'args':('proposal.decline', {'user':['author.first_name', 'author.last_name'], 'datetime':'updated','user_id':'author.id',})})
+        elif payload.status.value=='procured':activity.append({'func': add_activity, 'args':('proposal.procured', {'inventory':'inventory.title', 'inventory_id':'inventory.id'})})
     return await crud.proposal.update_2(id, payload, db, activity=activity)
 
 @router.delete('/{id}', name='Proposal', status_code=204) # is authenticated

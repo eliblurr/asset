@@ -23,7 +23,7 @@ class Consumable(BaseMixin, Base):
     inventory = relationship("Inventory", back_populates="consumables")
     currency_id = Column(Integer, ForeignKey('currencies.id'))
     currency = relationship("Currency")
-    # code = Column(String, nullable=False, unique=True, default=gen_code)
+    code = Column(String, nullable=False, unique=True, default=gen_code)
 
     def give_away(self, quantity, db):
         self.validate_quantity(quantity, db)

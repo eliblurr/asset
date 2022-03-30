@@ -61,9 +61,9 @@ class CreateRequest(RequestBase):
     @root_validator
     def rename_obj(cls, values):
         if isinstance(values['obj'], CreateAssetRequest):
-            values['asset'] = values['obj']
+            values['asset_rq'] = values['obj']
         elif isinstance(values['obj'], CreateConsumableRequest):
-            values['consumable'] = values['obj']
+            values['consumable_rq'] = values['obj']
         return values
 
 class TranferBase(BaseModel):

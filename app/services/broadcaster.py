@@ -1,9 +1,8 @@
 from broadcaster import Broadcast
-from pydantic import BaseModel
-from config import REDIS_URL
 from nm import Message
+import json
 
-broadcast = Broadcast(REDIS_URL) 
+broadcast = Broadcast('memory://') 
 
 async def chatroom_ws_receiver(websocket, channel):
 
@@ -22,7 +21,10 @@ async def chatroom_ws_sender(websocket, channel):
         if channel in broadcast._backend._subscribed:
             await broadcast._backend.unsubscribe(channel)
  
-async def send_message(channel, message):
+async def send_message(channel, message):    
     if channel in broadcast._backend._subscribed:
         return await broadcast.publish(channel, json.dumps(message))
-    Message.persist_message(channel, message, web_push_subscription=None)
+    
+    Message.persist_message(push_id=channel, message=message, web_push_subscription=None)
+
+# https://github.com/encode/broadcaster/tree/master/broadcaster

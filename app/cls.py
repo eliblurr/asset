@@ -42,7 +42,7 @@ class CRUD:
             db.refresh(obj) 
         except Exception as e:
             
-            # print(e)
+            print(e)
 
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
@@ -58,7 +58,7 @@ class CRUD:
             if activity:
                 for activity in activity:
                     message, meta = activity['args']
-                    await activity['func'](obj, message, parse_activity_meta(obj, meta))
+                    await activity['func'](obj, message, parse_activity_meta(obj, meta), db)
 
         return obj
 
@@ -250,7 +250,7 @@ class CRUD:
             if activity:
                 for activity in activity:
                     message, meta = activity['args']
-                    await activity['func'](obj, message, parse_activity_meta(obj, meta))
+                    await activity['func'](obj, message, parse_activity_meta(obj, meta), db)
         return obj
       
     async def delete(self, id, db:Session):

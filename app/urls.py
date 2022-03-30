@@ -93,15 +93,3 @@ async def websocket_endpoint(websocket: WebSocket, channel:str):
         (chatroom_ws_receiver, {"websocket": websocket, 'channel':channel}),
         (chatroom_ws_sender, {"websocket": websocket, 'channel':channel}),
     )
-
-'example'
-# from pydantic import BaseModel
-# from services.broadcaster import broadcast, send_message
-# class Publish(BaseModel):
-#     channel: str
-#     message: str
-# @app.post("/push")
-# async def push(publish: Publish):
-#     print(broadcast._backend._subscribed)    
-#     await send_message(publish.channel, publish.message)
-#     return publish

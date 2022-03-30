@@ -56,7 +56,7 @@ def async_send_web_push(*args, **kwargs):
     if q:return q.enqueue(send_web_push,*args, **kwargs, **params)  
 
 def async_send_message(*args, **kwargs):
-    q = get_queue('braodcaster')
+    q = get_queue('broadcaster')
     if q:return q.enqueue(send_message, *args, **kwargs, **params)  
 
 def async_logger(*args, **kwargs):

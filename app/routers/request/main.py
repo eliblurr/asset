@@ -1,17 +1,17 @@
 from exceptions import NotFound, OperationNotAllowed, BadRequestError
 from fastapi import APIRouter, Depends, HTTPException, Request
+from .utils import notify, notify_reminder, messages
 from utils import r_fields, logger, raise_exc
 from psycopg2.errors import UndefinedTable
 from sqlalchemy.exc import DBAPIError
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
 from dependencies import get_db
+from scheduler import scheduler
 from typing import Union, List
 from . import crud, schemas
-from .utils import notify, notify_reminder
-from re import search
-from scheduler import scheduler
 from utils import gen_code
+from re import search
 
 router = APIRouter()
 
@@ -58,8 +58,9 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
         recipient = recipient if not recipient else manager
 
         try:
-            notify(push_id=recipient.push_id, message = {'key':'request', 'message': messages['request']['department'],'meta':meta})
-            notify_reminder(id=req.id, date=payload.start_date-timedelta(days=1), name='expiry-notify-reminder', push_id=recipient.push_id, message={'key':'request', 'message': messages['request']['expires'], 'meta':meta.update({'datetime':payload.start_date})})
+            _messages = messages()
+            notify(push_id=recipient.push_id, message = {'key':'request', 'message': _messages['request']['department'],'meta':meta})
+            notify_reminder(id=req.id, date=payload.start_date-timedelta(days=1), name='expiry-notify-reminder', push_id=recipient.push_id, message={'key':'request', 'message': _messages['request']['expires'], 'meta':meta.update({'datetime':payload.start_date})})
             scheduler.add_job( 
                 crud.expire,
                 id=f'{req.id}_ID{gen_code(10)}',
