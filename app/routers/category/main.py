@@ -5,6 +5,7 @@ from dependencies import get_db
 from typing import Union, List
 from . import crud, schemas
 from utils import r_fields
+import re
 
 router = APIRouter()
 
@@ -38,8 +39,8 @@ async def delete(ids:int, db:Session=Depends(get_db)):
 @router.put('/{resource_id}/remove-{resource}', name='Categories')
 @router.put('/{resource_id}/append-{resource}', name='Categories')
 async def update(request:Request, resource_id:int, resource:schemas.RelatedResource, related_resource_ids:List[int], db:Session=Depends(get_db)):
-    if re.search(r'(remove)', request.url.path):
-        return await crud.remove_resource_from_category(resource_id, related_resource_ids, resource, db)
+    if re.search(r'(remove-)', request.url.path):
+        return await crud.rem_resource_from_category(resource_id, related_resource_ids, resource, db)
     return await crud.add_resource_to_category(resource_id, related_resource_ids, resource, db)
 
 from routers.vendor.crud import vendor

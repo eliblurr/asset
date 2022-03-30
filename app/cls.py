@@ -365,15 +365,8 @@ class CRUD:
             rows = db.query(self.model).filter(subq).filter_by(**kwargs).delete(synchronize_session=False)
             db.commit()
             return f"{rows} row(s) deleted"
-        # except IntegrityError as e:
-        #     raise HTTPException(status_code=409, detail=http_exception_detail(msg=e._message().split('DETAIL:  ', 1)[1], type= e.__class__.__name__))
-        # except MaxOccurrenceError as e:
-        #     raise HTTPException(status_code=409, detail=http_exception_detail(msg=e._message(), type= e.__class__.__name__))
         except Exception as e:
-            # raise HTTPException(status_code=500, detail=http_exception_detail(msg=f"{e}", type= e.__class__.__name__))
-
-            # print(e)
-
+    
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
@@ -399,7 +392,7 @@ class CRUD:
             #     ),
             # )
 
-            # print(e)
+            print(e)
 
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
