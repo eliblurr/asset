@@ -1,15 +1,18 @@
-from sqlalchemy import Column, String, Float, event, DateTime, Enum, Boolean, CheckConstraint, ForeignKey, Integer
+from sqlalchemy import Column, String, Float, event, DateTime, Enum, Boolean, CheckConstraint, ForeignKey, Integer, select
+from utils import today_str, gen_code, instance_changes
 from routers.subscription.models import Subscription
 from sqlalchemy.ext.hybrid import hybrid_property
 from dateutil.relativedelta import relativedelta
+from routers.user.account.models import User
 from sqlalchemy.exc import IntegrityError
 from rds.tasks import async_remove_file
 from sqlalchemy.orm import relationship
-from utils import today_str, gen_code
+from rds.tasks import async_send_email
+from scheduler import scheduler
+import enum, datetime, config
 from mixins import BaseMixin
 from config import THUMBNAIL
 from database import Base
-import enum, datetime
 
 class DepreciationAlgorithm(enum.Enum):
     straight_line_depreciation = 'straight_line_depreciation'
@@ -20,7 +23,6 @@ class Asset(BaseMixin, Base):
     __tablename__ = "assets"
     __table_args__ = (
         CheckConstraint('salvage_price<=price', name='_price_salvage_price_'), # tbd
-        # CheckConstraint('decommission is TRUE AND decommission_justification IS NOT NULL', name='_decommission_justification_'),
     )
 
     make = Column(String, nullable=False)
@@ -87,16 +89,70 @@ def remove_file(mapper, connection, target):
     from routers.upload.models import Upload
     with connection.begin():
         connection.execute(Upload.__table__.delete().where(Upload.object==target))
-
-@event.listens_for(Asset.service_date, 'set', propagate=True)
-@event.listens_for(Asset.purchase_date, 'set', propagate=True)
-@event.listens_for(Asset.warranty_deadline, 'set', propagate=True)
-def set_up_notification(target, value, oldvalue, initiator):
-    # servicing, warranty
-    # if value > today: schedule join and add activity
-    pass
+    [scheduler.remove_job(job.id) for job in scheduler.get_jobs() if job.split('_',1)[0]==str(target.id)]
 
 @event.listens_for(Asset.depreciation_algorithm, 'set', propagate=True)
 def check_dep_factor(target, value, oldvalue, initiator):
     if value==DepreciationAlgorithm.declining_balance_depreciation and target.dep_factor is None:
         raise IntegrityError('Unacceptable Operation', '[depreciation_algorithm, dep_factor]', 'dep_factor must be set for declining balance depreciation')
+
+@event.listens_for(Asset, "after_update")
+@event.listens_for(Asset, "after_insert")
+def alert_inventory(mapper, connection, target):
+
+    changes = instance_changes(target)
+    warranty_deadline, service_date = changes.get('warranty_deadline', [None]), changes.get('service_date', [None])
+    from routers.inventory.models import Inventory
+    stmt = select(User.email, Inventory.title).join(Inventory).join(Asset).where(Asset.id==target.id)
+
+    with connection.begin():
+        data = connection.execute(stmt)
+        data = dict(data.mappings().first())
+
+    if service_date[0]:
+        name = 'smr-service-date' 
+        subject = 'Asset Servicing Reminder'
+
+        scheduler.add_job(
+            async_send_email,
+            id=f'{target.id}_ID{gen_code(10)}',
+            trigger='date', 
+            run_date=service_date[0], 
+            name=name,
+            kwargs={
+                'subject':subject,
+                'template_name':'service-reminder.html',
+                'recipients':[data.get('email')],
+                'body':{
+                    'title':target.title, 
+                    'code':target.code, 
+                    'date':service_date[0],
+                    'inventory_name':data.get('title'),
+                    'base_url':config.settings.BASE_URL
+                }
+            }
+        )
+
+    if warranty_deadline[0]:
+        name = 'smr-warranty-deadline' 
+        subject = 'Warranty Deadline Reminder'
+
+        scheduler.add_job(
+            async_send_email,
+            id=f'{target.id}_ID{gen_code(10)}',
+            trigger='date', 
+            run_date=warranty_deadline[0], 
+            name=name,
+            kwargs={
+                'subject':subject,
+                'template_name':'warranty-reminder.html',
+                'recipients':[data.get('email')],
+                'body':{
+                    'title':target.title, 
+                    'code':target.code, 
+                    'date':warranty_deadline[0],
+                    'inventory_name':data.get('title'),
+                    'base_url':config.settings.BASE_URL
+                }
+            }
+        )

@@ -24,7 +24,6 @@ class Validator(BaseModel):
     @validator('depreciation_algorithm', check_fields=False)
     def _check_d_a_(cls, v, values):
         bool(values['dep_factor'])
-        print(v)
         if v==m.DepreciationAlgorithm.declining_balance_depreciation and not values['dep_factor']:
             raise ValueError('declining balance depreciation requires dep_factor')
         return v
