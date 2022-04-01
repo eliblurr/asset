@@ -6,6 +6,7 @@ class UpdateSettings(BaseModel):
     BASE_URL: Optional[str]
     ADMIN_EMAIL: Optional[str]
     VERIFICATION_PATH: Optional[str]
+    TENANT_ACTIVATION_PATH: Optional[str]
 
     EMAIL_CODE_DURATION_IN_MINUTES: Optional[float]
     ACCESS_TOKEN_DURATION_IN_MINUTES: Optional[float]
