@@ -73,8 +73,8 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: str = '7b6c506ee07337cc3d02536d5119c4b2'
     TWILIO_ACCOUNT_SID: str = 'AC959cbde01aced5669b0121ffea2df117'
 
-    MAIL_USERNAME: str = "a9f521690f65a4"
-    MAIL_PASSWORD: str = "11480b2eec8121"
+    MAIL_USERNAME: str = "829e507086a9d9" # "a9f521690f65a4"
+    MAIL_PASSWORD: str = "e6e1d4fe2a31d3" # "11480b2eec8121"
     MAIL_FROM: str = "elisegb-49cabc@inbox.mailtrap.io"
     MAIL_PORT: int = 2525
     MAIL_SERVER: str = "smtp.mailtrap.io"
