@@ -19,7 +19,7 @@ async def create(request:Request, payload:schemas.CreateTenant=Depends(schemas.C
         try:     
             async_send_email(mail={
                 "subject":"Account Activation", "recipients":[tenant.email],
-                "body": {'verification_link': f'{urljoin(request.base_url, settings.VERIFICATION_PATH)}?token={token}', 'base_url':request.base_url},            
+                "body": {'verification_link': f'{urljoin(request.base_url, settings.TENANT_ACTIVATION_PATH)}?token={token}', 'base_url':request.base_url},            
                 "template_name":"tenant-account-activation.html"
             })
         except Exception as e:logger(__name__, e, 'critical')

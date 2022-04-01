@@ -60,7 +60,8 @@ class Settings(BaseSettings):
     APIKEY: str = '_7f$2uF9CArFq7LtmQqBNuQdTa@KLt@*Y%M24Ry=eUd%R6QsXW3=Z-g!!Rvu#srJ5*#PhbV'
     SECRET: str = "khgdcvgbh"
         
-    VERIFICATION_PATH: str = "tenants/activate-tenant/" 
+    VERIFICATION_PATH: str = "accounts/activate-account/" 
+    TENANT_ACTIVATION_PATH: str = "tenants/activate-tenant/"
 
     EMAIL_CODE_DURATION_IN_MINUTES: int = 15
     ACCESS_TOKEN_DURATION_IN_MINUTES: int = 60
