@@ -1,3 +1,4 @@
+from routers.activity.crud import add_activity
 from fastapi import APIRouter, Depends
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
@@ -23,8 +24,10 @@ async def read_by_id(id:int, fields:List[str]=r_fields(crud.inventory.model), db
 
 @router.patch('/{id}', response_model=schemas.Inventory, name='Inventory') # is authenticated, if role in []
 async def update(id:int, payload:schemas.UpdateInventory, db:Session=Depends(get_db)):
-    # inventory transfer of ownership -> add activity, push notification to new user
-    return await crud.inventory.update(id, payload, db)
+    activity = []
+    if payload.manager_id:
+        activity.append({'func': add_activity, 'args':('inventory.update_manager', {'manager':['manager.first_name', 'manager.last_name'], 'datetime':'updated', 'manager_id':'manager.id',})})
+    return await crud.inventory.update_2(id, payload, db, activity=activity)
 
 @router.delete('/{id}', name='Inventory', status_code=204) # is authenticated, if role in []
 async def delete(id:int, db:Session=Depends(get_db)):

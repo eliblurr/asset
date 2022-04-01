@@ -31,7 +31,7 @@
         "transfer":"proposal operations has been transfered to you"
     }, 
     "inventory":{
-        "update_manager":"manager changed by {author} from {prev_user} to {user} on {datetime}"
+        "update_manager":"inventory assigned to {manager} on {datetime}"
     },
     "department":{
         "update_manager":"manager changed by {author} from {prev_user} to {user} on {datetime}"
