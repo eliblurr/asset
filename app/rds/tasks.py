@@ -13,7 +13,7 @@ def report_success(job, connection, result, *args, **kwargs):
     print('success')
 
 def report_failure(job, connection, type, value, traceback):
-    print('failed', traceback.print_exception)
+    print('failed', traceback.print_exc())
 
 max_retry = settings.REDIS_MAX_RETRIES
 intervals =[n*settings.REDIS_RETRY_INTERVAL for n in range(max_retry)]
