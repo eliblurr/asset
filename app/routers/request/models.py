@@ -85,6 +85,21 @@ class ConsumableRequest(BaseMixin, Base):
     returned_at=None
     id=None
 
+@event.listens_for(Request, 'before_insert', propagate=True) 
+def one_active_request_per_user_per_asset(mapper, connection, target):
+    join = (AssetRequest, Request.asset_rq) if target.asset_rq else (ConsumableRequest, Request.consumable_rq)
+    stmt = select(func.count(Request.id)).join(*join).where(
+        Request.author_id==target.author_id, Request.status==RequestStatus.active, 
+       AssetRequest.asset_id==target.asset_rq.asset_id if target.asset_rq else ConsumableRequest.consumable_id==target.consumable_rq.consumable_id 
+    )
+    with connection.begin():res = connection.execute(stmt).scalar()
+    if res: raise IntegrityError('IntegrityError', '[object, author, status]', 'author already has an active request for object')
+
+
+
+
+
+
 @event.listens_for(Request.inventory_id, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     
@@ -120,15 +135,7 @@ def receive_set(target, value, oldvalue, initiator):
         }) 
         'notify department head of request'
 
-@event.listens_for(Request, 'before_insert', propagate=True) 
-def one_active_request_per_user_per_asset(mapper, connection, target):
-    join = (AssetRequest, Request.asset_rq) if target.asset_rq else (ConsumableRequest, Request.consumable_rq)
-    stmt = select(func.count(Request.id)).join(*join).where(
-        Request.author_id==target.author_id, Request.status==RequestStatus.active, 
-       AssetRequest.asset_id==target.asset_rq.asset_id if target.asset_rq else ConsumableRequest.consumable_id==target.consumable_rq.consumable_id 
-    )
-    with connection.begin():res = connection.execute(stmt).scalar()
-    if res: raise IntegrityError('IntegrityError', '[object, author, status]', 'author already has an active request for object')
+
 
 @event.listens_for(AssetRequest.pickup_deadline, 'set', propagate=True)
 @event.listens_for(ConsumableRequest.pickup_deadline, 'set', propagate=True)

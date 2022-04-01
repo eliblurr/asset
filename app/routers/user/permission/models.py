@@ -5,6 +5,9 @@ from sqlalchemy.orm import relationship
 from database import Base
 from constants import OPS
 
+# https://github.com/holgi/fastapi-permissions -> ACL
+# https://fastapi-contrib.readthedocs.io/en/latest/readme.html
+
 class Permission(BaseMixin, Base):
     '''Permissions Model'''
     __tablename__ = "permissions"
