@@ -23,7 +23,7 @@ services:
       - postgres
       - redis
     environment:
-      REDIS_HOST: 'redis'
+      REDIS_HOST: redis
       REDIS_PORT: 6379
       DOCKER: 'true'
       DATABASE_URL: 'postgres://${DB_USER}:${DB_PASSWORD}@postgres/${DB_NAME}'
@@ -87,14 +87,7 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_USER: ${REDIS_USER}
-      REDIS_NODE: ${REDIS_NODE}
-      REDIS_MAX_RETRIES: ${REDIS_MAX_RETRIES}
-      REDIS_RETRY_INTERVAL: ${REDIS_RETRY_INTERVAL}
-    links:
-      - redis
-
+      
   nginx:
     build:
       context: ./nginx
