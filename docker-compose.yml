@@ -84,6 +84,8 @@ services:
     command: python3 -m rds.worker # rq worker --name worker --url redis://redis:6379/0 
     networks: 
       - asset-network
+    env_file:
+      - docker.env
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
