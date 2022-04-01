@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, ForeignKey, Integer, UniqueConstraint, func, event, select
+from routers.user.account.models import User
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 from mixins import BaseMixin
@@ -36,3 +37,32 @@ def check_integrity(mapper, connection, target):
     with connection.begin():
         res = connection.execute(select(func.count()).select_from(table).where(*args)).scalar()
         if res:raise IntegrityError('Unacceptable Operation', 'branch_id', 'branch_id and base_department_id must be unique together')
+
+@event.listens_for(Department, "after_update")
+@event.listens_for(Department, "after_insert")
+def alert_department(mapper, connection, target):
+
+    changes = instance_changes(target)
+    head_of_department_id = changes.get('head_of_department_id', [None])    
+    
+    if head_of_department_id[0]:
+        stmt = select(User.push_id, User.first_name, User.last_name, Department.title, Department.updated, Department.id, Department.head_of_department_id).join(Department, Department.head_of_department_id==User.id).where(Department.id==target.id)
+        with connection.begin():
+            data = connection.execute(stmt)
+            data = dict(data.mappings().first())
+
+        if data:
+            async_send_message(
+                channel=data.get('push_id'),
+                message={
+                    'key':'department',
+                    'message': "department assigned to {head_of_department} on {datetime}",
+                    'meta': {
+                        'id':data.get('id'), 
+                        'title':data.get('title'),    
+                        'datetime':data.get('updated'),               
+                        'head_of_department_id':data.get('head_of_department_id'), 
+                        'head_of_department':f'{data.get("first_name")} {data.get("last_name")}'
+                    }
+                }
+            )

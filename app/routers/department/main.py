@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request
+from routers.activity.crud import add_activity
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
 from dependencies import get_db
@@ -37,8 +38,10 @@ async def create(payload:schemas.CreateDepartment2, db:Session=Depends(get_db)):
 
 @router.patch('/{id}', response_model=schemas.Department, name='update department')
 async def update(request:Request, id:int, payload:schemas.UpdateDepartment, db:Session=Depends(get_db)):
-    # department transfer of ownership -> add activity, push notification to new user
-    return await crud.department.update_2(id, payload, db)
+    activity = []
+    if payload.manager_id:
+        activity.append({'func': add_activity, 'args':('department.update_manager', {'head_of_department':['head_of_department.first_name', 'head_of_department.last_name'], 'datetime':'updated', 'head_of_department_id':'head_of_department_id',})})
+    return await crud.department.update_2(id, payload, db, activity=activity)
 
 @router.patch('-base/{id}', response_model=schemas.BaseDepartment, name='update base-department')
 async def update(id:int, payload:schemas.UpdateBaseDepartment, db:Session=Depends(get_db)):
@@ -62,3 +65,8 @@ from routers.inventory.crud import inventory
 async def read(d_id:int, db:Session=Depends(get_db), **params):
     joins = {'filters':{}, 'joins':[{'target':inventory.model, 'filters':{'department_id':d_id}}]}
     return await asset.read(params, db, joins=joins)
+
+@router.get('/{d_id}/inventories', name='departments')
+@ContentQueryChecker(inventory.model.c(), None)
+async def read(d_id:int, db:Session=Depends(get_db), **params):
+    return await crud.department.read(params, db, use_related_name='inventories', resource_id=d_id)
