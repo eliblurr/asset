@@ -93,7 +93,7 @@ services:
       DATABASE_URL: 'postgres://${DB_USER}:${DB_PASSWORD}@postgres/${DB_NAME}'
     volumes_from: 
       - app:rw
-    # restart: on-failure
+    restart: always
 
   nginx:
     build:
