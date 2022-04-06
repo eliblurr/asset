@@ -91,6 +91,7 @@ services:
       REDIS_PORT: 6379
       DOCKER: 'true'
       DATABASE_URL: 'postgres://${DB_USER}:${DB_PASSWORD}@postgres/${DB_NAME}'
+      ALLOW_EMPTY_PASSWORD: yes
     volumes_from: 
       - app:rw
     restart: always
