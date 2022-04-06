@@ -74,6 +74,8 @@ services:
       - redis_data:/data
     env_file:
       - docker.env
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
 
   worker:
     image: master-image
@@ -91,7 +93,6 @@ services:
       REDIS_PORT: 6379
       DOCKER: 'true'
       DATABASE_URL: 'postgres://${DB_USER}:${DB_PASSWORD}@postgres/${DB_NAME}'
-      ALLOW_EMPTY_PASSWORD: yes
     volumes_from: 
       - app:rw
     restart: always
