@@ -69,5 +69,5 @@ def a():
     print('redis working')
 
 def async_a(*args, **kwargs):
-    q = get_queue('file')
+    q = get_queue('email')
     if q:return q.enqueue(a, *args, **kwargs, **params)
