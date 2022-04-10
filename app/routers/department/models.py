@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, ForeignKey, Integer, UniqueConstraint, fu
 from routers.user.account.models import User
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
+from utils import instance_changes
 from mixins import BaseMixin
 from database import Base
 
