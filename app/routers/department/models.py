@@ -47,7 +47,10 @@ def alert_department(mapper, connection, target):
     head_of_department_id = changes.get('head_of_department_id', [None])    
     
     if head_of_department_id[0]:
-        stmt = select(User.push_id, User.first_name, User.last_name, Department.title, Department.updated, Department.id, Department.head_of_department_id).join(Department, Department.head_of_department_id==User.id).where(Department.id==target.id)
+        # stmt = select(User.push_id, User.first_name, User.last_name, Department.title, Department.updated, Department.id, Department.head_of_department_id).join(Department, Department.head_of_department_id==User.id).where(Department.id==target.id)
+
+        stmt = select(User.push_id, User.first_name, User.last_name, BaseDepartment.title, Department.updated, Department.id, Department.head_of_department_id).join(Department, Department.head_of_department_id==User.id).join(BaseDepartment, BaseDepartment.id==Department.base_department_id).where(Department.id==target.id)
+
         with connection.begin():
             data = connection.execute(stmt)
             data = dict(data.mappings().first())
