@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, ForeignKey, Integer, UniqueConstraint, func, event, select
 from routers.user.account.models import User
 from sqlalchemy.exc import IntegrityError
+from rds.tasks import async_send_message
 from sqlalchemy.orm import relationship
 from utils import instance_changes
 from mixins import BaseMixin
