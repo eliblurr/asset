@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship
 from utils import instance_changes
 from mixins import BaseMixin
 from database import Base
-import  enum
+import enum, config
 
 class ProposalStatus(enum.Enum):
     active = 'active'
@@ -47,7 +47,7 @@ def receive_set(target, value, oldvalue, initiator):
             "subject":"Recommended Asset Procured",
             "recipients":[target.author.email],
             "template_name":"asset-procurement.html",
-            "body":{'title': f'{target.title}', 'base_url':request.base_url},
+            "body":{'title': f'{target.title}', 'base_url':config.settings.BASE_URL},
         })
 
     if value!=oldvalue and value=='declined' and target.author:
@@ -55,7 +55,7 @@ def receive_set(target, value, oldvalue, initiator):
             "subject":f"Proposal For {target.title} Declined",
             "recipients":[target.author.email],
             "template_name":"proposal-declined.html",
-            "body":{'title': f'{target.title}', 'base_url':request.base_url},
+            "body":{'title': f'{target.title}', 'base_url':config.settings.BASE_URL},
         })
 
 @event.listens_for(Proposal, "after_update")

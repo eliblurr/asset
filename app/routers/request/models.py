@@ -1,14 +1,19 @@
 from sqlalchemy import Column, DateTime, Integer, Enum, CheckConstraint, ForeignKey, event, String, select, func
+from rds.tasks import async_send_email, async_send_message, async_send_web_push
+from sqlalchemy.orm import relationship, aliased
+from routers.consumable.models import Consumable
+from routers.department.models import Department
+from routers.inventory.models import Inventory
 from routers.user.account.models import User
 from sqlalchemy.exc import IntegrityError
 from .utils import emit_action, messages
-from sqlalchemy.orm import relationship
 from routers.asset.models import Asset
-from routers.consumable.models import Consumable
+from utils import instance_changes
+from scheduler import scheduler
 from mixins import BaseMixin
 from utils import gen_code
 from database import Base
-import enum
+import enum, config
 
 class Tag(enum.Enum):
     consumable = 'consumable'
@@ -85,7 +90,7 @@ class ConsumableRequest(BaseMixin, Base):
     returned_at=None
     id=None
 
-@event.listens_for(Request, 'before_insert', propagate=True) 
+# @event.listens_for(Request, 'before_insert', propagate=True) 
 def one_active_request_per_user_per_asset(mapper, connection, target):
     join = (AssetRequest, Request.asset_rq) if target.asset_rq else (ConsumableRequest, Request.consumable_rq)
     stmt = select(func.count(Request.id)).join(*join).where(
@@ -95,65 +100,9 @@ def one_active_request_per_user_per_asset(mapper, connection, target):
     with connection.begin():res = connection.execute(stmt).scalar()
     if res: raise IntegrityError('IntegrityError', '[object, author, status]', 'author already has an active request for object')
 
-
-
-
-
-
-@event.listens_for(Request.inventory_id, 'set', propagate=True)
-def receive_set(target, value, oldvalue, initiator):
-    
-    # obj = cls.query.filter(cls.push_id==push_id).order_by(cls.created).all()
-    # obj = Consumable.query.filter(id==target.consumable_rq.consumable_id).first()
-
-    print(target)
-
-    # print(target.consumable_rq.consumable_id)
-    # print(dir(target.consumable_rq.consumable))
-    # print(dir(target.consumable_rq), target.consumable_rq.consumable)
-    # print(obj)
-
-    _messages = messages()
-    if value != oldvalue:
-        obj = target.asset_rq.asset if target.asset_rq else target.consumable_rq.consumable
-        emit_action(target, obj, 'notify', message={
-            'key':'request',
-            'message': _messages['request']['inventory'],
-            'meta': {'type':target.tag, 'request_code':target.code, 'title':obj.title, 'id':obj.id, 'author':target.author.id, 'author_name':f'{target.author.full_name()}'}
-        }) 
-        'notify inventory owner of request'
-
-@event.listens_for(Request.department_id, 'set', propagate=True)
-def receive_set(target, value, oldvalue, initiator):
-    _messages = messages()
-    if value != oldvalue:
-        obj = target.asset_rq.asset if target.asset_rq else target.consumable_rq.consumable
-        emit_action(target, obj, 'notify', message={
-            'key':'request',
-            'message': _messages['request']['department'],
-            'meta': {'type':target.tag, 'request_code':target.code, 'title':obj.title, 'id':obj.id, 'author':target.author.id, 'author_name':f'{target.author.full_name()}'}
-        }) 
-        'notify department head of request'
-
-
-
-@event.listens_for(AssetRequest.pickup_deadline, 'set', propagate=True)
-@event.listens_for(ConsumableRequest.pickup_deadline, 'set', propagate=True)
-def receive_set(target, value, oldvalue, initiator):
-    print(target)
-    if value != oldvalue:
-        emit_action(target.request, target, 'schedule-email-job', name='smr-pickup-deadline', date=value)
-        'schedule notification reminder job for author'
-
-@event.listens_for(AssetRequest.return_deadline, 'set', propagate=True)
-def receive_set(target, value, oldvalue, initiator):
-    if value != oldvalue:
-        emit_action(target.request, target, 'schedule-email-job',  name='smr-return-deadline', date=value) # add kwargs
-        'schedule notification reminder job for author'
-
-'for only assets, no consumables'
-@event.listens_for(Request, 'before_update', propagate=True) 
+# @event.listens_for(Request, 'before_update', propagate=True) 
 def cancel_all_other_active_request_for_obj(mapper, connection, target):
+    
     if target.status==RequestStatus.accepted:
         if target.asset_rq:
             join = (AssetRequest, Request.asset_rq)
@@ -162,28 +111,168 @@ def cancel_all_other_active_request_for_obj(mapper, connection, target):
                 Request.id != target.id, Request.author_id==target.author_id, Request.status==RequestStatus.active, 
                 AssetRequest.asset_id==target.asset_rq.asset_id
             )
+            
             u_stmt = Request.__table__.update().where(*filters).values(status=RequestStatus.declined)
             s_stmt = select(User.email).join(Request).where(Request.id != target.id, Request.author_id==target.author_id, Request.status==RequestStatus.active, ).join(*join).where(*filters)
             
             connection.execute(u_stmt)
             res = connection.execute(s_stmt)
+            
+            email_list = [email['email'] for email in res.mappings().all()]
 
-            email_list = [email[0] for email in res.all()]
-            emit_action(target, target.asset_rq.asset, 'bk_notify', email_list=email_list, status='DECLINED')
-            'notify all reciepients of declined requests'
+            async_send_email(mail={
+                "subject":"DECLINED Request",
+                "recipients":list(set(email_list)),
+                "template_name":"request.html",
+                "body":{'title': f'{target.asset_rq.asset.title}', 'code':target.code, 'item_code':target.asset_rq.asset.code, 'base_url':config.settings.BASE_URL, 'status':'DECLINED'},
+            })
 
-@event.listens_for(Request.status, 'set', propagate=True)
-def receive_set(target, value, oldvalue, initiator):    
-    if value != oldvalue:
-        obj = target.asset_rq.asset if target.asset_rq else target.consumable_rq.consumable
-        emit_action(target, obj, value)
-        if value=='accepted' and target.asset_rq:
-            obj.available = False
-            target.inventory_id = obj.inventory_id
-
-@event.listens_for(AssetRequest.action, 'set', propagate=True)
+# @event.listens_for(AssetRequest.action, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
-        emit_action(target.request, target, value)
         if value=='returned':
             target.asset.available=True
+        emit_action(target.request, target, value)
+
+# @event.listens_for(AssetRequest.return_deadline, 'set', propagate=True)
+def receive_set(target, value, oldvalue, initiator):
+    if value != oldvalue:
+        scheduler.add_job(
+            async_send_email,
+            kwargs = {
+                'subject':'smr-return-deadline',
+                'template_name':'request-transfer-return-reminder.html',
+                'recipients':[target.request.author],
+                'body':{
+                    'title':target.asset.title,
+                    'item_code':target.asset.code,
+                    'base_url': config.settings.BASE_URL,
+                    'return_deadline': value
+                }
+            }, 
+            id=f'{target.id}_ID{gen_code(10)}',
+            trigger='date',
+            date=value,
+            name='smr-return-deadline'
+        )
+
+# @event.listens_for(AssetRequest.pickup_deadline, 'set', propagate=True)
+# @event.listens_for(ConsumableRequest.pickup_deadline, 'set', propagate=True)
+def receive_set(target, value, oldvalue, initiator):
+    print(isinstance(target, AssetRequest))
+    if value != oldvalue:
+        scheduler.add_job(
+            async_send_email,
+            kwargs = {
+                'subject':'Asset pick up reminder',
+                'template_name':'request-transfer-pickup-reminder.html',
+                'recipients':[target.request.author],
+                'body':{
+                    'title':target.asset.title if isinstance(target, AssetRequest) else target.consumable.title,
+                    'item_code':target.asset.code if isinstance(target, AssetRequest) else target.consumable.code,
+                    'base_url': config.settings.BASE_URL,
+                    'pickup_deadline': value
+                }
+            }, 
+            id=f'{target.id}_ID{gen_code(10)}',
+            trigger='date',
+            date=value,
+            name='smr-pickup-deadline'
+        )
+
+@event.listens_for(Request, "after_update")
+@event.listens_for(Request, "after_insert")
+def update_handler(mapper, connection, target):
+
+    hod = aliased(User)
+    author = aliased(User)
+    manager = aliased(User)
+    
+    _messages = messages()
+    changes = instance_changes(target)
+    inventory, department, status = changes.get('inventory_id', [None]), changes.get('department_id', [None]), changes.get('status', [None])
+
+    if status[0]:
+        if target.tag.value=='asset':
+            stmt = select(Asset, manager.push_id.label('push_id')).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id).join(AssetRequest, AssetRequest.asset_id==Asset.id).join(Request, Request.id==AssetRequest.request_id)
+
+            # .join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
+        
+        if target.tag.value=='consumable':
+            stmt = select(Consumable).join(ConsumableRequest, ConsumableRequest.consumable_id==Consumable.id).join(Request, Request.id==ConsumableRequest.request_id)
+
+        
+        with connection.begin():
+            data = connection.execute(stmt)
+            data = dict(data.mappings().first())
+
+            stmt = Asset.__table__.update().where(Asset.id==data['id']).values(available=False)
+            connection.execute(stmt)
+
+            stmt = Request.__table__.update().where(Request.id==target.id).values(inventory_id=data['inventory_id'])
+            connection.execute(stmt)
+
+        push_id = data.pop('push_id', None)
+
+        if target.tag.value=='asset':
+            emit_action(target, Asset(**data), status[0].value, push_id=push_id)
+
+        if target.tag.value=='consumable':
+            emit_action(target, Consumable(**data), status[0].value, push_id=push_id)
+
+    if department[0]:
+
+        args = (Request.code, Request.id.label('request_id'), author.first_name, author.last_name, author.id.label('author_id'), manager.push_id) 
+
+        if target.tag.value=='asset':
+            stmt = select(*args, Asset.title, Asset.id.label('asset_id')).join(Request, Request.author_id==author.id).join(Department, author.department_id==Department.id).join(manager, manager.id==Department.head_of_department_id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id)
+        
+        if target.tag.value=='consumable':
+            stmt = select(*args, Asset.title, Consumable.id.label('consumable_id')).join(Request, Request.author_id==author.id).join(Department, author.department_id==Department.id).join(manager, manager.id==Department.head_of_department_id).join(ConsumableRequest, Request.id==ConsumableRequest.request_id).join(Consumable, ConsumableRequest.consumable_id==Consumable.id)
+
+        with connection.begin():
+            data = connection.execute(stmt)
+            if data.rowcount:
+                data = dict(data.mappings().first())
+            else:
+                data = None
+        if data:
+            push_id = data.pop('push_id', None)
+
+            async_send_message(
+                channel=push_id,
+                message={
+                    'key':'request',
+                    'message': _messages['request']['department'],
+                    'meta':data.update({'type':target.tag.value})
+                }
+            )
+
+    if inventory[0]:
+        
+        args = (Request.code, Request.id.label('request_id'), author.first_name, author.last_name, author.id.label('author_id'), manager.push_id)
+
+        if target.tag.value=='asset':
+            stmt = select(*args, Asset.title, Asset.id.label('asset_id')).join(Request, Request.author_id==author.id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
+
+        if target.tag.value=='consumable':
+            stmt = select(*args, Consumable.title,  Consumable.id.label('consumable_id')).join(Request, Request.author_id==author.id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
+
+        with connection.begin():
+            data = connection.execute(stmt)
+            if data.rowcount:
+                data = dict(data.mappings().first())
+            else:
+                data = None
+
+        if data:
+            push_id = data.pop('push_id', None)
+
+            async_send_message(
+                channel=push_id,
+                message={
+                    'key':'request',
+                    'message': _messages['request']['inventory'],
+                    'meta':data.update({'type':target.tag.value})
+                }
+            )

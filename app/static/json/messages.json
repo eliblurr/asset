@@ -20,7 +20,7 @@
         "expires":"request with code {code} expires {datetime}",
         "accepted":"request with code {code} made for {name} by {author} has been approved by {hod}",
         "inventory":"request with code {code} made for {name} by {author}",
-        "department":"request with code {code} made for {name} by {author}"
+        "department":"request with code {code} made for {type}: {name} by {author}"
     },
     "proposal":{
         "create":"created by {user} on {datetime}",

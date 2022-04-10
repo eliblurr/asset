@@ -51,7 +51,7 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
         logger(__name__, e, 'critical')
         raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
-    req = await crud.request.create(payload.copy(exclude={'obj'}), db, **kw)
+    req = await crud.request.create(payload.copy(exclude={'obj'}), db, **kw) # activities here
         
     if req: 
         meta = meta.update({'id':req.id})
@@ -88,8 +88,8 @@ async def update_request(id:int, payload:schemas.UpdateRequest, db:Session=Depen
     # activities here
     return await crud.request.update_2(id, payload, db)
 
-@router.patch('/{id}/transfer', response_model=schemas.Request, name='Transfer')
-async def transfer(id:int, payload:Union[schemas.AssetTransfer, schemas.ConsumableTransfer], db:Session=Depends(get_db)):
+@router.patch('/{id}/transfer', name='Transfer') # , response_model=schemas.Request
+async def transfer_(id:int, payload:Union[schemas.AssetTransfer, schemas.ConsumableTransfer], db:Session=Depends(get_db)):
     # activities here
     return await crud.transfer(id, payload, db)
 

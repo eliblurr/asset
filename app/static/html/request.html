@@ -278,7 +278,7 @@
                                         color: #333333;
                                       "
                                     >
-                                      Asset Request
+                                      Asset Request Updates
                                     </h1>
                                   </td>
                                 </tr>
@@ -304,9 +304,9 @@
                                         font-size: 14px;
                                       "
                                     >
-                                      Your request for item
-                                      <strong>ITEM NAME </strong>has been
-                                      <strong>ACCEPTED</strong>
+                                      Your request with {{code}} for item 
+                                      <strong>{{title}}</strong> with <strong>{{item_code}}</strong> is
+                                      <strong>{{status}}</strong>
                                     </p>
                                   </td>
                                 </tr>
@@ -331,7 +331,7 @@
                                         width: auto;
                                       "
                                       ><a
-                                        href="http://196.43.196.108:8092"
+                                        href="{{base_url}}"
                                         target="_blank"
                                         style="
                                           text-decoration: none;

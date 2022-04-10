@@ -3,7 +3,9 @@ from datetime import timedelta, datetime
 from scheduler import scheduler
 from config import STATIC_ROOT
 from utils import gen_code
-import os, json
+import os, json, config
+from services.email import Mail
+
 
 def messages():
     with open(os.path.join(STATIC_ROOT, 'json/messages.json')) as file:
@@ -13,15 +15,15 @@ def messages():
 
 notify = lambda push_id, message : async_send_message(channel=push_id, message=message)
 web_push = lambda subscription_info, message : async_send_web_push(subscription_info=subscription_info, message_body=message) 
-terminate_reminders = lambda id : [scheduler.remove_job(job.id) for job in scheduler.get_jobs() if job.split('_',1)[0]==str(id)]
-terminate_reminder = lambda id, name : [scheduler.remove_job(job.id) for job in scheduler.get_jobs() if job.split('_',1)[0]==str(id) and job.name==name]
+terminate_reminders = lambda id : [scheduler.remove_job(job.id) for job in scheduler.get_jobs() if job.id.split('_',1)[0]==str(id)]
+terminate_reminder = lambda id, name : [scheduler.remove_job(job.id) for job in scheduler.get_jobs() if job.id.split('_',1)[0]==str(id) and job.name==name]
 send_mail = lambda kwargs : async_send_email(mail=Mail(**kwargs)) # subject=subject, recipients=recipients, body=body, template_name=template_name
 email_reminder = lambda id, date, name, kwargs : scheduler.add_job(send_mail, kwargs=kwargs, id=f'{id}_ID{gen_code(10)}', trigger='date', run_date=date, name=name) #kwargs = recipients, subject, body, template_name
 notify_reminder = lambda id, date, name, push_id, message : scheduler.add_job(send_mail, kwargs={'push_id':push_id, 'message':message}, id=f'{id}_ID{gen_code(10)}', trigger='date', run_date=date, name=name)
 
 def emit_action(request, obj, op, *args, **kwargs):
 
-    op_switcher = lambda op: { 
+    op_switcher = { 
         'expired':{
             'func':(terminate_reminders, send_mail),
             'params':[
@@ -85,14 +87,15 @@ def emit_action(request, obj, op, *args, **kwargs):
             name = kwargs.get('name'), #'smr-pickup-deadline'/'smr-return-deadline'
             date = kwargs.get('date'),
             kwargs = {
-                'request_code':request.code, 
                 'subject':f'Expired Request',
                 'template_name':'request.html',
                 'recipients':[request.author.email],
                 'body':{
                     'title':obj.title, 
                     'type':request.tag,
-                    'code':obj.code 
+                    'code':request.code,
+                    'item_code':obj.code,
+                    'status':kwargs.get('status')
                 },
             })
 
@@ -105,27 +108,31 @@ def emit_action(request, obj, op, *args, **kwargs):
                     name = 'smr-return-deadline',
                     date = obj.return_deadline,
                     kwargs={
-                        'request_code':request.code, 
                         'subject':f'Asset return reminder',
-                        'template_name':'request.html',
+                        'template_name':'request-transfer-return-reminder.html',
                         'recipients':[request.author.email],
                         'body':{
                             'title':obj.title, 
-                            'code':obj.code 
+                            'item_code': obj.code,
+                            'base_url': config.settings.BASE_URL,
+                            'return_deadline': obj.return_deadline
                         },
+
                     }
                 )
 
     elif op=='ready':
         send_mail(
             kwargs={
-                'request_code':request.code, 
                 'subject':f'Asset is ready for pick up',
                 'template_name':'request.html',
                 'recipients':[request.author.email],
                 'body':{
                     'title':obj.title, 
-                    'code':obj.code 
+                    'code':request.code,
+                    'item_code':obj.code,
+                    'base_url': config.settings.BASE_URL,
+                    'status':'READY'
                 },
             }
         ),
@@ -138,11 +145,13 @@ def emit_action(request, obj, op, *args, **kwargs):
                     kwargs={
                         'request_code':request.code, 
                         'subject':f'Asset pick up reminder',
-                        'template_name':'request.html',
+                        'template_name':'request-transfer-pickup-reminder.html',
                         'recipients':[request.author.email],
                         'body':{
                             'title':obj.title, 
-                            'code':obj.code 
+                            'item_code':obj.code,
+                            'base_url': config.settings.BASE_URL,
+                            'pickup_deadline': obj.pickup_deadline
                         },
                     }
                 )
@@ -150,6 +159,7 @@ def emit_action(request, obj, op, *args, **kwargs):
     elif op=='accepted':
         terminate_reminder(request.id, 'expire-request')
         terminate_reminder(request.id, 'expiry-notify-reminder')
+        
         send_mail(
             kwargs={
                 'request_code':request.code, 
@@ -164,10 +174,10 @@ def emit_action(request, obj, op, *args, **kwargs):
         )
 
         notify(
-            obj.asset.inventory.manager.push_id if request.asset_rq else obj.consumable.inventory.manager.push_id, 
+            kwargs.get('push_id'),
             message={
                 'key':'request',
-                'message': messages['request']['accepted'],
+                'message': messages()['request']['accepted'],
                 'meta': {
                     'id':request.id, 
                     'type':request.tag, 

@@ -184,7 +184,7 @@ class CRUD:
             return rows.first()
         except Exception as e:
 
-            # print(e)
+            print(e)
 
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
@@ -210,7 +210,10 @@ class CRUD:
     
     async def update_2(self, id, payload, db:Session, activity:list=[], **kwargs):
         try:
-            obj = db.query(self.model).filter(self.model.id==id).first()
+            if isinstance(id, dict):
+                obj = db.query(self.model).filter_by(**id).first()
+            else:
+                obj = db.query(self.model).filter(self.model.id==id).first()
             if not obj:
                 raise NotFound(f'object with id:{id} not found')
             data = schema_to_model(payload, exclude_unset=True)
@@ -218,24 +221,9 @@ class CRUD:
             [setattr(obj, k, v) for k, v in data.items()]
             db.commit()
             db.refresh(obj)  
-        # except NotFound as e:
-        #     print(e)
-        #     raise HTTPException(status_code=404, detail=raise_exc(msg=e._message(), type= e.__class__.__name__))
-        # except IntegrityError as e:
-        #     print(e)
-        #     raise HTTPException(status_code=409, detail=raise_exc(msg=e._message(), type= e.__class__.__name__))
-        # except MaxOccurrenceError as e:
-        #     print(e)
-        #     raise HTTPException(status_code=409, detail=raise_exc(msg=e._message(), type= e.__class__.__name__))
-        # except AssertionError as e:
-        #     print(e)
-        #     raise HTTPException(status_code=400, detail=raise_exc(msg=f"{e}", type= e.__class__.__name__))
+        
         except Exception as e:
-            # print(e)
-            # raise HTTPException(status_code=500, detail=raise_exc(msg=f"{e}", type= e.__class__.__name__))
-
-            # print(e)
-
+           
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
@@ -243,7 +231,12 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            async_logger(__name__, e, 'critical')
+            
+            try:
+                async_logger(__name__, e, 'critical')
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f'redis failed: {e}')
+            
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
         else: 

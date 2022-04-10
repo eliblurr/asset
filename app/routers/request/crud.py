@@ -52,16 +52,20 @@ asset_request = CRUD(models.AssetRequest)
 consumable_request = CRUD(models.ConsumableRequest)
 
 async def transfer(request_id:int, payload:Union[schemas.AssetTransfer, schemas.ConsumableTransfer], db:Session):
-    request = await request.read_by_id(id, db)
-    if payload.action=='ready' and request.status!='accepted':
+
+    req = db.query(models.Request).filter_by(id=request_id).first()
+
+    if payload.action=='ready' and req.status!='accepted':
         raise HTTPException(status_code=400, detail='transfer can only occur when request has been accepted')
+    
+    if req.tag.value=='asset':
+        if not isinstance(payload, schemas.AssetTransfer):
+            raise HTTPException(status_code=400, detail="payload mismatch with request tag")
 
-    case1 = request.tag=='asset' and isinstance(payload, schemas.AssetTransfer)
-    case2 = request.tag=='consumable' and isinstance(payload, schemas.ConsumableTransfer)
+        return await asset_request.update_2({'request_id':request_id}, payload, db)
 
-    if not any((case1, case2)):raise HTTPException(status_code=422, detail="payload mismatch with object tag")
-
-    if case1:
-        return await asset_request.update_2(id, payload, db)
-    elif case2:
-        return await consumable_request.update_2(id, payload, db)
+    if req.tag.value=='consumable':
+        if not isinstance(payload, schemas.ConsumableTransfer):
+            raise HTTPException(status_code=400, detail="payload mismatch with request tag")
+        
+        return await consumable_request.update_2({'request_id':request_id}, payload, db)
