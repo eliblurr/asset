@@ -75,7 +75,7 @@ services:
     env_file:
       - docker.env
     environment:
-      - ALLOW_EMPTY_PASSWORD=yes
+      - ALLOW_EMPTY_PASSWORD=yes      
 
   worker:
     image: master-image

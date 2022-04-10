@@ -62,3 +62,12 @@ def async_send_message(*args, **kwargs):
 def async_logger(*args, **kwargs):
     q = get_queue('file')
     if q:return q.enqueue(logger, *args, **kwargs, **params)  
+
+
+# ["default","file","email","sms","notification","broadcaster"]
+def a():
+    print('redis working')
+
+def async_a(*args, **kwargs):
+    q = get_queue('file')
+    if q:return q.enqueue(a, *args, **kwargs, **params)
