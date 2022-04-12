@@ -73,4 +73,7 @@ def alert_inventory(mapper, connection, target):
         push_id = data.pop('push_id', None)
         data.update({'consumable_id':target.id, 'code':target.code})
         if push_id:
-            async_send_message(channel=push_id, message={'key':'consumable', 'message': "This {inventory} is now in charge of {consumable} with code: {code}", 'meta': data})
+            try:
+                async_send_message(channel=push_id, message={'key':'consumable', 'message': "This {inventory} is now in charge of {consumable} with code: {code}", 'meta': data})
+            except Exception as e: 
+                pass

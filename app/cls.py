@@ -51,7 +51,10 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else f'{e.orig}' if hasattr(e, 'orig')  else msg 
-            async_logger(__name__, e, 'critical')
+            try:
+                async_logger(__name__, e, 'critical')
+            except Exception as e:
+                pass
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
             
         else:
@@ -138,7 +141,10 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            async_logger(__name__, e, 'critical')
+            try:
+                async_logger(__name__, e, 'critical')
+            except Exception as e:
+                pass
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
             # print(e)
             # # if getattr(e, 'orig'):
@@ -165,7 +171,10 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            async_logger(__name__, e, 'critical')
+            try:
+                async_logger(__name__, e, 'critical')
+            except Exception as e:
+                pass
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
     
     async def read_by_kwargs(self, db:Session, fields:List[str]=None, **kwargs):
@@ -193,7 +202,10 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            async_logger(__name__, e, 'critical')
+            try:
+                async_logger(__name__, e, 'critical')
+            except Exception as e:
+                pass
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
             # raise HTTPException(
@@ -270,7 +282,10 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            async_logger(__name__, e, 'critical')
+            try:
+                async_logger(__name__, e, 'critical')
+            except Exception as e:
+                pass
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def delete_2(self, id, db:Session, use_field:str=None):
@@ -294,7 +309,10 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            async_logger(__name__, e, 'critical')
+            try:
+                async_logger(__name__, e, 'critical')
+            except Exception as e:
+                pass
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def bk_create(self, payload, db:Session):
@@ -322,7 +340,10 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            async_logger(__name__, e, 'critical')
+            try:
+                async_logger(__name__, e, 'critical')
+            except Exception as e:
+                pass
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def bk_update(self, payload, db:Session, **kwargs):
@@ -349,7 +370,10 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            async_logger(__name__, e, 'critical')
+            try:
+                async_logger(__name__, e, 'critical')
+            except Exception as e:
+                pass
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def bk_delete(self, ids:list, db:Session, use_field:str=None, **kwargs):
@@ -367,7 +391,10 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            async_logger(__name__, e, 'critical')
+            try:
+                async_logger(__name__, e, 'critical')
+            except Exception as e:
+                pass
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def bk_delete_2(self, db:Session, **kwargs):
@@ -394,7 +421,10 @@ class CRUD:
             else:
                 status_code = 400 if isinstance(e, (BadRequestError, FileNotSupported, UploadNotAllowed, AssertionError)) else 404 if isinstance(e, NotFound) else 409 if isinstance(e, MaxOccurrenceError) else status_code
                 msg = f"{e._message()}" if isinstance(e, (BadRequestError, NotFound, MaxOccurrenceError,FileNotSupported,UploadNotAllowed,)) else msg  
-            async_logger(__name__, e, 'critical')
+            try:
+                async_logger(__name__, e, 'critical')
+            except Exception as e:
+                pass
             raise HTTPException(status_code=status_code, detail=raise_exc(msg=msg, type=class_name))
 
     async def exists(self, db, **kwargs):
