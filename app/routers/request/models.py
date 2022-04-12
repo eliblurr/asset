@@ -184,6 +184,8 @@ def receive_set(target, value, oldvalue, initiator):
 @event.listens_for(Request, "after_insert")
 def update_handler(mapper, connection, target):
 
+    
+
     hod = aliased(User)
     author = aliased(User)
     manager = aliased(User)
@@ -192,13 +194,16 @@ def update_handler(mapper, connection, target):
     changes = instance_changes(target)
     inventory, department, status = changes.get('inventory_id', [None]), changes.get('department_id', [None]), changes.get('status', [None])
 
+    
+
     if status[0]:
-        if target.tag.value=='asset':
+        
+        if target.tag=='asset':
             stmt = select(Asset, manager.push_id.label('push_id')).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id).join(AssetRequest, AssetRequest.asset_id==Asset.id).join(Request, Request.id==AssetRequest.request_id)
 
             # .join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
         
-        if target.tag.value=='consumable':
+        if target.tag=='consumable':
             stmt = select(Consumable).join(ConsumableRequest, ConsumableRequest.consumable_id==Consumable.id).join(Request, Request.id==ConsumableRequest.request_id)
 
         
@@ -214,20 +219,26 @@ def update_handler(mapper, connection, target):
 
         push_id = data.pop('push_id', None)
 
-        if target.tag.value=='asset':
-            emit_action(target, Asset(**data), status[0].value, push_id=push_id)
+        if target.tag=='asset':
+            try:
+                emit_action(target, Asset(**data), status[0], push_id=push_id)
+            except:
+                pass
 
-        if target.tag.value=='consumable':
-            emit_action(target, Consumable(**data), status[0].value, push_id=push_id)
-
+        if target.tag=='consumable':
+            try:
+                emit_action(target, Consumable(**data), status[0], push_id=push_id)
+            except:
+                pass
+    
     if department[0]:
 
         args = (Request.code, Request.id.label('request_id'), author.first_name, author.last_name, author.id.label('author_id'), manager.push_id) 
 
-        if target.tag.value=='asset':
+        if target.tag=='asset':
             stmt = select(*args, Asset.title, Asset.id.label('asset_id')).join(Request, Request.author_id==author.id).join(Department, author.department_id==Department.id).join(manager, manager.id==Department.head_of_department_id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id)
         
-        if target.tag.value=='consumable':
+        if target.tag=='consumable':
             stmt = select(*args, Asset.title, Consumable.id.label('consumable_id')).join(Request, Request.author_id==author.id).join(Department, author.department_id==Department.id).join(manager, manager.id==Department.head_of_department_id).join(ConsumableRequest, Request.id==ConsumableRequest.request_id).join(Consumable, ConsumableRequest.consumable_id==Consumable.id)
 
         with connection.begin():
@@ -239,23 +250,26 @@ def update_handler(mapper, connection, target):
         if data:
             push_id = data.pop('push_id', None)
 
-            async_send_message(
-                channel=push_id,
-                message={
-                    'key':'request',
-                    'message': _messages['request']['department'],
-                    'meta':data.update({'type':target.tag.value})
-                }
-            )
+            try:
+                async_send_message(
+                    channel=push_id,
+                    message={
+                        'key':'request',
+                        'message': _messages['request']['department'],
+                        'meta':data.update({'type':target.tag})
+                    }
+                )
+            except:
+                pass
 
     if inventory[0]:
         
         args = (Request.code, Request.id.label('request_id'), author.first_name, author.last_name, author.id.label('author_id'), manager.push_id)
 
-        if target.tag.value=='asset':
+        if target.tag=='asset':
             stmt = select(*args, Asset.title, Asset.id.label('asset_id')).join(Request, Request.author_id==author.id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
 
-        if target.tag.value=='consumable':
+        if target.tag=='consumable':
             stmt = select(*args, Consumable.title,  Consumable.id.label('consumable_id')).join(Request, Request.author_id==author.id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
 
         with connection.begin():
@@ -267,12 +281,14 @@ def update_handler(mapper, connection, target):
 
         if data:
             push_id = data.pop('push_id', None)
-
-            async_send_message(
-                channel=push_id,
-                message={
-                    'key':'request',
-                    'message': _messages['request']['inventory'],
-                    'meta':data.update({'type':target.tag.value})
-                }
-            )
+            try:
+                async_send_message(
+                    channel=push_id,
+                    message={
+                        'key':'request',
+                        'message': _messages['request']['inventory'],
+                        'meta':data.update({'type':target.tag})
+                    }
+                )
+            except:
+                pass
