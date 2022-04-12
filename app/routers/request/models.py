@@ -180,8 +180,8 @@ def receive_set(target, value, oldvalue, initiator):
             name='smr-pickup-deadline'
         )
 
-@event.listens_for(Request, "after_update")
-@event.listens_for(Request, "after_insert")
+# @event.listens_for(Request, "after_update")
+# @event.listens_for(Request, "after_insert")
 def update_handler(mapper, connection, target):
 
     
