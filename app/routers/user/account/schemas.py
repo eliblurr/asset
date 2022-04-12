@@ -70,6 +70,7 @@ class User(EmailBase):
     middle_name:Optional[str]
     created: datetime.datetime
     updated: datetime.datetime
+    department_id: Optional[int]
 
     class Config:
         orm_mode = True
@@ -85,6 +86,7 @@ class UserSummary(BaseModel):
     first_name: Optional[str]
     middle_name: Optional[str]
     email: constr(regex=EMAIL)
+    department_id: Optional[int]
     phone: Optional[constr(regex=PHONE)]
    
     class Config:
