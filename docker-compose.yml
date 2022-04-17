@@ -105,7 +105,6 @@ services:
     restart: always
     ports:
       - ${WEB_PORT}:2000
-      # - ${REDIS_PORT}:2001
       - ${PGADMIN_PORT}:2002
       - ${POSTGRES_PORT}:2003
     networks: 
