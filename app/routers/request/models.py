@@ -90,7 +90,7 @@ class ConsumableRequest(BaseMixin, Base):
     returned_at=None
     id=None
 
-# @event.listens_for(Request, 'before_insert', propagate=True) 
+@event.listens_for(Request, 'before_insert', propagate=True) 
 def one_active_request_per_user_per_asset(mapper, connection, target):
     join = (AssetRequest, Request.asset_rq) if target.asset_rq else (ConsumableRequest, Request.consumable_rq)
     stmt = select(func.count(Request.id)).join(*join).where(
@@ -100,7 +100,7 @@ def one_active_request_per_user_per_asset(mapper, connection, target):
     with connection.begin():res = connection.execute(stmt).scalar()
     if res: raise IntegrityError('IntegrityError', '[object, author, status]', 'author already has an active request for object')
 
-# @event.listens_for(Request, 'before_update', propagate=True) 
+@event.listens_for(Request, 'before_update', propagate=True) 
 def cancel_all_other_active_request_for_obj(mapper, connection, target):
     
     if target.status==RequestStatus.accepted:
@@ -127,14 +127,14 @@ def cancel_all_other_active_request_for_obj(mapper, connection, target):
                 "body":{'title': f'{target.asset_rq.asset.title}', 'code':target.code, 'item_code':target.asset_rq.asset.code, 'base_url':config.settings.BASE_URL, 'status':'DECLINED'},
             })
 
-# @event.listens_for(AssetRequest.action, 'set', propagate=True)
+@event.listens_for(AssetRequest.action, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
         if value=='returned':
             target.asset.available=True
         emit_action(target.request, target, value)
 
-# @event.listens_for(AssetRequest.return_deadline, 'set', propagate=True)
+@event.listens_for(AssetRequest.return_deadline, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
         scheduler.add_job(
@@ -156,8 +156,8 @@ def receive_set(target, value, oldvalue, initiator):
             name='smr-return-deadline'
         )
 
-# @event.listens_for(AssetRequest.pickup_deadline, 'set', propagate=True)
-# @event.listens_for(ConsumableRequest.pickup_deadline, 'set', propagate=True)
+@event.listens_for(AssetRequest.pickup_deadline, 'set', propagate=True)
+@event.listens_for(ConsumableRequest.pickup_deadline, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     print(isinstance(target, AssetRequest))
     if value != oldvalue:
@@ -180,11 +180,9 @@ def receive_set(target, value, oldvalue, initiator):
             name='smr-pickup-deadline'
         )
 
-# @event.listens_for(Request, "after_update")
-# @event.listens_for(Request, "after_insert")
+@event.listens_for(Request, "after_update")
+@event.listens_for(Request, "after_insert")
 def update_handler(mapper, connection, target):
-
-    
 
     hod = aliased(User)
     author = aliased(User)
@@ -194,14 +192,10 @@ def update_handler(mapper, connection, target):
     changes = instance_changes(target)
     inventory, department, status = changes.get('inventory_id', [None]), changes.get('department_id', [None]), changes.get('status', [None])
 
-    
-
     if status[0]:
         
         if target.tag=='asset':
             stmt = select(Asset, manager.push_id.label('push_id')).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id).join(AssetRequest, AssetRequest.asset_id==Asset.id).join(Request, Request.id==AssetRequest.request_id)
-
-            # .join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
         
         if target.tag=='consumable':
             stmt = select(Consumable).join(ConsumableRequest, ConsumableRequest.consumable_id==Consumable.id).join(Request, Request.id==ConsumableRequest.request_id)
