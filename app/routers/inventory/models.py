@@ -1,7 +1,8 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, event
+from sqlalchemy import Column, String, Integer, ForeignKey, event, select
 from routers.user.account.models import User
 from rds.tasks import async_send_message
 from sqlalchemy.orm import relationship
+from utils import instance_changes
 from mixins import BaseMixin
 from database import Base
 
@@ -26,7 +27,7 @@ class Inventory(BaseMixin, Base):
 def alert_inventory(mapper, connection, target):
 
     changes = instance_changes(target)
-    manager_id = changes.get('manager_id', [None])    
+    manager_id = changes.get('manager_id', [None])   
     
     if manager_id[0]:
         stmt = select(User.push_id, User.first_name, User.last_name, Inventory.title, Inventory.updated, Inventory.id, Inventory.manager_id).join(Inventory, Inventory.manager_id==User.id).where(Inventory.id==target.id)
