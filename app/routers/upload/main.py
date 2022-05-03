@@ -15,7 +15,7 @@ def verify_upload(files:List[UploadFile]=File(...)):
         for file in files:
             media = [k for k,v in UPLOAD_EXTENSIONS.items() if file_ext(file.filename) in v]
             assert media, f"unsupported format for {file.filename}"
-            uploads.append([file, media])
+            uploads.append([file, media[0]])
         return uploads
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=raise_exc(msg=f"{e}", type=e.__class__.__name__))
@@ -28,9 +28,11 @@ async def create(resource:crud.resources=None, resource_id:int=None, uploads=Dep
         status_code=404 if isinstance(e, NotFound) else 500
         raise HTTPException(status_code=status_code, detail=raise_exc(msg=e._message(), type=e.__class__.__name__))
 
-@router.get('/', response_model=schemas.UploadList, name='Upload') # perm is authenticated
-async def read(media:schemas.UploadType=None, db:Session=Depends(get_db)):
-    params = {"upload_type":media.value} if media else {}
+@router.get('/', response_model=schemas.UploadList, name='Upload') # perm is authenticated 
+async def read(media:schemas.m.UploadType=None, offset:int=0, limit:int=100 , db:Session=Depends(get_db)):
+    params = schemas.params
+    params.update({'offset': offset, 'limit': limit,})
+    if media:params.update({"upload_type":media.value})
     return await crud.upld.read(params, db)
 
 @router.get('/{id}', response_model=schemas.Upload, name='Upload') # perm is authenticated
@@ -38,9 +40,10 @@ async def read(id:int, db:Session=Depends(get_db)):
     return await crud.upld.read_by_id(id, db)
 
 @router.get('/{resource}/{resource_id}', response_model=schemas.UploadList, name='Upload') # perm is authenticated
-async def read(resource:crud.resources, resource_id:int, media:schemas.UploadType=None, offset:int=0, limit:int=100, db:Session=Depends(get_db)):
-    params = {"upload_type":media.value} if media else {}
-    try:crud.read(resource, resource_id, params, offset, limit, db)
+async def read(resource:crud.resources, resource_id:int, media:schemas.m.UploadType=None, offset:int=0, limit:int=100, db:Session=Depends(get_db)):
+    try: 
+        params = {"upload_type":media.value} if media else {}
+        return await crud.read(resource, resource_id, params, offset, limit, db)
     except Exception as e:
         status_code=404 if isinstance(e, NotFound) else 500
         raise HTTPException(status_code=status_code, detail=raise_exc(msg=e._message(), type=e.__class__.__name__))

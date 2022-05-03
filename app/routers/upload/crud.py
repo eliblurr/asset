@@ -12,8 +12,9 @@ resources = Enum('Object', {v:v for v in objects.keys()})
 
 async def create(resource, resource_id, uploads, db):
     if resource and resource_id:
-        obj = objects[resource.value].read_by_id(resource_id, db)
-        if obj is None:raise NotFound(f"resource with id:{resource_id} not found")
+        obj = await objects[resource.value].read_by_id(resource_id, db)
+        if obj is None:
+            raise NotFound(f"resource with id:{resource_id} not found")
         db.add_all([
             models.Upload(
                 url=upload[0],
@@ -29,9 +30,11 @@ async def create(resource, resource_id, uploads, db):
     return "upload successful"
 
 async def read(resource, resource_id, params, offset, limit, db):
-    obj = objects[resource.value].read_by_id(resource_id, db)
-    if obj is None:raise NotFound(f"resource with id:{resource_id} not found")
-    return db.query(models.Upload).filter_by(object=obj, **params).all()
+    obj = await objects[resource.value].read_by_id(resource_id, db)
+    if obj is None:raise NotFound(f"resource with id:{resource_id} not found")    
+    base = db.query(models.Upload).filter_by(object=obj, **params)
+    data = base.offset(offset).limit(limit).all()
+    return {'bk_size':base.count(), 'pg_size':data.__len__(), 'data':data}
 
 async def update(id, resource, resource_id, db):
     upload = db.query(models.Upload).get(id)
