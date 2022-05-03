@@ -194,12 +194,11 @@ def update_handler(mapper, connection, target):
 
     if status[0]:
         
-        if target.tag=='asset':
+        if target.tag.value=='asset':
             stmt = select(Asset, manager.push_id.label('push_id')).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id).join(AssetRequest, AssetRequest.asset_id==Asset.id).join(Request, Request.id==AssetRequest.request_id)
         
-        if target.tag=='consumable':
+        if target.tag.value=='consumable':
             stmt = select(Consumable).join(ConsumableRequest, ConsumableRequest.consumable_id==Consumable.id).join(Request, Request.id==ConsumableRequest.request_id)
-
         
         with connection.begin():
             data = connection.execute(stmt)
@@ -213,13 +212,13 @@ def update_handler(mapper, connection, target):
 
         push_id = data.pop('push_id', None)
 
-        if target.tag=='asset':
+        if target.tag.value=='asset':
             try:
                 emit_action(target, Asset(**data), status[0], push_id=push_id)
             except:
                 pass
 
-        if target.tag=='consumable':
+        if target.tag.value=='consumable':
             try:
                 emit_action(target, Consumable(**data), status[0], push_id=push_id)
             except:
@@ -229,10 +228,10 @@ def update_handler(mapper, connection, target):
 
         args = (Request.code, Request.id.label('request_id'), author.first_name, author.last_name, author.id.label('author_id'), manager.push_id) 
 
-        if target.tag=='asset':
+        if target.tag.value=='asset':
             stmt = select(*args, Asset.title, Asset.id.label('asset_id')).join(Request, Request.author_id==author.id).join(Department, author.department_id==Department.id).join(manager, manager.id==Department.head_of_department_id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id)
         
-        if target.tag=='consumable':
+        if target.tag.value=='consumable':
             stmt = select(*args, Asset.title, Consumable.id.label('consumable_id')).join(Request, Request.author_id==author.id).join(Department, author.department_id==Department.id).join(manager, manager.id==Department.head_of_department_id).join(ConsumableRequest, Request.id==ConsumableRequest.request_id).join(Consumable, ConsumableRequest.consumable_id==Consumable.id)
 
         with connection.begin():
@@ -260,10 +259,10 @@ def update_handler(mapper, connection, target):
         
         args = (Request.code, Request.id.label('request_id'), author.first_name, author.last_name, author.id.label('author_id'), manager.push_id)
 
-        if target.tag=='asset':
+        if target.tag.value=='asset':
             stmt = select(*args, Asset.title, Asset.id.label('asset_id')).join(Request, Request.author_id==author.id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
 
-        if target.tag=='consumable':
+        if target.tag.value=='consumable':
             stmt = select(*args, Consumable.title,  Consumable.id.label('consumable_id')).join(Request, Request.author_id==author.id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
 
         with connection.begin():
