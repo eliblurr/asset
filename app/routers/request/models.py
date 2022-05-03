@@ -183,7 +183,7 @@ def receive_set(target, value, oldvalue, initiator):
 @event.listens_for(Request, "after_update")
 @event.listens_for(Request, "after_insert")
 def update_handler(mapper, connection, target):
-
+    stmt=''
     hod = aliased(User)
     author = aliased(User)
     manager = aliased(User)
