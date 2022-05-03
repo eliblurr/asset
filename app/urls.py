@@ -94,8 +94,8 @@ async def websocket_endpoint(websocket: WebSocket, channel:str):
         (chatroom_ws_sender, {"websocket": websocket, 'channel':channel}),
     )
 
-from rds.tasks import async_a
-@app.post('/redis-test')
-def redis():
-    print('sdfsdf')
-    async_a()
+# from rds.tasks import async_a
+# @app.post('/redis-test')
+# def redis():
+#     print('sdfsdf')
+#     async_a()
