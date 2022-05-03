@@ -183,12 +183,12 @@ def receive_set(target, value, oldvalue, initiator):
 @event.listens_for(Request, "after_update")
 @event.listens_for(Request, "after_insert")
 def update_handler(mapper, connection, target):
-    stmt=''
+
     hod = aliased(User)
     author = aliased(User)
     manager = aliased(User)
     
-    _messages = messages()
+    _messages, stmt = messages(), ''
     changes = instance_changes(target)
     inventory, department, status = changes.get('inventory_id', [None]), changes.get('department_id', [None]), changes.get('status', [None])
 
