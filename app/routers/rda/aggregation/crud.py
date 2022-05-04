@@ -73,7 +73,7 @@ class Aggregate:
         for tenant in tenants:
             # do joins with branches[might be different for each resource]
             tbl = self.table.tometadata(metadata=MetaData(schema=tenant))
-                        
+
             if epochs:
                 months = extract('month', getattr(tbl.c, epochs.field)).label('month')
                 years = extract('year', getattr(tbl.c, epochs.field)).label('year')
@@ -109,41 +109,46 @@ class Aggregate:
     async def _verify_source(self, sources):
         'This function verifies tenants and their branches'
 
+        for source in sources:
+            tbl = self.table.tometadata(metadata=MetaData(schema=tenant))
+
+            pass
+        
+
     async def _is_date(self, field):
         if not isinstance(self.table.c[field].type, (DATETIME, DATE, Date, DateTime)):
             raise KeyError(f'{field} in not a valid date type.')
 
-payload = {
-    "sources": [
-        {
-            "tenant": "6ece118caa5d398ae551f68b784b75dc",
-            "branches": [ ]
-        },
-        {
-            "tenant": "5e0cfddf87da708f62c1312cd20cebdb",
-            "branches": [ ]
-        }
-    ],
-    "params": {
-        "resource": "assets",
-        "fields": [
-            {
-                "field": "id",
-                "op": "count"
-            },
-            {
-                "field": "price",
-                "op": "sum"
-            }
-        ],
-        "group_by": [
-            "id"
-        ]
-    }
-}
+# payload = {
+#     "sources": [
+#         {
+#             "tenant": "6ece118caa5d398ae551f68b784b75dc",
+#             "branches": [ ]
+#         },
+#         {
+#             "tenant": "5e0cfddf87da708f62c1312cd20cebdb",
+#             "branches": [ ]
+#         }
+#     ],
+#     "params": {
+#         "resource": "assets",
+#         "fields": [
+#             {
+#                 "field": "id",
+#                 "op": "count"
+#             },
+#             {
+#                 "field": "price",
+#                 "op": "sum"
+#             }
+#         ],
+#         "group_by": [
+#             "id"
+#         ]
+#     }
+# }
 
 # test = Aggregate(models.Asset)
-
 # test.aggregate(
 #     payload['params']['fields'],
 #     payload['sources'], 
