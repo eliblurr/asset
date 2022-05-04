@@ -1,5 +1,6 @@
 from sqlalchemy import func, union_all, select, and_, or_, extract
 from sqlalchemy.types import Date, DateTime, DATE, DATETIME
+from sqlalchemy.dialects.postgresql import array
 from database import MetaData, session as db
 from . import schemas, models
 from typing import List
@@ -108,16 +109,36 @@ class Aggregate:
 
     async def _verify_source(self, sources):
         'This function verifies tenants and their branches'
+        'check if list of branches for a given tenant is a valid subset of that tenants branches'
 
         for source in sources:
-            tbl = self.table.tometadata(metadata=MetaData(schema=tenant))
+            tbl = self.table.tometadata(metadata=MetaData(schema=source.tenant))
 
-            pass
+            source_branches = array(source.branches)
+            tenant_branches = func.array(db.query(tbl.c.id).as_scalar())
+
+            is_valid = db.query(source_branches.contained_by(tenant_branches)).scalar()
+
+            if not is_valid:
+                raise ValueError(f'some branches provided are not valid tenant branches')
         
-
     async def _is_date(self, field):
         if not isinstance(self.table.c[field].type, (DATETIME, DATE, Date, DateTime)):
             raise KeyError(f'{field} in not a valid date type.')
+
+
+# check if list of branches for a given tenant is valid or subset of that tenants branches
+
+# tbl = models.Asset.__table__
+# tbl = tbl.tometadata(metadata=MetaData(schema='6ece118caa5d398ae551f68b784b75dc'))
+# ids = array([1, 4])
+# ls = func.array(
+#     db.query(tbl.c.id).as_scalar()
+# )
+# valid = db.query(
+#     ids.contained_by(ls)
+# ).scalar()
+# print(valid)
 
 # payload = {
 #     "sources": [
