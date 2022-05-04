@@ -58,7 +58,7 @@ class Aggregate:
         args.extend(grouping)
         q = select(*args).group_by(*grouping)
         res = db.execute(q)
-        
+
         return res if return_query else res.mappings().all()
 
     async def _get_queryset(self, fields, sources, epochs, and_f:dict={}, or_f:dict={}, **kwargs):
@@ -111,25 +111,22 @@ class Aggregate:
 
         for source in sources:
             tbl = self.table.tometadata(metadata=MetaData(schema=source.tenant))
-
+            
             source_branches = array(source.branches)
             tenant_branches = func.array(db.query(tbl.c.id).as_scalar())
 
-            is_valid = db.query(source_branches.contained_by(tenant_branches)).scalar()
-
-            if not is_valid:
-                raise ValueError(f'some branches provided are not valid tenant branches')
+            if source.branches:
+                is_valid = db.query(source_branches.contained_by(tenant_branches)).scalar()
+                if not is_valid:raise ValueError(f'some branches provided are not valid tenant branches')
         
     async def _is_date(self, field):
         if not isinstance(self.table.c[field].type, (DATETIME, DATE, Date, DateTime)):
             raise KeyError(f'{field} in not a valid date type.')
 
 
-# check if list of branches for a given tenant is valid or subset of that tenants branches
-
 # tbl = models.Asset.__table__
 # tbl = tbl.tometadata(metadata=MetaData(schema='6ece118caa5d398ae551f68b784b75dc'))
-# ids = array([1, 4])
+# ids = array([1])
 # ls = func.array(
 #     db.query(tbl.c.id).as_scalar()
 # )
