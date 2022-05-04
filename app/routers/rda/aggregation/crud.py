@@ -56,11 +56,9 @@ class Aggregate:
             if epochs.years: grouping.append(queryset.c.year)
         
         args.extend(grouping)
-
         q = select(*args).group_by(*grouping)
-        
         res = db.execute(q)
-
+        
         return res if return_query else res.mappings().all()
 
     async def _get_queryset(self, fields, sources, epochs, and_f:dict={}, or_f:dict={}, **kwargs):
