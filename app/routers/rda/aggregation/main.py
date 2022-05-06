@@ -1,12 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from psycopg2.errors import UndefinedTable
 from sqlalchemy.exc import IntegrityError
+from dependencies import validate_bearer
 from sqlalchemy.exc import DBAPIError
 from . import crud, schemas, models
 from exceptions import NotFound
 from utils import raise_exc
-
-
 
 router = APIRouter()
 

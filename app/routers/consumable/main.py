@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, File, UploadFile
+from dependencies import get_db, validate_bearer
 from routers.activity.crud import add_activity
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
-from dependencies import get_db
 from typing import Union, List
 from . import crud, schemas
 from utils import r_fields

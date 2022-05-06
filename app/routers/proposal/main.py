@@ -1,9 +1,9 @@
+from dependencies import get_db, validate_bearer
 from routers.activity.crud import add_activity
 from fastapi import APIRouter, Depends
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
 from utils import r_fields, logger
-from dependencies import get_db
 from typing import Union, List
 from . import crud, schemas
 

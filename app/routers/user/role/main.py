@@ -1,8 +1,8 @@
+from dependencies import get_db, validate_bearer
 from ..permission.crud import permission
 from fastapi import APIRouter, Depends
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
-from dependencies import get_db
 from typing import Union, List
 from . import crud, schemas
 from utils import r_fields

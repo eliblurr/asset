@@ -1,4 +1,5 @@
 from fastapi.responses import FileResponse
+from dependencies import validate_bearer
 from fastapi import APIRouter, Request
 from config import LOG_ROOT
 from pathlib import Path

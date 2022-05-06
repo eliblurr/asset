@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
+from dependencies import get_db, validate_bearer
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
-from dependencies import get_db
 from typing import Union, List
 from . import crud, schemas
 from utils import r_fields

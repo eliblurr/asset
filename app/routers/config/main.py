@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from dependencies import validate_bearer
 from config import get_settings
 import dotenv, os, config
 from utils import logger

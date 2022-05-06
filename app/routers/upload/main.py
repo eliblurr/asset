@@ -1,9 +1,9 @@
 from fastapi import APIRouter, File, UploadFile, Depends
+from dependencies import get_db, validate_bearer
 from utils import raise_exc, file_ext
 from config import UPLOAD_EXTENSIONS
 from sqlalchemy.orm import Session
 from exceptions import NotFound
-from dependencies import get_db
 from . import schemas, crud
 from typing import List
 

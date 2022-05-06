@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, Request, UploadFile, File
 from routers.user.account.crud import gen_token, decode_token
+from dependencies import get_db, validate_bearer
 from utils import r_fields, urljoin, logger
 from rds.tasks import async_send_email
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
-from dependencies import get_db
 from typing import Union, List
 from . import crud, schemas
 from config import settings

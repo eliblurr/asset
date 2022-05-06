@@ -1,9 +1,9 @@
+from dependencies import get_db, validate_bearer
 from babel.numbers import list_currencies
 from typing import Union, List, Optional
 from fastapi import APIRouter, Depends
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
-from dependencies import get_db
 from . import crud, schemas
 from utils import r_fields
 

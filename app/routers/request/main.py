@@ -1,12 +1,12 @@
 from exceptions import NotFound, OperationNotAllowed, BadRequestError
 from fastapi import APIRouter, Depends, HTTPException, Request
 from .utils import notify, notify_reminder, messages
+from dependencies import get_db, validate_bearer
 from utils import r_fields, logger, raise_exc
 from psycopg2.errors import UndefinedTable
 from sqlalchemy.exc import DBAPIError
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
-from dependencies import get_db
 from scheduler import scheduler
 from typing import Union, List
 from . import crud, schemas

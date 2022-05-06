@@ -1,8 +1,8 @@
 from exceptions import NotFound, OperationNotAllowed, BadRequestError
 from fastapi import APIRouter, Depends, HTTPException, status
+from dependencies import get_db, validate_bearer
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
-from dependencies import get_db
 from . import crud, schemas
 from typing import List
 

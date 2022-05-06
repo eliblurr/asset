@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
+from dependencies import get_db, validate_bearer
 from utils import r_fields, logger, raise_exc
 from sqlalchemy.orm import Session
 from exceptions import NotFound
-from dependencies import get_db
 from typing import Union, List
 from . import crud, schemas
 
