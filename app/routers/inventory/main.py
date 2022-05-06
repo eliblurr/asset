@@ -40,14 +40,14 @@ from routers.asset.crud import asset
 @router.get('/{r_id}/proposals', name='Inventory') # is authenticated
 @ContentQueryChecker(proposal.model.c(), None)
 async def read(r_id:int, db:Session=Depends(get_db), **params):
-    return await crud.inventory.read(params, db, use_related_name='proposal', resource_id=r_id)
+    return await crud.inventory.read(params, db, use_related_name='proposals', resource_id=r_id)
 
 @router.get('/{r_id}/requests', name='Inventory') # is authenticated
 @ContentQueryChecker(request.model.c(), None)
 async def read(r_id:int, db:Session=Depends(get_db), **params):
-    return await crud.inventory.read(params, db, use_related_name='request', resource_id=r_id)
+    return await crud.inventory.read(params, db, use_related_name='requests', resource_id=r_id)
 
 @router.get('/{r_id}/assets', name='Inventory') # is authenticated
 @ContentQueryChecker(asset.model.c(), None)
 async def read(r_id:int, db:Session=Depends(get_db), **params):
-    return await crud.inventory.read(params, db, use_related_name='asset', resource_id=r_id)
+    return await crud.inventory.read(params, db, use_related_name='assets', resource_id=r_id)
