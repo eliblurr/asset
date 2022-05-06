@@ -5,6 +5,20 @@ from pydantic import BaseModel, constr
 from utils import as_form
 import datetime
 
+# from routers.asset.schemas import AssetSummary
+
+class AssetSummary(BaseModel):
+    id: int
+    make: str
+    title: str
+    model: str
+    serial_number: str
+    metatitle: Optional[str]
+    description: Optional[str]
+
+    class Config:
+        orm_mode = True
+
 class PackageBase(BaseModel):
     title: str
     metatitle: Optional[str]
@@ -57,9 +71,9 @@ class UpdateSubscription(BaseModel):
     status: Optional[bool]
 
 class Subscription(BaseModel):
-    # asset: AssetSummary
     asset_id: int
     package: Package
+    asset: AssetSummary
     price: Optional[float]
 
     class Config:
