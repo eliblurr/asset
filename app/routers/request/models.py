@@ -152,14 +152,13 @@ def receive_set(target, value, oldvalue, initiator):
             }, 
             id=f'{target.id}_ID{gen_code(10)}',
             trigger='date',
-            date=value,
+            run_date=value,
             name='smr-return-deadline'
         )
 
 @event.listens_for(AssetRequest.pickup_deadline, 'set', propagate=True)
 @event.listens_for(ConsumableRequest.pickup_deadline, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
-    print(isinstance(target, AssetRequest))
     if value != oldvalue:
         scheduler.add_job(
             async_send_email,
@@ -176,7 +175,7 @@ def receive_set(target, value, oldvalue, initiator):
             }, 
             id=f'{target.id}_ID{gen_code(10)}',
             trigger='date',
-            date=value,
+            run_date=value,
             name='smr-pickup-deadline'
         )
 
