@@ -1,11 +1,11 @@
 from sqlalchemy import Column, DateTime, Integer, Enum, CheckConstraint, ForeignKey, event, String, select, func
 from rds.tasks import async_send_email, async_send_message, async_send_web_push
+from sqlalchemy.exc import IntegrityError, ArgumentError
 from sqlalchemy.orm import relationship, aliased
 from routers.consumable.models import Consumable
 from routers.department.models import Department
 from routers.inventory.models import Inventory
 from routers.user.account.models import User
-from sqlalchemy.exc import IntegrityError
 from .utils import emit_action, messages
 from routers.asset.models import Asset
 from utils import instance_changes
@@ -132,7 +132,7 @@ def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
         if value=='returned':
             target.asset.available=True
-        emit_action(target.request, target, value)
+        emit_action(target.request, target, value.value)
 
 @event.listens_for(AssetRequest.return_deadline, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
@@ -191,6 +191,8 @@ def update_handler(mapper, connection, target):
     changes = instance_changes(target)
     inventory, department, status = changes.get('inventory_id', [None]), changes.get('department_id', [None]), changes.get('status', [None])
 
+    # print(status[0].value)
+
     if status[0]:
         
         if target.tag.value=='asset':
@@ -213,15 +215,15 @@ def update_handler(mapper, connection, target):
 
         if target.tag.value=='asset':
             try:
-                emit_action(target, Asset(**data), status[0], push_id=push_id)
-            except:
-                pass
+                emit_action(target, Asset(**data), status[0].value, push_id=push_id)
+            except Exception as e:
+                raise ArgumentError('ArgumentError', f'{status[0].value}', 'something went wrong in emit_action for status. see LN220')
 
         if target.tag.value=='consumable':
             try:
-                emit_action(target, Consumable(**data), status[0], push_id=push_id)
-            except:
-                pass
+                emit_action(target, Consumable(**data), status[0].value, push_id=push_id)
+            except Exception as e:
+                raise ArgumentError('ArgumentError', f'{status[0].value}', 'something went wrong in emit_action for status. see LN227')
     
     if department[0]:
 

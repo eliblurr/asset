@@ -17,54 +17,18 @@ notify = lambda push_id, message : async_send_message(channel=push_id, message=m
 web_push = lambda subscription_info, message : async_send_web_push(subscription_info=subscription_info, message_body=message) 
 terminate_reminders = lambda id : [scheduler.remove_job(job.id) for job in scheduler.get_jobs() if job.id.split('_',1)[0]==str(id)]
 terminate_reminder = lambda id, name : [scheduler.remove_job(job.id) for job in scheduler.get_jobs() if job.id.split('_',1)[0]==str(id) and job.name==name]
-send_mail = lambda kwargs : async_send_email(mail=Mail(**kwargs)) # subject=subject, recipients=recipients, body=body, template_name=template_name
-email_reminder = lambda id, date, name, kwargs : scheduler.add_job(send_mail, kwargs=kwargs, id=f'{id}_ID{gen_code(10)}', trigger='date', run_date=date, name=name) #kwargs = recipients, subject, body, template_name
+# send_mail = lambda kwargs : async_send_email(mail=Mail(**kwargs)) # subject=subject, recipients=recipients, body=body, template_name=template_name
+# email_reminder = lambda id, date, name, kwargs : scheduler.add_job(send_mail, kwargs=kwargs, id=f'{id}_ID{gen_code(10)}', trigger='date', run_date=date, name=name) #kwargs = recipients, subject, body, template_name
 notify_reminder = lambda id, date, name, push_id, message : scheduler.add_job(send_mail, kwargs={'push_id':push_id, 'message':message}, id=f'{id}_ID{gen_code(10)}', trigger='date', run_date=date, name=name)
 
-def emit_action(request, obj, op, *args, **kwargs):
+def send_mail(*args, **kwargs):
+    if args: async_send_email(mail=Mail(**args[0]))
+    else: async_send_email(mail=Mail(**kwargs['kwargs']))
 
-    op_switcher = { 
-        'expired':{
-            'func':(terminate_reminders, send_mail),
-            'params':[
-                (request.id,), 
-                ({
-                    'request_code':request.code, 
-                    'subject':f'Expired Request',
-                    'template_name':'request.html',
-                    'recipients':[request.author.email],
-                    'body':{
-                        'title':obj.title, 
-                        'type':request.tag,
-                        'code':obj.code 
-                    },
-                    'status':'EXPIRED'
-                },)
-            ]
-        },
-        'declined':{
-            'func':(terminate_reminders, send_mail),
-            'params':[
-                (request.id,), 
-                ({
-                    'request_code':request.code, 
-                    'subject':f'Declined Request',
-                    'template_name':'request.html',
-                    'recipients':[request.author.email],
-                    'body':{
-                        'title':obj.title, 
-                        'type':request.tag,
-                        'code':obj.code 
-                    },
-                    'status':'DECLINED'
-                },)
-            ]
-        },
-        'returned':{
-            'func':(terminate_reminders),
-            'params':[(request.id,)]
-        },
-    }
+def email_reminder(id, date, name, **kwargs):
+    scheduler.add_job(send_mail, kwargs=kwargs, id=f'{id}_ID{gen_code(10)}', trigger='date', run_date=date, name=name)
+
+def emit_action(request, obj, op, *args, **kwargs):
 
     if op=='bk_notify': # for only assets, no consumables
         status = kwargs.get('status')
@@ -76,11 +40,11 @@ def emit_action(request, obj, op, *args, **kwargs):
             'body':{'title':obj.title, 'code':obj.code},
             'status':status
         })
-
-    elif op=='notify':
+    
+    if op=='notify':
         notify(request.author.push_id, message=kwargs.get('message'))
-
-    elif op=='schedule-email-job':
+    
+    if op=='schedule-email-job':
         obj = obj.asset if request.asset_rq else obj.consumable
         email_reminder(
             id=request.id,
@@ -91,7 +55,7 @@ def emit_action(request, obj, op, *args, **kwargs):
                 'template_name':'request.html',
                 'recipients':[request.author.email],
                 'body':{
-                    'title':obj.title, 
+                    'title':obj.title,
                     'type':request.tag,
                     'code':request.code,
                     'item_code':obj.code,
@@ -99,7 +63,12 @@ def emit_action(request, obj, op, *args, **kwargs):
                 },
             })
 
-    elif op=='picked':
+    if op=='picked':
+        
+        item = obj
+        if hasattr(obj, 'asset'): item = obj.asset
+        elif hasattr(obj, 'consumable'): item = obj.consumable
+        
         terminate_reminder(request.id, 'smr-pickup-deadline')
         if request.asset_rq:
             if obj.return_deadline:
@@ -107,30 +76,34 @@ def emit_action(request, obj, op, *args, **kwargs):
                     id=request.id,
                     name = 'smr-return-deadline',
                     date = obj.return_deadline,
-                    kwargs={
+                    data={
                         'subject':f'Asset return reminder',
                         'template_name':'request-transfer-return-reminder.html',
                         'recipients':[request.author.email],
                         'body':{
-                            'title':obj.title, 
-                            'item_code': obj.code,
+                            'title': item.title, # obj.title, #obj.asset.title 
+                            'item_code': item.code,
                             'base_url': config.settings.BASE_URL,
                             'return_deadline': obj.return_deadline
                         },
-
                     }
                 )
 
-    elif op=='ready':
+    if op=='ready':
+        
+        item = obj
+        if hasattr(obj, 'asset'): item = obj.asset
+        elif hasattr(obj, 'consumable'): item = obj.consumable
+
         send_mail(
             kwargs={
                 'subject':f'Asset is ready for pick up',
                 'template_name':'request.html',
                 'recipients':[request.author.email],
                 'body':{
-                    'title':obj.title, 
+                    'title': item.title, #obj.title,  #
                     'code':request.code,
-                    'item_code':obj.code,
+                    'item_code':item.code,
                     'base_url': config.settings.BASE_URL,
                     'status':'READY'
                 },
@@ -148,15 +121,15 @@ def emit_action(request, obj, op, *args, **kwargs):
                         'template_name':'request-transfer-pickup-reminder.html',
                         'recipients':[request.author.email],
                         'body':{
-                            'title':obj.title, 
-                            'item_code':obj.code,
+                            'title': item.title, #obj.title,  #obj.asset.title 
+                            'item_code':item.code,
                             'base_url': config.settings.BASE_URL,
                             'pickup_deadline': obj.pickup_deadline
                         },
                     }
                 )
 
-    elif op=='accepted':
+    if op=='accepted':
         terminate_reminder(request.id, 'expire-request')
         terminate_reminder(request.id, 'expiry-notify-reminder')
         
@@ -189,7 +162,52 @@ def emit_action(request, obj, op, *args, **kwargs):
             }
         )
 
-    else:
+    if op in ['expired', 'declined', 'returned']:
+        
+        op_switcher = { 
+            'expired':{
+                'func':(terminate_reminders, send_mail),
+                'params':[
+                    (request.id,), 
+                    ({
+                        'request_code':request.code, 
+                        'subject':f'Expired Request',
+                        'template_name':'request.html',
+                        'recipients':[request.author.email],
+                        'body':{
+                            'title':obj.title, 
+                            'type':request.tag,
+                            'code':obj.code 
+                        },
+                        'status':'EXPIRED'
+                    },)
+                ]
+            },
+            'declined':{
+                'func':(terminate_reminders, send_mail),
+                'params':[
+                    (request.id,), 
+                    ({
+                        'request_code':request.code, 
+                        'subject':f'Declined Request',
+                        'template_name':'request.html',
+                        'recipients':[request.author.email],
+                        'body':{
+                            'title':obj.title, 
+                            'type':request.tag,
+                            'code':obj.code 
+                        },
+                        'status':'DECLINED'
+                    },)
+                ]
+            },
+            'returned':{
+                'func':(terminate_reminders),
+                'params':[(request.id,)]
+            },
+        }
+        
+        i = 0
         func, params = op_switcher.get(op).get('func', None), op_switcher.get(op).get('params', None)
         if func and params:
             for func in func:
