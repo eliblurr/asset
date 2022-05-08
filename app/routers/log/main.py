@@ -1,4 +1,4 @@
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from dependencies import validate_bearer
 from fastapi import APIRouter, Request
 from config import LOG_ROOT
@@ -9,15 +9,20 @@ import os, xattr
 router = APIRouter()
 
 @router.get('/', description='Read logs')
-@router.get('/download', description='Read logs')
-async def read(request:Request, file:Path=None, offset:int=0, limit:int=20):
+async def read(request:Request, file:str=None, download:bool=False, offset:int=0, limit:int=20):
 
-    if file:
-        file_path = os.path.join(LOG_ROOT, file)
+    if file:     
+        file_path = os.path.join(LOG_ROOT, file)  
+        
+        def iterfile():
+            with open(file_path, mode="rb") as file: yield from file 
+        
         if os.path.isfile(file_path):
-            if request.url.path=='/logs/download':
-                return FileResponse(file_path, media_type='text/plain')
-            return FileResponse(file_path, media_type='text/plain', stat_result=os.stat(file_path))
+            if download:
+                return FileResponse(file_path, media_type='application/octet-stream', filename=file)
+            # return FileResponse(file_path, media_type='text/plain', stat_result=os.stat(file_path))
+            return StreamingResponse(iterfile(), media_type="text/plain")
+            
         else:
             return "error", {"info":f"File not found"}  
     

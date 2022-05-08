@@ -33,10 +33,10 @@ app.include_router(report, tags=['Analytics'], prefix='/reports')
 app.include_router(branch, tags=['Branches'], prefix='/branches')
 app.include_router(policy, tags=['Policies'], prefix='/policies')
 app.include_router(request, tags=['Requests'], prefix='/request')
+app.include_router(logs, tags=['Logs'], prefix='/system-logs')
 app.include_router(vendor, tags=['Vendor'], prefix='/vendors')
 app.include_router(asset, tags=['Asset'], prefix='/assets')
 app.include_router(role, tags=['Roles'], prefix='/roles')
-app.include_router(logs, tags=['Logs'], prefix='/logs')
 app.include_router(auth, tags=['Authentication'])
 
 def get_openapi_schema(path='/redoc'):
