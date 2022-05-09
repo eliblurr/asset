@@ -162,53 +162,51 @@ def emit_action(request, obj, op, *args, **kwargs):
             }
         )
 
-    if op in ['expired', 'declined', 'returned']:
-        
+    if op=='declined':
+        terminate_reminders(request.id)
+        send_mail(
+            kwargs={
+                'request_code':request.code, 
+                'subject':f'Declined Request',
+                'template_name':'request.html',
+                'recipients':[request.author.email],
+                'body':{
+                    'title':obj.title, 
+                    'type':request.tag,
+                    'code':obj.code  
+                },
+                'status':'DECLINED',
+            }
+        )
+
+    if op=='expired':
+        terminate_reminders(request.id)
+        send_mail(
+            kwargs={
+                'request_code':request.code, 
+                'subject':f'Expired Request',
+                'template_name':'request.html',
+                'recipients':[request.author.email],
+                'body':{
+                    'title':obj.title, 
+                    'code':obj.code,
+                    'type':request.tag,
+                },
+                'status':'EXPIRED'
+            }
+        )
+
+
+    if op in ['returned']:
+
         op_switcher = { 
-            'expired':{
-                'func':(terminate_reminders, send_mail),
-                'params':[
-                    (request.id,), 
-                    ({
-                        'request_code':request.code, 
-                        'subject':f'Expired Request',
-                        'template_name':'request.html',
-                        'recipients':[request.author.email],
-                        'body':{
-                            'title':obj.title, 
-                            'type':request.tag,
-                            'code':obj.code 
-                        },
-                        'status':'EXPIRED'
-                    },)
-                ]
-            },
-            'declined':{
-                'func':(terminate_reminders, send_mail),
-                'params':[
-                    (request.id,), 
-                    ({
-                        'request_code':request.code, 
-                        'subject':f'Declined Request',
-                        'template_name':'request.html',
-                        'recipients':[request.author.email],
-                        'body':{
-                            'title':obj.title, 
-                            'type':request.tag,
-                            'code':obj.code 
-                        },
-                        'status':'DECLINED'
-                    },)
-                ]
-            },
             'returned':{
-                'func':(terminate_reminders),
+                'func':(terminate_reminders,),
                 'params':[(request.id,)]
             },
         }
         
         i = 0
-        print('here')
         func, params = op_switcher.get(op).get('func', None), op_switcher.get(op).get('params', None)
         if func and params:
             for func in func:
