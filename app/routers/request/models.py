@@ -197,33 +197,41 @@ def update_handler(mapper, connection, target):
     changes = instance_changes(target)
     inventory, department, status = changes.get('inventory_id', [None]), changes.get('department_id', [None]), changes.get('status', [None])
 
+    if isinstance(target.tag, str):
+        asset_case = target.tag==Tag.asset.value
+        consumable_case = target.tag==Tag.consumable.value
+    else:
+        asset_case = target.tag==Tag.asset
+        consumable_case = target.tag==Tag.consumable
+
     if status[0]:
-        
-        if target.tag=='asset':
+
+        if asset_case:
             stmt = select(Asset, manager.push_id.label('push_id')).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id).join(AssetRequest, AssetRequest.asset_id==Asset.id).join(Request, Request.id==AssetRequest.request_id)
         
-        if target.tag=='consumable':
+        if consumable_case:
             stmt = select(Consumable).join(ConsumableRequest, ConsumableRequest.consumable_id==Consumable.id).join(Request, Request.id==ConsumableRequest.request_id)
         
         with connection.begin():
             data = connection.execute(stmt)
             data = dict(data.mappings().first())
 
-            stmt = Asset.__table__.update().where(Asset.id==data['id']).values(available=False)
-            connection.execute(stmt)
+            if status[0].value=='accepted':
+                stmt = Asset.__table__.update().where(Asset.id==data['id']).values(available=False)
+                connection.execute(stmt)
 
             stmt = Request.__table__.update().where(Request.id==target.id).values(inventory_id=data['inventory_id'])
             connection.execute(stmt)
 
         push_id = data.pop('push_id', None)
 
-        if target.tag=='asset':
+        if asset_case:
             try:
                 emit_action(target, Asset(**data), status[0].value, push_id=push_id)
             except Exception as e:
                 raise ArgumentError('ArgumentError', f'{status[0].value}', 'something went wrong in emit_action for status. see LN220')
 
-        if target.tag=='consumable':
+        if consumable_case:
             try:
                 emit_action(target, Consumable(**data), status[0].value, push_id=push_id)
             except Exception as e:
@@ -233,10 +241,10 @@ def update_handler(mapper, connection, target):
 
         args = (Request.code, Request.id.label('request_id'), author.first_name, author.last_name, author.id.label('author_id'), manager.push_id) 
 
-        if target.tag=='asset':
+        if asset_case:
             stmt = select(*args, Asset.title, Asset.id.label('asset_id')).join(Request, Request.author_id==author.id).join(Department, author.department_id==Department.id).join(manager, manager.id==Department.head_of_department_id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id)
         
-        if target.tag=='consumable':
+        if consumable_case:
             stmt = select(*args, Asset.title, Consumable.id.label('consumable_id')).join(Request, Request.author_id==author.id).join(Department, author.department_id==Department.id).join(manager, manager.id==Department.head_of_department_id).join(ConsumableRequest, Request.id==ConsumableRequest.request_id).join(Consumable, ConsumableRequest.consumable_id==Consumable.id)
 
         with connection.begin():
@@ -264,10 +272,10 @@ def update_handler(mapper, connection, target):
         
         args = (Request.code, Request.id.label('request_id'), author.first_name, author.last_name, author.id.label('author_id'), manager.push_id)
 
-        if target.tag=='asset':
+        if asset_case:
             stmt = select(*args, Asset.title, Asset.id.label('asset_id')).join(Request, Request.author_id==author.id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
 
-        if target.tag=='consumable':
+        if consumable_case:
             stmt = select(*args, Consumable.title,  Consumable.id.label('consumable_id')).join(Request, Request.author_id==author.id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
 
         with connection.begin():
