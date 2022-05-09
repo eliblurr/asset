@@ -138,7 +138,7 @@ def receive_set(target, value, oldvalue, initiator):
         if value=='picked':
             add_activity_2(Asset, 'asset.assign', {'user':f'{target.request.author.first_name} {target.request.author.last_name}', 'user_id':target.request.author.id})
 
-        # emit_action(target.request, target, value.value)
+        emit_action(target.request, target, value.value)
 
 @event.listens_for(AssetRequest.return_deadline, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
@@ -197,14 +197,12 @@ def update_handler(mapper, connection, target):
     changes = instance_changes(target)
     inventory, department, status = changes.get('inventory_id', [None]), changes.get('department_id', [None]), changes.get('status', [None])
 
-    # print(status[0].value)
-
     if status[0]:
         
-        if target.tag.value=='asset':
+        if target.tag=='asset':
             stmt = select(Asset, manager.push_id.label('push_id')).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id).join(AssetRequest, AssetRequest.asset_id==Asset.id).join(Request, Request.id==AssetRequest.request_id)
         
-        if target.tag.value=='consumable':
+        if target.tag=='consumable':
             stmt = select(Consumable).join(ConsumableRequest, ConsumableRequest.consumable_id==Consumable.id).join(Request, Request.id==ConsumableRequest.request_id)
         
         with connection.begin():
@@ -219,13 +217,13 @@ def update_handler(mapper, connection, target):
 
         push_id = data.pop('push_id', None)
 
-        if target.tag.value=='asset':
+        if target.tag=='asset':
             try:
                 emit_action(target, Asset(**data), status[0].value, push_id=push_id)
             except Exception as e:
                 raise ArgumentError('ArgumentError', f'{status[0].value}', 'something went wrong in emit_action for status. see LN220')
 
-        if target.tag.value=='consumable':
+        if target.tag=='consumable':
             try:
                 emit_action(target, Consumable(**data), status[0].value, push_id=push_id)
             except Exception as e:
@@ -235,10 +233,10 @@ def update_handler(mapper, connection, target):
 
         args = (Request.code, Request.id.label('request_id'), author.first_name, author.last_name, author.id.label('author_id'), manager.push_id) 
 
-        if target.tag.value=='asset':
+        if target.tag=='asset':
             stmt = select(*args, Asset.title, Asset.id.label('asset_id')).join(Request, Request.author_id==author.id).join(Department, author.department_id==Department.id).join(manager, manager.id==Department.head_of_department_id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id)
         
-        if target.tag.value=='consumable':
+        if target.tag=='consumable':
             stmt = select(*args, Asset.title, Consumable.id.label('consumable_id')).join(Request, Request.author_id==author.id).join(Department, author.department_id==Department.id).join(manager, manager.id==Department.head_of_department_id).join(ConsumableRequest, Request.id==ConsumableRequest.request_id).join(Consumable, ConsumableRequest.consumable_id==Consumable.id)
 
         with connection.begin():
@@ -266,10 +264,10 @@ def update_handler(mapper, connection, target):
         
         args = (Request.code, Request.id.label('request_id'), author.first_name, author.last_name, author.id.label('author_id'), manager.push_id)
 
-        if target.tag.value=='asset':
+        if target.tag=='asset':
             stmt = select(*args, Asset.title, Asset.id.label('asset_id')).join(Request, Request.author_id==author.id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
 
-        if target.tag.value=='consumable':
+        if target.tag=='consumable':
             stmt = select(*args, Consumable.title,  Consumable.id.label('consumable_id')).join(Request, Request.author_id==author.id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
 
         with connection.begin():
