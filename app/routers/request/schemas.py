@@ -75,9 +75,11 @@ class TranferBase(BaseModel):
 
 class AssetTransfer(TranferBase):
     returned_at: Optional[int]
+    return_deadline: Optional[int]
     action: Optional[m.AssetTransferAction]
 
     _normalize_returned_at_ = validator('returned_at', allow_reuse=True)(timestamp_to_datetime)
+    _normalize_returned_deadline_ = validator('return_deadline', allow_reuse=True)(timestamp_to_datetime)
 
 class ConsumableTransfer(TranferBase):
     action: Optional[m.ConsumableTransferAction]
