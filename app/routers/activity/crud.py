@@ -31,6 +31,17 @@ async def add_activity(object, ref, meta:dict, db:Session=Depends(get_db_2)):
     payload = schemas.ActivityBase(message=get_message(ref), meta=meta)
     return await activity.create(payload, db, object=object)
 
+def add_activity_2(object, ref, meta:dict, db:Session=Depends(get_db_2)):
+    db = next(get_db_2())
+    payload = schemas.ActivityBase(message=get_message(ref), meta=meta)
+    try:
+        obj = models.Activity(message=get_message(ref), meta=meta)
+        db.add(obj)
+        db.commit()
+        db.refresh(obj) 
+    except Exception as e:
+        pass
+
 from routers.asset.crud import asset
 from routers.request.crud import request
 from routers.proposal.crud import proposal

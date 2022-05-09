@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError, ArgumentError
 from sqlalchemy.orm import relationship, aliased
 from routers.consumable.models import Consumable
 from routers.department.models import Department
+from routers.activity.crud import add_activity_2
 from routers.inventory.models import Inventory
 from routers.user.account.models import User
 from .utils import emit_action, messages
@@ -132,6 +133,11 @@ def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
         if value=='returned':
             target.asset.available=True
+            add_activity_2(Asset, 'asset.return', {'user':f'{target.request.author.first_name} {target.request.author.last_name}', 'user_id':target.request.author.id})
+
+        if value=='picked':
+            add_activity_2(Asset, 'asset.assign', {'user':f'{target.request.author.first_name} {target.request.author.last_name}', 'user_id':target.request.author.id})
+
         emit_action(target.request, target, value.value)
 
 @event.listens_for(AssetRequest.return_deadline, 'set', propagate=True)

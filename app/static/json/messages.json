@@ -3,11 +3,12 @@
         "delivery":"delivered to {user} on {datetime}",
         "update":"updated by {user} on {datetime}",
         "pick":"picked by {user} on {datetime}",
-        "return":"returned by {user} on {datetime}",
-        "transfer_inv":"transferred by {user} from %s to %s on {datetime}",
+        "return":"returned by {user} and is available in store",
+        "transfer_inv":"transferred to {inventory}[inventory]",
         "transfer_brnch":"transferred by {user} from %s to %s on {datetime}",
         "decommission":"decommissioned by {user} on {datetime}",
-        "transfer_usr":"transferred by {user} from %s to %s on {datetime}"
+        "transfer_usr":"transferred by {user} from %s to %s on {datetime}",
+        "assign":"currently assigned to {user}"
     },
     "request":{
         "created":"created by {author} for {asset} to {target}",
