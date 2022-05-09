@@ -138,7 +138,7 @@ def receive_set(target, value, oldvalue, initiator):
         if value=='picked':
             add_activity_2(Asset, 'asset.assign', {'user':f'{target.request.author.first_name} {target.request.author.last_name}', 'user_id':target.request.author.id})
 
-        emit_action(target.request, target, value.value)
+        # emit_action(target.request, target, value.value)
 
 @event.listens_for(AssetRequest.return_deadline, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):

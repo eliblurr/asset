@@ -208,6 +208,7 @@ def emit_action(request, obj, op, *args, **kwargs):
         }
         
         i = 0
+        print('here')
         func, params = op_switcher.get(op).get('func', None), op_switcher.get(op).get('params', None)
         if func and params:
             for func in func:
