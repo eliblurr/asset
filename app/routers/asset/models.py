@@ -3,7 +3,6 @@ from utils import today_str, gen_code, instance_changes
 from routers.subscription.models import Subscription
 from sqlalchemy.ext.hybrid import hybrid_property
 from dateutil.relativedelta import relativedelta
-from routers.activity.crud import add_activity_2
 from routers.user.account.models import User
 from sqlalchemy.exc import IntegrityError
 from rds.tasks import async_remove_file
@@ -102,7 +101,7 @@ def check_dep_factor(target, value, oldvalue, initiator):
 def alert_inventory(mapper, connection, target):
 
     changes = instance_changes(target)
-    warranty_deadline, service_date, inventory = changes.get('warranty_deadline', [None]), changes.get('service_date', [None]), changes.get('inventory_id', [None])
+    warranty_deadline, service_date, inventory_id = changes.get('warranty_deadline', [None]), changes.get('service_date', [None]), changes.get('inventory_id', [None])
     from routers.inventory.models import Inventory
     stmt = select(User.email, Inventory.title).join(Inventory).join(Asset).where(Asset.id==target.id)
 
@@ -110,9 +109,11 @@ def alert_inventory(mapper, connection, target):
         data = connection.execute(stmt)
         data = dict(data.mappings().first())
 
-    if inventory[0]:
-        if hasattr(target, 'inventory'):
-            add_activity_2(Asset, 'asset.transfer_inv', {'inventory':target.inventory.title, 'inventory_id':inventory[0]})
+    # print(inventory_id[0])
+    # if inventory_id[0]:
+    #     from routers.activity.crud import add_activity_2
+    #     if hasattr(target, 'inventory'):
+    #         add_activity_2(Asset, 'asset.transfer_inv', {'inventory':target.inventory.title, 'inventory_id':inventory[0]})
 
     if service_date[0]:
         name = 'smr-service-date' 
