@@ -19,7 +19,9 @@ async def create(resource, resource_id, uploads, db):
             models.Upload(
                 url=upload[0],
                 upload_type=upload[1],
-                object = obj
+                object= obj,
+                filename= upload[3],
+                extension= upload[2],
             )
             for upload in uploads
         ])

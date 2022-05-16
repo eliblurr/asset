@@ -13,9 +13,10 @@ def verify_upload(files:List[UploadFile]=File(...)):
     try:
         uploads = []
         for file in files:
-            media = [k for k,v in UPLOAD_EXTENSIONS.items() if file_ext(file.filename) in v]
+            ext = file_ext(file.filename)
+            media = [k for k,v in UPLOAD_EXTENSIONS.items() if ext in v]
             assert media, f"unsupported format for {file.filename}"
-            uploads.append([file, media[0]])
+            uploads.append([file, media[0], ext, file.filename])
         return uploads
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=raise_exc(msg=f"{e}", type=e.__class__.__name__))

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Enum, Unicode, Integer, event
+from sqlalchemy import Column, Enum, Unicode, Integer, event, String
 from sqlalchemy_utils import generic_relationship
 from rds.tasks import async_remove_file
 from config import UPLOAD_EXTENSIONS
@@ -16,6 +16,9 @@ class Upload(BaseMixin, Base):
 
     url = Column(File(upload_to=f'uploads/{today_str()}'), nullable=False)
     upload_type = Column(Enum(UploadType), nullable=False)
+
+    filename = Column(String, nullable=True)
+    extension = Column(String, nullable=True)
 
     object_type = Column(Unicode(255))
     object_id = Column(Integer, nullable=True)

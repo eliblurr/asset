@@ -18,6 +18,8 @@ class UploadBase(BaseModel):
 class Upload(UploadBase):
     id: int
     object_type: str
+    filename: Optional[str]
+    extension: Optional[str]
     created: datetime.datetime
     updated: datetime.datetime
 
