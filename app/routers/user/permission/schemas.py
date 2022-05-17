@@ -62,7 +62,15 @@ class ContentTypeList(BaseModel):
     pg_size: int
     data:  Union[List[ContentType], list]
 
-class PermissionSummaryWithHasPerm(PermissionSummary):
+class Casl(BaseModel):
+    op: str
+    content_type: str
+
+    @validator('content_type', always=True)
+    def check_active(cls, v, values, **kwargs):
+        return v.model
+
+class PermissionSummaryWithHasPerm(Casl):
     active: Optional[bool]
 
     @validator('active', always=True)
@@ -72,14 +80,15 @@ class PermissionSummaryWithHasPerm(PermissionSummary):
 class ContentTypeWithHasPerm(ContentTypeBase):
     permissions: Optional[List[PermissionSummaryWithHasPerm]]
 
-    # @validator('permissions', always=True)
-    # def check_active(cls, v, values, **kwargs):
-    #     for perm in v:
-    #         perm.active = perm.id in cls.__config__.permissions
-    #     # return values['id'] in cls.__config__.permissions
-    #     return v
-
 class ContentTypeWithHasPermList(BaseModel):
     bk_size: int
     pg_size: int
     data:  Union[List[ContentTypeWithHasPerm], list]
+
+class CASL(BaseModel):
+    op: str
+    content_type: str
+
+    @validator('content_type', always=True)
+    def check_active(cls, v, values, **kwargs):
+        return v.model
