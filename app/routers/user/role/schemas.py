@@ -1,3 +1,4 @@
+from routers.user.permission.schemas import Casl
 from typing import Optional, List, Union
 import routers.user.role.models as m
 from pydantic import BaseModel
@@ -20,19 +21,14 @@ class RoleBase(BaseModel):
 class CreateRole(RoleBase):
     permissions: List[int]
 
-# class AddOrRemovePermission(BaseModel):
-#     permissions: List[int]
-#     operation:Operation
-    
 class UpdateRole(BaseModel):
     title: Optional[str]
     status: Optional[bool]
     description: Optional[str]
-
-    # permissions:Optional[AddOrRemovePermission]
     
 class Role(RoleBase):
     id: int
+    permissions: Optional[List[Casl]]
     created: datetime.datetime
     updated: datetime.datetime
 

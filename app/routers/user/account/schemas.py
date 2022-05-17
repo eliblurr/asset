@@ -60,7 +60,7 @@ class UpdateUser(BaseModel):
         model = m.User
 
 class User(EmailBase):
-    id: int
+    id: int 
     phone:str
     push_id: str
     last_name:str

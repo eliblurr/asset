@@ -1,5 +1,5 @@
 from pydantic import BaseModel, validator
-from typing import Optional, List, Union
+from typing import Optional, List, Union,  Callable
 import routers.user.permission.models as m
 import datetime
 
@@ -62,15 +62,7 @@ class ContentTypeList(BaseModel):
     pg_size: int
     data:  Union[List[ContentType], list]
 
-class Casl(BaseModel):
-    op: str
-    content_type: str
-
-    @validator('content_type', always=True)
-    def check_active(cls, v, values, **kwargs):
-        return v.model
-
-class PermissionSummaryWithHasPerm(Casl):
+class PermissionSummaryWithHasPerm(PermissionSummary):
     active: Optional[bool]
 
     @validator('active', always=True)
@@ -85,10 +77,13 @@ class ContentTypeWithHasPermList(BaseModel):
     pg_size: int
     data:  Union[List[ContentTypeWithHasPerm], list]
 
-class CASL(BaseModel):
+class Casl(BaseModel):
     op: str
-    content_type: str
+    content_type: ContentTypeBase
 
+    class Config:
+        orm_mode = True
+    
     @validator('content_type', always=True)
-    def check_active(cls, v, values, **kwargs):
+    def check_content_type(cls, v, values, **kwargs):
         return v.model

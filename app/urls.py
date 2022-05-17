@@ -38,7 +38,7 @@ app.include_router(permission, tags=['Permissions'], prefix='/permissions')
 # app.include_router(vendor, tags=['Vendor'], prefix='/vendors')
 # app.include_router(asset, tags=['Asset'], prefix='/assets')
 app.include_router(role, tags=['Roles'], prefix='/roles')
-# app.include_router(auth, tags=['Authentication'])
+app.include_router(auth, tags=['Authentication'])
 
 def get_openapi_schema(path='/redoc'):
     description = f""" {cfg.settings.DESCRIPTION} \n\n {

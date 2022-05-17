@@ -54,3 +54,8 @@ async def read_by_id(id:int, role:int, include_permissions:bool=False, fields:Li
 @ContentQueryChecker(crud.permission.model.c(), None)
 async def read(resource_id:int, db:Session=Depends(get_db), **params):
     return await crud.content_type.read(params, db, use_related_name='permissions', resource_id=resource_id)
+
+
+@router.get('dummy/{id}', response_model=Union[schemas.Casl, dict], name='Permission')
+async def read_by_id(id:int, fields:List[str]=r_fields(crud.permission.model), db:Session=Depends(get_db)):
+    return await crud.permission.read_by_id(id, db, fields)
