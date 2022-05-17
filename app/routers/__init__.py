@@ -53,7 +53,8 @@ __all__=[
     'catalogue',
     'aggregation',
     'dashboard',
-    'report'
+    'report', 
+    'content_type'
 ]
 
 from database import engine

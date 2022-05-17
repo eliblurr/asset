@@ -15,6 +15,7 @@ app.include_router(config, tags=['Environment Configuration'], prefix='/configur
 app.include_router(account, tags=['User & Adminstrator Accounts'], prefix='/accounts')
 app.include_router(subscription, tags=['Subscriptions'], prefix='/subscriptions')
 app.include_router(manufacturer, tags=['Manufacturers'], prefix='/manufacturers')
+app.include_router(content_type, tags=['Content Types'], prefix='/content-types')
 app.include_router(tenant, tags=['Tenants/Organizations'], prefix='/tenants')
 app.include_router(permission, tags=['Permissions'], prefix='/permissions')
 app.include_router(department, tags=['Departments'], prefix='/departments')
@@ -93,9 +94,3 @@ async def websocket_endpoint(websocket: WebSocket, channel:str):
         (chatroom_ws_receiver, {"websocket": websocket, 'channel':channel}),
         (chatroom_ws_sender, {"websocket": websocket, 'channel':channel}),
     )
-
-# from rds.tasks import async_a
-# @app.post('/redis-test')
-# def redis():
-#     print('sdfsdf')
-#     async_a()

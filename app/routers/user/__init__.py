@@ -7,5 +7,5 @@ from .auth.models import EmailVerificationCode, RevokedToken
 from .role.main import router as role
 from .role.models import Role, RolePermission
 
-from .permission.main import router as permission
+from .permission.main import router as permission, ct_router as content_type
 from .permission.models import Permission, ContentType

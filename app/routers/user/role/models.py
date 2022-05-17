@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, event, Integer, ForeignKey
+from sqlalchemy import Column, String, event, Integer, ForeignKey, delete
 from exceptions import OperationNotAllowed
 from sqlalchemy.orm import relationship
 from mixins import BaseMixin
@@ -19,29 +19,27 @@ class Role(BaseMixin, Base):
     description = Column(String, nullable=True)
     users = relationship('User', back_populates="role")
     permissions = relationship('Permission', secondary=RolePermission.__table__, back_populates="roles")
-
-    def has_perm(self, perm, db):
-        return perm in self.permissions
+    
+    def has_perm(self, perm):
+        return perm in [perm.id for perm in self.permissions]
 
     def add_perm(self, perm, db):
-        if not self.has(perm):
-            self.permissions.append(perm)
+        db.add_all([RolePermission(role_id=self.id, permission_id=pid) for pid in perm if not self.has_perm(pid) and self.perm_exists(pid)])
         db.commit()
 
     def remove_perm(self, perm, db):
-        if self.has(perm):
-            self.permissions.remove(perm)
+        db.query(RolePermission).filter(RolePermission.permission_id.in_(perm), RolePermission.role_id==self.id).delete()
         db.commit()
     
-    def remove_all_perm(self, db):
-        for perm in self.permissions:
-            self.permissions.remove(perm)
-        db.commit()
-
-    def reset_perm(self, db):
+    def clear_perm(self, db):
         self.permissions.clear()
         db.commit() 
 
+    @staticmethod
+    def perm_exists(perm):
+        from routers.user.permission.models import Permission
+        return Permission.query.get(perm) is not None
+    
 def after_create(target, connection, **kw):
     connection.execute(
         Role.__table__.insert(), 

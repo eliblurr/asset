@@ -20,18 +20,16 @@ class RoleBase(BaseModel):
 class CreateRole(RoleBase):
     permissions: List[int]
 
-class AddOrRemovePermission(BaseModel):
-    permissions: List[int]
-    operation:Operation
+# class AddOrRemovePermission(BaseModel):
+#     permissions: List[int]
+#     operation:Operation
     
 class UpdateRole(BaseModel):
     title: Optional[str]
     status: Optional[bool]
     description: Optional[str]
 
-    permissions:Optional[AddOrRemovePermission]
-    # in_perm: Optional[List[int]]
-    # ex_perm: Optional[List[int]]
+    # permissions:Optional[AddOrRemovePermission]
     
 class Role(RoleBase):
     id: int
@@ -43,11 +41,5 @@ class RoleList(BaseModel):
     pg_size: int
     data:  Union[List[Role], list]
 
-# from pydantic import BaseModel, validator
-# from utils import v_2n, sum_ls
-# _v_ex_perm_ = validator('ex_perm', allow_reuse=True, each_item=True)(v_2n)
-# _v_in_perm_ = validator('in_perm', allow_reuse=True, each_item=True)(v_2n)
-# _s_ex_perm_ = validator('ex_perm', allow_reuse=True)(sum_ls)
-# _s_in_perm_ = validator('in_perm', allow_reuse=True)(sum_ls)
-# _v_perm_ = validator('permissions', allow_reuse=True, each_item=True)(v_2n)
-# _s_perm_ = validator('permissions', allow_reuse=True)(sum_ls)
+class RoleWithPerm(Role):
+    permissions: list = []
