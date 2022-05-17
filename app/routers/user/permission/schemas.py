@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import Optional, List, Union
 import routers.user.permission.models as m
 import datetime
@@ -63,10 +63,21 @@ class ContentTypeList(BaseModel):
     data:  Union[List[ContentType], list]
 
 class PermissionSummaryWithHasPerm(PermissionSummary):
-    pass
+    active: Optional[bool]
+
+    @validator('active', always=True)
+    def check_active(cls, v, values, **kwargs):
+        return values['id'] in cls.__config__.permissions
 
 class ContentTypeWithHasPerm(ContentTypeBase):
     permissions: Optional[List[PermissionSummaryWithHasPerm]]
+
+    # @validator('permissions', always=True)
+    # def check_active(cls, v, values, **kwargs):
+    #     for perm in v:
+    #         perm.active = perm.id in cls.__config__.permissions
+    #     # return values['id'] in cls.__config__.permissions
+    #     return v
 
 class ContentTypeWithHasPermList(BaseModel):
     bk_size: int
