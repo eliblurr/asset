@@ -34,20 +34,20 @@ from .models import Permission
 @ct_router.get('/', name='Content Type')
 @ContentQueryChecker(crud.content_type.model.c(), None)
 async def read(role:int=0, include_permissions:bool=False, db:Session=Depends(get_db), **params):
-    if include_permissions:
-        return parse_obj_as(schemas.ContentTypeList, await crud.content_type.read(params, db))
     if role:
         schemas.PermissionSummaryWithHasPerm.__config__.permissions = list(*zip(*db.query(Permission.id).join(Role, Permission.roles).filter(Role.id==role).all()))
         return parse_obj_as(schemas.ContentTypeWithHasPermList, await crud.content_type.read(params, db))
+    if include_permissions:
+        return parse_obj_as(schemas.ContentTypeList, await crud.content_type.read(params, db))
     return await crud.content_type.read(params, db)
 
 @ct_router.get('/{id}', name='Content Type')
 async def read_by_id(id:int, role:int, include_permissions:bool=False, fields:List[str]=r_fields(crud.content_type.model), db:Session=Depends(get_db)):
-    if include_permissions: 
-        return parse_obj_as(schemas.ContentType, await crud.content_type.read_by_id(id, db, fields))
     if role:
         schemas.PermissionSummaryWithHasPerm.__config__.permissions = list(*zip(*db.query(Permission.id).join(Role, Permission.roles).filter(Role.id==role).all()))
         return parse_obj_as(schemas.ContentTypeWithHasPerm, await crud.content_type.read_by_id(id, db, fields))
+    if include_permissions: 
+        return parse_obj_as(schemas.ContentType, await crud.content_type.read_by_id(id, db, fields)) 
     return parse_obj_as(schemas.ContentTypeBase, await crud.content_type.read_by_id(id, db, fields))
 
 @ct_router.get('/{resource_id}/permissions', response_model=Union[schemas.PermissionSummaryList, list], name='Content Type')
