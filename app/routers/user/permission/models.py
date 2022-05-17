@@ -13,13 +13,14 @@ class Permission(BaseMixin, Base):
     __tablename__ = "permissions"
     __table_args__ = ({'schema':'public'},)
     
+    op = Column(String , nullable=False)
     name = Column(String , unique=True, nullable=False)
     code_name = Column(String , unique=True, nullable=False)
     description = Column(String, nullable=True)
     content_type_id = Column(Integer, ForeignKey('public.content_types.id'))
     content_type = relationship("ContentType", back_populates="permissions")
     roles = relationship('Role', secondary=RolePermission.__table__, back_populates="permissions")
-
+    
 class ContentType(BaseMethodMixin, Base):
     '''Content Types Model'''
     __tablename__ = "content_types"
@@ -44,7 +45,8 @@ def after_create_permission(target, connection, **kw):
                 {
                     'name': f'Can {op} {" ".join(row[1].split("_"))}',
                     'code_name':f'can_{op}_{row[1]}',
-                    'content_type_id':row[0]
+                    'content_type_id':row[0],
+                    'op':op
                 } for op in OPS for row in rows
             ]
         )
