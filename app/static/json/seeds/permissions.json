@@ -2671,5 +2671,60 @@
         "code_name": "can_issue_requests",
         "description": null,
         "content_type_id": 25
+    },
+    {
+        "status": true,
+        "created": "2022-05-18T12:14:43.316994",
+        "id": 800,
+        "updated": "2022-05-18T12:14:43.316995",
+        "op": "add",
+        "name": "Can add tenant configuration",
+        "code_name": "can_add_tenant_configuration",
+        "description": null,
+        "content_type_id": 38
+    },
+    {
+        "status": true,
+        "created": "2022-05-18T12:14:43.316994",
+        "id": 900,
+        "updated": "2022-05-18T12:14:43.316995",
+        "op": "edit",
+        "name": "Can edit tenant configuration",
+        "code_name": "can_edit_tenant_configuration",
+        "description": null,
+        "content_type_id": 38
+    },
+    {
+        "status": true,
+        "created": "2022-05-18T12:14:43.316994",
+        "id":990,
+        "updated": "2022-05-18T12:14:43.316995",
+        "op": "view",
+        "name": "Can view tenant configuration",
+        "code_name": "can_view_tenant_configuration",
+        "description": null,
+        "content_type_id": 38
+    },
+    {
+        "status": true,
+        "created": "2022-05-18T12:14:43.316994",
+        "id": 979,
+        "updated": "2022-05-18T12:14:43.316995",
+        "op": "info",
+        "name": "Can info tenant configuration",
+        "code_name": "can_info_tenant_configuration",
+        "description": null,
+        "content_type_id": 38
+    },
+    {
+        "status": true,
+        "created": "2022-05-18T12:14:43.316994",
+        "id": 989,
+        "updated": "2022-05-18T12:14:43.316995",
+        "op": "assign",
+        "name": "Can assign tenant configuration",
+        "code_name": "can_assign_tenant_configuration",
+        "description": null,
+        "content_type_id": 38
     }
 ]
