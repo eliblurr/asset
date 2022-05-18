@@ -2726,5 +2726,82 @@
         "code_name": "can_assign_tenant_configuration",
         "description": null,
         "content_type_id": 38
+    },
+    {
+        "status": true,
+        "created": "2022-05-18T12:14:43.316994",
+        "id": 911,
+        "updated": "2022-05-18T12:14:43.316995",
+        "op": "view",
+        "name": "Can view forwarded proposals",
+        "code_name": "can_view_forwarded_proposals",
+        "description": null,
+        "content_type_id": 39
+    },
+    {
+        "status": true,
+        "created": "2022-05-18T12:14:43.316994",
+        "id": 912,
+        "updated": "2022-05-18T12:14:43.316995",
+        "op": "info",
+        "name": "Can info forwarded proposals",
+        "code_name": "can_info_forwarded_proposals",
+        "description": null,
+        "content_type_id": 39
+    },
+    {
+        "status": true,
+        "created": "2022-05-18T12:14:43.316994",
+        "id": 913,
+        "updated": "2022-05-18T12:14:43.316995",
+        "op": "edit",
+        "name": "Can edit forwarded proposals",
+        "code_name": "can_edit_forwarded_proposals",
+        "description": null,
+        "content_type_id": 39
+    },
+    {
+        "status": true,
+        "created": "2022-05-18T12:14:43.316994",
+        "id": 914,
+        "updated": "2022-05-18T12:14:43.316995",
+        "op": "assign",
+        "name": "Can assign forwarded proposals",
+        "code_name": "can_assign_forwarded_proposals",
+        "description": null,
+        "content_type_id": 39
+    },
+    {
+        "status": true,
+        "created": "2022-05-18T12:14:43.316994",
+        "id": 915,
+        "updated": "2022-05-18T12:14:43.316995",
+        "op": "add",
+        "name": "Can add forwarded proposals",
+        "code_name": "can_add_forwarded_proposals",
+        "description": null,
+        "content_type_id": 39
+    },
+    {
+        "status": true,
+        "created": "2022-05-18T12:14:43.316994",
+        "id": 916,
+        "updated": "2022-05-18T12:14:43.316995",
+        "op": "cancel",
+        "name": "Can cancel forwarded proposals",
+        "code_name": "can_cancel_forwarded_proposals",
+        "description": null,
+        "content_type_id": 39
+    },
+    {
+        "status": true,
+        "created": "2022-05-18T12:14:43.316994",
+        "id": 917,
+        "updated": "2022-05-18T12:14:43.316995",
+        "op": "end",
+        "name": "Can end forwarded proposals",
+        "code_name": "can_end_forwarded_proposals",
+        "description": null,
+        "content_type_id": 39
     }
 ]

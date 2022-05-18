@@ -150,5 +150,9 @@
     {
         "id": 38,
         "model": "tenant_configuration"
+    },
+    {
+        "id": 39,
+        "model": "forwarded_proposals"
     }
 ]
