@@ -153,6 +153,10 @@
     },
     {
         "id": 39,
-        "model": "forwarded_proposals"
+        "model": "forwarded_proposal"
+    },
+    {
+        "id": 40,
+        "model": "request_transfer"
     }
 ]
