@@ -2,8 +2,10 @@ from sqlalchemy import Column, String, event, Integer, ForeignKey, select
 from mixins import BaseMixin, BaseMethodMixin
 from ..role.models import RolePermission
 from sqlalchemy.orm import relationship
+from config import STATIC_ROOT
 from database import Base
 from constants import OPS
+import json, os
 
 # https://github.com/holgi/fastapi-permissions -> ACL
 # https://fastapi-contrib.readthedocs.io/en/latest/readme.html
@@ -31,24 +33,28 @@ class ContentType(BaseMethodMixin, Base):
     permissions = relationship("Permission", back_populates="content_type")
 
 def after_create(target, connection, **kw):
+
+    with open(os.path.join(STATIC_ROOT, 'json/seeds/content_types.json')) as file:
+        messages = json.load(file)  
+        file.close()
+
     with connection.begin():
         connection.execute(
-            ContentType.__table__.insert(), 
-            [{"model":str(_map.mapped_table.name)} for _map in Base.registry.mappers]
+            ContentType.__table__.insert(),
+            messages 
         )
 
 def after_create_permission(target, connection, **kw):
+    
+    with open(os.path.join(STATIC_ROOT, 'json/seeds/permissions.json')) as file:
+        messages = json.load(file)  
+        file.close()
+
     with connection.begin():
         rows = connection.execute(ContentType.__table__.select()).all()
         connection.execute(
-            Permission.__table__.insert(), [
-                {
-                    'name': f'Can {op} {" ".join(row[1].split("_"))}',
-                    'code_name':f'can_{op}_{row[1]}',
-                    'content_type_id':row[0],
-                    'op':op
-                } for op in OPS for row in rows
-            ]
+            Permission.__table__.insert(),
+            messages
         )
 
 event.listen(ContentType.__table__, "after_create", after_create)

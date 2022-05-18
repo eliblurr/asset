@@ -1,8 +1,10 @@
 from sqlalchemy import Column, String, event, Integer, ForeignKey, delete
 from exceptions import OperationNotAllowed
 from sqlalchemy.orm import relationship
+from config import STATIC_ROOT
 from mixins import BaseMixin
 from database import Base
+import json, os
 
 class RolePermission(Base):
     '''Role Permission Model'''
@@ -41,19 +43,29 @@ class Role(BaseMixin, Base):
         return Permission.query.get(perm) is not None
     
 def after_create(target, connection, **kw):
+
+    with open(os.path.join(STATIC_ROOT, 'json/seeds/roles.json')) as file:
+        messages = json.load(file)  
+        file.close()
+
     connection.execute(
         Role.__table__.insert(), 
-        [   
-            {"title":'Tenant Administrator', "permissions":[]},
-            {"title":'Head of Department', "permissions":[]},
-            {"title":'Facility Manager', "permissions":[]},
-            {"title":'Head of Entity', "permissions":[]},
-            {"title":'Store Manager', "permissions":[]},
-            {"title":'Staff', "permissions":[]},
-        ]   
+        messages
+    )
+
+def after_create_role_permissions(target, connection, **kw):
+
+    with open(os.path.join(STATIC_ROOT, 'json/seeds/role_permissions.json')) as file:
+        messages = json.load(file)  
+        file.close()
+
+    connection.execute(
+        RolePermission.__table__.insert(), 
+        messages
     )
 
 event.listen(Role.__table__, 'after_create', after_create)
+event.listen(RolePermission.__table__, 'after_create', after_create_role_permissions)
 
 @event.listens_for(Role.title, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
