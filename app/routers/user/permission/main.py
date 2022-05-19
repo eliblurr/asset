@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from dependencies import get_db, validate_bearer
+from psycopg2.errors import UndefinedTable
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
 from pydantic import parse_obj_as
@@ -35,8 +36,13 @@ from .models import Permission
 @ContentQueryChecker(crud.content_type.model.c(), None)
 async def read(role:int=0, include_permissions:bool=False, db:Session=Depends(get_db), **params):
     if role:
-        schemas.PermissionSummaryWithHasPerm.__config__.permissions = list(*zip(*db.query(Permission.id).join(Role, Permission.roles).filter(Role.id==role).all()))
-        return parse_obj_as(schemas.ContentTypeWithHasPermList, await crud.content_type.read(params, db))
+        try:
+            schemas.PermissionSummaryWithHasPerm.__config__.permissions = list(*zip(*db.query(Permission.id).join(Role, Permission.roles).filter(Role.id==role).all()))
+            return parse_obj_as(schemas.ContentTypeWithHasPermList, await crud.content_type.read(params, db))
+        except Exception as e:
+            if isinstance(e.orig, UndefinedTable):
+                raise HTTPException(status_code=400, detail=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header')
+            raise HTTPException(status_code=500, detail=f'{e}')
     if include_permissions:
         return parse_obj_as(schemas.ContentTypeList, await crud.content_type.read(params, db))
     return await crud.content_type.read(params, db)
@@ -44,8 +50,13 @@ async def read(role:int=0, include_permissions:bool=False, db:Session=Depends(ge
 @ct_router.get('/{id}', name='Content Type')
 async def read_by_id(id:int, role:int, include_permissions:bool=False, fields:List[str]=r_fields(crud.content_type.model), db:Session=Depends(get_db)):
     if role:
-        schemas.PermissionSummaryWithHasPerm.__config__.permissions = list(*zip(*db.query(Permission.id).join(Role, Permission.roles).filter(Role.id==role).all()))
-        return parse_obj_as(schemas.ContentTypeWithHasPerm, await crud.content_type.read_by_id(id, db, fields))
+        try:
+            schemas.PermissionSummaryWithHasPerm.__config__.permissions = list(*zip(*db.query(Permission.id).join(Role, Permission.roles).filter(Role.id==role).all()))
+            return parse_obj_as(schemas.ContentTypeWithHasPerm, await crud.content_type.read_by_id(id, db, fields))
+        except Exception as e:
+            if isinstance(e.orig, UndefinedTable):
+                raise HTTPException(status_code=400, detail=f'(UndefinedTable) This may be due to missing or invalid tenant_key in request header')
+            raise HTTPException(status_code=500, detail=f'{e}')
     if include_permissions: 
         return parse_obj_as(schemas.ContentType, await crud.content_type.read_by_id(id, db, fields)) 
     return parse_obj_as(schemas.ContentTypeBase, await crud.content_type.read_by_id(id, db, fields))
