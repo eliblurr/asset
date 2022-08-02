@@ -103,7 +103,7 @@ async def forgot_password(request:Request, payload:schemas.EmailBase, account:sc
         try:
             if async_send_email(mail={
                 "subject":"Forgot Password",
-                "recipients":[obj.email],
+                "recipients":[user.email],
                 "body": {'verification_link': f'{urljoin(request.base_url, settings.VERIFICATION_PATH)}?token={token}', 'base_url':request.base_url},            
                 "template_name":"password-reset.html"
             }):return 'you will receive link shortly'
