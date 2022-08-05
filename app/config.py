@@ -61,6 +61,7 @@ class Settings(BaseSettings):
     SECRET: str = "khgdcvgbh"
         
     VERIFICATION_PATH: str = "accounts/activate-account/" 
+    PASSWORD_RESET: str = "reset-password/" 
     TENANT_ACTIVATION_PATH: str = "tenants/activate-tenant/"
 
     EMAIL_CODE_DURATION_IN_MINUTES: int = 15
