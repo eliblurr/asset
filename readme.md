@@ -156,7 +156,7 @@ Now we're ready to set up the project:
     source /path/to/venv/bin/activate
     pip install -r requirements.txt
 
-Next, we'll set up our local environment variables. We use [django-dotenv](https://github.com/jpadilla/django-dotenv) to help with this. It reads environment variables located in a file name `.env` in the top level directory of the project.
+Next, we'll set up our local environment variables. We use [python-dotenv](https://github.com/theskumar/python-dotenv.git) to help with this. It reads environment variables located in a file name `.env` in the top level directory of the project.
 
     $ mv env.example .env [update enviromental variables and change accordingly]
     
