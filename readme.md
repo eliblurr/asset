@@ -122,13 +122,12 @@ You can run the site locally or on your server without setting up Vagrant or Doc
 #### Dependencies
 
 - Python 3.6, 3.7, 3.8 or 3.9
-- [Virtualenv](https://virtualenv.pypa.io/en/stable/installation/)
-- [VirtualenvWrapper](https://virtualenvwrapper.readthedocs.io/en/latest/install.html) (optional)
-- [NodeJs and npm cli](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) 
+- [Virtualenv[Optional]](https://virtualenv.pypa.io/en/stable/installation/)
+- [VirtualenvWrapper[Optional]](https://virtualenvwrapper.readthedocs.io/en/latest/install.html) (optional)
 
 ### Installation
 
-#### Creating your Virtualenv
+#### Creating your Virtualenv[Optional]
 
 With [PIP](https://github.com/pypa/pip) and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/)
 installed, run:
@@ -147,81 +146,80 @@ Confirm that this is showing a compatible version of Python 3.x. If not, and you
 
     deactivate
     rmvirtualenv 
-    mkvirtualenv nsravenv --python=python3.9
+    mkvirtualenv assetvenv --python=python3.9
     python --version
 
-Now we're ready to set up the nsra project itself:
+Now we're ready to set up the project:
 
-    cd ~/dev [or your preferred dev directory]
-    git clone https://github.com/eliblurr/nsra.git
-    cd nsra
-    npm install
+    git clone https://github.com/eliblurr/asset.git
+    cd asset/app
     source /path/to/venv/bin/activate
-    pip install -r requirements/base.txt
+    pip install -r requirements.txt
 
-Next, we'll set up our local environment variables. We use [django-dotenv](https://github.com/jpadilla/django-dotenv)
-to help with this. It reads environment variables located in a file name `.env` in the top level directory of the project. The only variable we need to start is `DJANGO_SETTINGS_MODULE`:
+Next, we'll set up our local environment variables. We use [django-dotenv](https://github.com/jpadilla/django-dotenv) to help with this. It reads environment variables located in a file name `.env` in the top level directory of the project.
 
-    $ cp nsra/settings/local.py.example nsra/settings/local.py
     $ mv env.example .env [update enviromental variables and change accordingly]
     
 allowed environment variables `KEYWORDS`=`VALUES`:
 
-| KEYWORDS | VALUES | DEFAULT VALUE | VALUE TYPE | IS REQUIRED | ENVIRONMENT |
-| :------------ | :---------------------: | :------------------: | :------------------: | :------------------: | :------------------: |
-| ENVIRONMENT | dev or prod | dev | string | true | all |
-| DJANGO_SUPERUSER_USERNAME | | admin | string | false | all |
-| DJANGO_SUPERUSER_PASSWORD | | changeme | string | false | all |
-| DEBUG | on or off | on | string | false | production |
-| SECRET_KEY | | | string | string | production |
-| DJANGO_SECURE_SSL_REDIRECT | on or off | off | string | false | production |
-| ADMINS | .e.g. admin,admin@admin.com;admin2,admin2@admin.com; | | username,email; | true | production |
-| ALLOWED_HOSTS | | * | urls | false | production |
-| BASE_URL | .e.g. http://host1.com | http://localhost | url | true | production |
-| EMAIL_HOST | | | url | true | production |
-| EMAIL_PORT | | | integer | true | production |
-| EMAIL_USE_TLS | true or false | | bool | true | production |
-| EMAIL_USE_SSL | true or false | | bool | true | production |
-| EMAIL_HOST_USER | | | string | true | production |
-| EMAIL_HOST_PASSWORD | | | string | true | production |
-| EMAIL_SSL_CERTFILE | | | string | false | production |
-| EMAIL_SSL_KEYFILE | | | string | false | production |
-| EMAIL_TIMEOUT | | | integer | false | production |
-| EMAIL_USE_LOCALTIME | true or false | false | bool | false | production |
-| EMAIL_SUBJECT_PREFIX | | | string | false | production |
-| CACHE_URL | | | url | false | production |
-| MEDIA_BUCKET_SERVICE | gs or aws | | string | false | production |
-| GS_PROJECT_ID | | | string | true if MEDIA_BUCKET_SERVICE==gs else false | production |
-| GS_BUCKET_NAME | | | string | true if MEDIA_BUCKET_SERVICE==gs else false | production |
-| AWS_REGION | | | url | true if MEDIA_BUCKET_SERVICE==aws else false | production |
-| AWS_ACCESS_KEY_ID | | | string | true if MEDIA_BUCKET_SERVICE==aws else false | production |
-| AWS_SESSION_TOKEN | | | string | true if MEDIA_BUCKET_SERVICE==aws else false | production |
-| AWS_SECRET_ACCESS_KEY | | | string | true if MEDIA_BUCKET_SERVICE==aws else false | production |
-| AWS_STORAGE_BUCKET_NAME | | | string | true if MEDIA_BUCKET_SERVICE==aws else false | production |
-| ELASTICSEARCH_URL | | | url | false | production |
-| ELASTICSEARCH_PORT | | 9200 | integer | true if ELASTICSEARCH_URL is set else false | production |
-| ELASTICSEARCH_USE_SSL | on or off | | url | true if ELASTICSEARCH_URL is set else false | production |
-| ELASTICSEARCH_VERIFY_CERTS | on or off | | url | true if ELASTICSEARCH_URL is set else false | production |
-| FILE_LOG_LEVEL | | ERROR | string | false | production |
-| MAIL_LOG_LEVEL | | CRITICAL | string | false | production |
-| CACHE_URL | | | url | false | production |
-| DATABASE_URL | | | url | true | production |
+| KEYWORDS | VALUES | DEFAULT VALUE | VALUE TYPE | IS REQUIRED | 
+| :------------ | :---------------------: | :------------------: | :------------------: | :------------------: |
+| DATABASE_URL | | | string | true |
+| BASE_URL | | http://localhost | string | true | 
+| ADMIN_EMAIL | | admin@admin.com | string | true |
+| VERIFICATION_PATH | | | string | true |
+| PASSWORD_RESET | | | string | true |
+| EMAIL_CODE_DURATION_IN_MINUTES | | 15 | integer | true |
+| ACCESS_TOKEN_DURATION_IN_MINUTES | | 60 | integer | true |
+| REFRESH_TOKEN_DURATION_IN_MINUTES | | 600 | integer | true |
+| PASSWORD_RESET_TOKEN_DURATION_IN_MINUTES | | 15 | integer | true |
+| ACCOUNT_VERIFICATION_TOKEN_DURATION_IN_MINUTES | | 15 | integer | true |
+| TWILIO_PHONE_NUMBER | | | string | false |
+| TWILIO_AUTH_TOKEN | | | string | false |
+| TWILIO_ACCOUNT_SID | | | string | false |
+| MAIL_USERNAME | | | string | true |
+| MAIL_PASSWORD | | | string | true |
+| MAIL_FROM | | | string | true |
+| MAIL_PORT | | | string | true |
+| MAIL_SERVER | | | string | true |
+| MAIL_FROM_NAME | | | string | true |
+| MAIL_TLS | | true | boolean | true |
+| MAIL_SSL | | false | boolean | true |
+| USE_CREDENTIALS | | true | boolean | true |
+| VALIDATE_CERTS | | true | boolean | true |
+| DEFAULT_MAIL_SUBJECT | | | string | true |
+| APS_COALESCE | | false | boolean | true |
+| APS_MAX_INSTANCES | | 20 | integer | true |
+| APS_MISFIRE_GRACE_TIME | | 4 | integer | true |
+| APS_THREAD_POOL_MAX_WORKERS | | 20 | integer | true |
+| APS_PROCESS_POOL_MAX_WORKERS | | 5 | integer | true |
+| USE_S3 | | false | boolean | true |
+| AWS_ACCESS_KEY_ID | | | string | true |
+| AWS_SECRET_ACCESS_KEY | | | string | true |
+| AWS_DEFAULT_ACL | | public-read | string | true |
+| AWS_STORAGE_BUCKET_NAME | | | string | true |
+| AWS_S3_OBJECT_CACHE_CONTROL | | max-age=86400 | string | true |
+| REDIS_HOST | | redis | string | true |
+| REDIS_PORT | | 6379 | integer | true |
+| REDIS_PASSWORD | | | string | true |
+| REDIS_USER | | | string | true |
+| REDIS_NODE | | 0 | integer | true |
+| REDIS_MAX_RETRIES | | 3 | integer | true |
+| REDIS_RETRY_INTERVAL | | 10 | integer | true |
 
-To set up your database without initial data, run the following commands in shell:
+make start script an executable[in asset/app/ directory]:
+    
+    chmod +x start.sh   
+    chmod +x build.sh   
 
-    chmod +x init.sh     
-    ./init.sh
+To build and setup application, run[in asset/app/ directory]:
 
-To set up your database with initial data, run the following commands in shell:
-
-    chmod +x init.sh  
-    ./init.sh -z load
+    ./build.sh
 
 Start app server with:
 
-    ./manage.py runserver
-
-Log into the admin with the credentials `admin / changeme` or `values for newly set DJANGO_SUPERUSER_USERNAME and DJANGO_SUPERUSER_PASSWORD`.
+    ./start.sh
+    <!-- accept server and server params -->
 
 ## Deploy to Heroku
 
