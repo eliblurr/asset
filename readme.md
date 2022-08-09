@@ -117,7 +117,7 @@ docker-compose logs -f
 
 ## Setup with Virtualenv
 
-You can run the site locally without setting up Vagrant or Docker and simply use Virtualenv, which is the [recommended installation approach](https://docs.djangoproject.com/en/3.2/topics/install/#install-the-django-code) for Django itself.
+You can run the site locally or on your server without setting up Vagrant or Docker and simply use Virtualenv, which is the **recommended installation approach**.
 
 #### Dependencies
 
