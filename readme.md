@@ -1,6 +1,6 @@
 # E-Asset Management API service
 
-This is a project for building an asset management system using [Fastapi](https://fastapi.tiangolo.com)  with [SQLalchemy ORM logic](https://docs.sqlalchemy.org/en/14/).
+This project is a multitenant asset management system built using [Fastapi](https://fastapi.tiangolo.com)  with [SQLalchemy ORM logic](https://docs.sqlalchemy.org/en/14/).
 
 **Document contents**
 
@@ -234,41 +234,7 @@ to generate one. At this point you will be presented with a screen to configure 
 we will accept all of the defaults and click `Deploy`. The status of the deployment will dynamically
 update in the browser. Once finished, click `View` to see the public site.
 
-Log into the admin with the credentials `admin / changeme`.
-
-To prevent the site from regenerating a new Django `SECRET_KEY` each time Heroku restarts your site, you should set
-a `DJANGO_SECRET_KEY` environment variable in Heroku using the web interace or the [CLI](https://devcenter.heroku.com/articles/heroku-cli). If using the CLI, you can set a `SECRET_KEY` like so:
-
-    heroku config:set DJANGO_SECRET_KEY=changeme
-
-To learn more about Heroku, read [Deploying Python and Django Apps on Heroku](https://devcenter.heroku.com/articles/deploying-python).
-
-### Storing Wagtail Media Files on AWS S3
-
-If you have deployed the site to Heroku or via Docker, you may want to perform some additional setup. Heroku uses an
-[ephemeral filesystem](https://devcenter.heroku.com/articles/dynos#ephemeral-filesystem), and Docker-based hosting
-environments typically work in the same manner. In laymen's terms, this means that uploaded images will disappear at a
-minimum of once per day, and on each application deployment. To mitigate this, you can host your media on S3.
-
-This documentation assumes that you have an AWS account, an IAM user, and a properly configured S3 bucket. These topics
-are outside of the scope of this documentation; the following [blog post](https://wagtail.org/blog/amazon-s3-for-media-files/)
-will walk you through those steps.
-
-This site comes preconfigured with a production settings file that will enable S3 for uploaded media storage if
-`AWS_STORAGE_BUCKET_NAME` is defined in the shell environment. All you need to do is set the following environment
-variables. If using Heroku, you will first need to install and configure the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli). Then, execute the following commands to set the aforementioned environment variables:
-
-    heroku config:set AWS_STORAGE_BUCKET_NAME=changeme
-    heroku config:set AWS_ACCESS_KEY_ID=changeme
-    heroku config:set AWS_SECRET_ACCESS_KEY=changeme
-
-Do not forget to replace the `changeme` with the actual values for your AWS account. If you're using a different hosting
-environment, set the same environment variables there using the method appropriate for your environment.
-
-Once Heroku restarts your application or your Docker container is refreshed, you should have persistent media storage!
-
-Running `./manage.py load_initial_data` will copy local images to S3, but if you set up S3 after you ran it the first
-time you might need to run it again.
+To learn more about Heroku, read [Deploying Python and FastApi Apps on Heroku](https://devcenter.heroku.com/articles/deploying-python).
 
 ## Deploy as AWS-EC2 Instance
 
@@ -276,41 +242,12 @@ To be included
 
 # Contributing
 
-If you're a Python or Django developer, fork the repo and get stuck in! If you'd like to get involved you may find our [contributing guidelines](https://github.com/eliblurr/nsra/blob/master/contributing.md) a useful read.
+This repository is a proprietary product intended for AITI-KACE
 
-### Preparing this archive for distribution
-
-If you change content or images in this repo and need to prepare a new fixture file for export, do the following on a branch:
-
-`./manage.py dumpdata --natural-foreign --indent 2 -e auth.permission -e contenttypes -e wagtailcore.GroupCollectionPermission -e wagtailimages.filter -e wagtailcore.pagerevision -e wagtailimages.rendition -e sessions > nsra/base/fixtures/site.json`
-
-Please optimize any included images to 1200px wide with JPEG compression at 60%. Note that `media/images` is ignored in the repo by `.gitignore` but `media/original_images` is not. Wagtail's local image "renditions" are excluded in the fixture recipe above.
-
-Make a pull request to https://github.com/eliblurr/nsra.git
+Make a pull request to https://github.com/eliblurr/asset.git
 
 # Other notes
 
-### Note on search
-
-Because we can't (easily) use ElasticSearch for this site, we use wagtail's native DB search.
-However, native DB search can't search specific fields in our models on a generalized `Page` query.
-So for site purposes ONLY, we hard-code the model names we want to search into `search.views`, which is
-not ideal. In production, use ElasticSearch and a simplified search query, per
-[https://docs.wagtail.org/en/stable/topics/search/searching.html](https://docs.wagtail.org/en/stable/topics/search/searching.html).
-
-### Sending email from the contact form
-
-The following setting in `base.py` and `production.py` ensures that live email is not sent by the contact form.
-
-`EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'`
-
-In production on your own site, you'll need to change this to:
-
-`EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'`
-
-and configure [SMTP settings](https://docs.djangoproject.com/en/3.2/topics/email/#smtp-backend) appropriate for your email provider.
-
 ### Ownership of content
 
-All content in this site is public domain. Textual content in this project is either sourced from Wikipedia or is lorem ipsum. All images are from either Wikimedia Commons or other copyright-free sources.
-
+All content in this app is private domain.
