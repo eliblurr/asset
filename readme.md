@@ -216,13 +216,26 @@ To build and setup application, run[in asset/app/ directory]:
 
     ./build.sh
 
-Start app server with:
+Start app server with start script:
 
     ./start.sh
 
-    script arguments:
-    
-    <!-- accept server and server params -->
+Start script options
+1. -s : identifies your desired server, current options are uvicorn or gunicorn
+
+    -s uvicorn
+
+2. -w : identifies number of workers you want running
+
+    -w 4
+
+3. -e : all extra arguments passed in quotes for your selected server
+
+    -e "--port 8087"
+
+example:
+
+    ./start.sh -s uvicorn -w 4 -e "--port 8087"
 
 ## Deploy to Heroku
 
