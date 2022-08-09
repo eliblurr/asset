@@ -132,7 +132,7 @@ You can run the site locally or on your server without setting up Vagrant or Doc
 With [PIP](https://github.com/pypa/pip) and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/)
 installed, run:
 
-    mkvirtualenv nsravenv
+    mkvirtualenv assetvenv
     python --version
 
 or 
@@ -225,7 +225,7 @@ Start app server with:
 
 If you want a publicly accessible site, use [Heroku's](https://heroku.com) one-click deployment solution to the free 'Hobby' tier:
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/eliblurr/nsra)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/eliblurr/asset)
 
 If you do not have a Heroku account, clicking the above button will walk you through the steps
 to generate one. At this point you will be presented with a screen to configure your app. For our purposes,
