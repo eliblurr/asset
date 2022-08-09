@@ -219,6 +219,9 @@ To build and setup application, run[in asset/app/ directory]:
 Start app server with:
 
     ./start.sh
+
+    script arguments:
+    
     <!-- accept server and server params -->
 
 ## Deploy to Heroku
