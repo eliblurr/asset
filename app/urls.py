@@ -3,6 +3,7 @@ from fastapi.openapi.docs import (
     get_swagger_ui_html, 
     get_swagger_ui_oauth2_redirect_html)
 from services.broadcaster import chatroom_ws_receiver, chatroom_ws_sender
+from fastapi.concurrency import run_until_first_complete
 from fastapi.openapi.utils import get_openapi
 from dependencies import validate_bearer
 from fastapi import WebSocket, Depends
@@ -88,7 +89,7 @@ async def redoc_html():
         with_google_fonts=True
     )
 
-@app.websocket("ws/{channel}")
+@app.websocket("/ws/{channel}")
 async def websocket_endpoint(websocket: WebSocket, channel:str):
     await websocket.accept()
     await run_until_first_complete(
