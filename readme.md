@@ -229,13 +229,17 @@ Start script options
 
     -w 4
 
-3. -e : all extra arguments passed in quotes for your selected server
+3. -p : identifies number of redis worker processes you want running
+
+    -p 4
+
+4. -e : all extra arguments passed in quotes for your selected server
 
     -e "--port 8087"
 
 example:
 
-    ./start.sh -s uvicorn -w 4 -e "--port 8087"
+    ./start.sh -s uvicorn -w 4 -rw 4 -e "--port 8087"
 
 ## Deploy to Heroku
 
