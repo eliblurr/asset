@@ -40,6 +40,7 @@ def get_db_2():
 
 async def validate_bearer(token:str=Depends(oauth2_scheme), db=Depends(get_db)):
     from routers.user.auth.crud import is_token_blacklisted
+    from utils import decode_jwt
     try:
         if await is_token_blacklisted(token, db):
             raise BlacklistedToken('token blacklisted')  
