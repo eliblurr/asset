@@ -25,7 +25,7 @@ def verify_payload(account:schemas.Account, payload:Union[schemas.CreateUser, sc
     schemas.User, List[schemas.User],
     schemas.Admin, List[schemas.Admin], list
 ], status_code=201, name='Accounts')
-async def create(request:Request, data=Depends(verify_payload), db:Session=Depends(get_db)):
+async def create(request:Request, data=Depends(verify_payload), db:Session=Depends(get_db), is_validated=Depends(validate_bearer)):
     c = crud.administrator if data['account']=="administrators" else crud.user
 
     if await c.exists(db, email=data['payload'].email):
@@ -51,24 +51,24 @@ async def create(request:Request, data=Depends(verify_payload), db:Session=Depen
 
 @router.get('/users', response_model=schemas.UserOrAdminList, name='User')
 @ContentQueryChecker(crud.user.model.c(), None)
-async def read(db:Session=Depends(get_db), **params):
+async def read(db:Session=Depends(get_db), is_validated=Depends(validate_bearer), **params):
     return await crud.user.read(params, db)
 
 @router.get('/administrators', response_model=schemas.UserOrAdminList, name='Administrator')
 @ContentQueryChecker(crud.administrator.model.c(), None)
-async def read(db:Session=Depends(get_db), **params):
+async def read(db:Session=Depends(get_db), is_validated=Depends(validate_bearer), **params):
     return await crud.administrator.read(params, db)
 
 @router.get('/users/{id}', response_model=Union[schemas.User, dict], name='User')
-async def read_by_id(id:int, fields:List[str]=r_fields(crud.user.model), db:Session=Depends(get_db)):
+async def read_by_id(id:int, fields:List[str]=r_fields(crud.user.model), db:Session=Depends(get_db), is_validated=Depends(validate_bearer)):
     return await crud.user.read_by_id(id, db, fields)
 
 @router.get('/administrators/{id}', response_model=Union[schemas.User, dict], name='Administrator')
-async def read_by_id(id:int, fields:List[str]=r_fields(crud.administrator.model), db:Session=Depends(get_db)):
+async def read_by_id(id:int, fields:List[str]=r_fields(crud.administrator.model), db:Session=Depends(get_db), is_validated=Depends(validate_bearer)):
     return await crud.administrator.read_by_id(id, db, fields)
 
 @router.patch('/{account}/{id}', response_model=Union[schemas.User, schemas.Admin, dict], name='User Account')
-async def update(id:int, account:schemas.Account, payload:schemas.UpdateUser, db:Session=Depends(get_db)):
+async def update(id:int, account:schemas.Account, payload:schemas.UpdateUser, db:Session=Depends(get_db), is_validated=Depends(validate_bearer)):
     obj = crud.administrator if account.value == "administrators" else crud.user
     if payload.password:
         await crud.update_password_with_code(id, account, payload.password, db)
@@ -91,7 +91,7 @@ async def update(request:Request, payload:schemas.PasswordBase, data=Depends(cru
     return 'password updated'
 
 @router.delete('/{account}/{id}', name='User/Administrator', status_code=204)
-async def delete(id:int, account:schemas.Account, db:Session=Depends(get_db)):
+async def delete(id:int, account:schemas.Account, db:Session=Depends(get_db), is_validated=Depends(validate_bearer)):
     if account.value == "administrators":
         await crud.administrator.delete(id, db)
     await crud.user.delete(id, db)
