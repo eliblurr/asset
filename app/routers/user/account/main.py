@@ -79,7 +79,7 @@ async def update(id:int, account:schemas.Account, payload:schemas.UpdateUser, db
 async def update(request:Request, payload:schemas.PasswordBase, data=Depends(crud.decode_token), db:Session=Depends(get_db)):
 
     c = crud.administrator if data['account']=="administrators" else crud.user
-    obj = c.read_by_id(data['id'], db)
+    obj = await c.read_by_id(data['id'], db)
 
     if not obj:
         raise HTTPException(status_code=404, detail='account no longer exits')

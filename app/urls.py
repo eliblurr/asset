@@ -3,6 +3,7 @@ from fastapi.openapi.docs import (
     get_swagger_ui_html, 
     get_swagger_ui_oauth2_redirect_html)
 from services.broadcaster import chatroom_ws_receiver, chatroom_ws_sender
+from fastapi.concurrency import run_until_first_complete
 from fastapi.openapi.utils import get_openapi
 from dependencies import validate_bearer
 from fastapi import WebSocket, Depends
@@ -17,7 +18,7 @@ app.include_router(account, tags=['User & Adminstrator Accounts'], prefix='/acco
 app.include_router(subscription, tags=['Subscriptions'], prefix='/subscriptions', dependencies=[Depends(validate_bearer)])
 app.include_router(manufacturer, tags=['Manufacturers'], prefix='/manufacturers', dependencies=[Depends(validate_bearer)])
 app.include_router(content_type, tags=['Content Types'], prefix='/content-types', dependencies=[Depends(validate_bearer)])
-app.include_router(tenant, tags=['Tenants/Organizations'], prefix='/tenants', dependencies=[Depends(validate_bearer)])
+app.include_router(tenant, tags=['Tenants/Organizations'], prefix='/tenants')
 app.include_router(permission, tags=['Permissions'], prefix='/permissions', dependencies=[Depends(validate_bearer)])
 app.include_router(department, tags=['Departments'], prefix='/departments', dependencies=[Depends(validate_bearer)])
 app.include_router(consumable, tags=['Consumables'], prefix='/consumables', dependencies=[Depends(validate_bearer)])
@@ -88,7 +89,7 @@ async def redoc_html():
         with_google_fonts=True
     )
 
-@app.websocket("ws/{channel}")
+@app.websocket("/ws/{channel}")
 async def websocket_endpoint(websocket: WebSocket, channel:str):
     await websocket.accept()
     await run_until_first_complete(

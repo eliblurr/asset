@@ -19,7 +19,6 @@ def get_db_2():
         db.close()
 
 # from fastapi import Request, Header, HTTPException, Depends
-# from routers.user.auth.crud import is_token_blacklisted
 # from utils import http_exception_detail, decode_jwt
 # 
 # from database import SessionLocal, engine
@@ -40,6 +39,8 @@ def get_db_2():
 #     return x_key
 
 async def validate_bearer(token:str=Depends(oauth2_scheme), db=Depends(get_db)):
+    from routers.user.auth.crud import is_token_blacklisted
+    from utils import decode_jwt
     try:
         if await is_token_blacklisted(token, db):
             raise BlacklistedToken('token blacklisted')  
