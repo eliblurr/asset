@@ -17,7 +17,7 @@ app.include_router(account, tags=['User & Adminstrator Accounts'], prefix='/acco
 app.include_router(subscription, tags=['Subscriptions'], prefix='/subscriptions', dependencies=[Depends(validate_bearer)])
 app.include_router(manufacturer, tags=['Manufacturers'], prefix='/manufacturers', dependencies=[Depends(validate_bearer)])
 app.include_router(content_type, tags=['Content Types'], prefix='/content-types', dependencies=[Depends(validate_bearer)])
-app.include_router(tenant, tags=['Tenants/Organizations'], prefix='/tenants', dependencies=[Depends(validate_bearer)])
+app.include_router(tenant, tags=['Tenants/Organizations'], prefix='/tenants')
 app.include_router(permission, tags=['Permissions'], prefix='/permissions', dependencies=[Depends(validate_bearer)])
 app.include_router(department, tags=['Departments'], prefix='/departments', dependencies=[Depends(validate_bearer)])
 app.include_router(consumable, tags=['Consumables'], prefix='/consumables', dependencies=[Depends(validate_bearer)])
