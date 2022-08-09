@@ -1,0 +1,58 @@
+[
+    {
+        "status": true,
+        "created": "2022-04-18T03:48:32.331026",
+        "id": 1,
+        "updated": "2022-04-18T03:48:32.33103",
+        "title": "Tenant Administrator",
+        "description": null
+    },
+    {
+        "status": true,
+        "created": "2022-04-18T03:48:32.331032",
+        "id": 2,
+        "updated": "2022-04-18T03:48:32.331033",
+        "title": "Head of Department",
+        "description": null
+    },
+    {
+        "status": true,
+        "created": "2022-04-18T03:48:32.331035",
+        "id": 3,
+        "updated": "2022-04-18T03:48:32.331036",
+        "title": "Facility Manager",
+        "description": null
+    },
+    {
+        "status": true,
+        "created": "2022-04-18T03:48:32.331037",
+        "id": 4,
+        "updated": "2022-04-18T03:48:32.331038",
+        "title": "Head of Entity",
+        "description": null
+    },
+    {
+        "status": true,
+        "created": "2022-04-18T03:48:32.33104",
+        "id": 5,
+        "updated": "2022-04-18T03:48:32.331041",
+        "title": "Store Manager",
+        "description": null
+    },
+    {
+        "status": true,
+        "created": "2022-04-18T03:48:32.331042",
+        "id": 6,
+        "updated": "2022-04-18T03:48:32.331044",
+        "title": "Staff",
+        "description": null
+    },
+    {
+        "status": true,
+        "created": "2022-04-18T03:48:32.331042",
+        "id": 7,
+        "updated": "2022-04-18T03:48:32.331044",
+        "title": "Procurement Officer",
+        "description": null
+    }
+]

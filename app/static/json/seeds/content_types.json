@@ -1,0 +1,162 @@
+[
+    {
+        "id": 37,
+        "model": "dashboard"
+    },
+    {
+        "id": 1,
+        "model": "subscriptions"
+    },
+    {
+        "id": 2,
+        "model": "faqs"
+    },
+    {
+        "id": 3,
+        "model": "asset_requests"
+    },
+    {
+        "id": 4,
+        "model": "departments"
+    },
+    {
+        "id": 5,
+        "model": "priorities"
+    },
+    {
+        "id": 6,
+        "model": "consumable_requests"
+    },
+    {
+        "id": 7,
+        "model": "base_departments"
+    },
+    {
+        "id": 8,
+        "model": "catalogues"
+    },
+    {
+        "id": 9,
+        "model": "packages"
+    },
+    {
+        "id": 10,
+        "model": "revoked_tokens"
+    },
+    {
+        "id": 11,
+        "model": "activities"
+    },
+    {
+        "id": 12,
+        "model": "tenants"
+    },
+    {
+        "id": 13,
+        "model": "users"
+    },
+    {
+        "id": 14,
+        "model": "branches"
+    },
+    {
+        "id": 15,
+        "model": "roles"
+    },
+    {
+        "id": 16,
+        "model": "messages"
+    },
+    {
+        "id": 17,
+        "model": "proposals"
+    },
+    {
+        "id": 18,
+        "model": "asset_categories"
+    },
+    {
+        "id": 19,
+        "model": "content_types"
+    },
+    {
+        "id": 20,
+        "model": "currencies"
+    },
+    {
+        "id": 21,
+        "model": "email_verication_codes"
+    },
+    {
+        "id": 22,
+        "model": "categories"
+    },
+    {
+        "id": 23,
+        "model": "catalogue_assets"
+    },
+    {
+        "id": 24,
+        "model": "administrators"
+    },
+    {
+        "id": 25,
+        "model": "requests"
+    },
+    {
+        "id": 26,
+        "model": "assets"
+    },
+    {
+        "id": 27,
+        "model": "vendors"
+    },
+    {
+        "id": 28,
+        "model": "role_permissions"
+    },
+    {
+        "id": 29,
+        "model": "permissions"
+    },
+    {
+        "id": 30,
+        "model": "inventories"
+    },
+    {
+        "id": 31,
+        "model": "consumables"
+    },
+    {
+        "id": 32,
+        "model": "consumable_categories"
+    },
+    {
+        "id": 33,
+        "model": "uploads"
+    },
+    {
+        "id": 34,
+        "model": "manufacturers"
+    },
+    {
+        "id": 35,
+        "model": "policies"
+    },
+    {
+        "id": 36,
+        "model": "vendor_categories"
+    },
+    {
+        "id": 38,
+        "model": "tenant_configuration"
+    },
+    {
+        "id": 39,
+        "model": "forwarded_proposal"
+    },
+    {
+        "id": 40,
+        "model": "request_transfer"
+    }
+]
