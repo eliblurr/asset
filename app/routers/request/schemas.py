@@ -66,9 +66,13 @@ class CreateRequest(RequestBase):
             values['consumable_rq'] = values['obj']
         return values
 
+class SwapHolder(BaseModel):
+    holder_id: int
+
 class TranferBase(BaseModel):
     picked_at: Optional[int]
     pickup_deadline: Optional[int]
+    holder_id: Optional[int]
 
     _normalize_start_date_ = validator('picked_at', allow_reuse=True)(timestamp_to_datetime)
     _normalize_deadline_date_ = validator('pickup_deadline', allow_reuse=True)(timestamp_to_datetime)
