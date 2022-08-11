@@ -67,7 +67,7 @@ class CreateRequest(RequestBase):
         return values
 
 class SwapHolder(BaseModel):
-    holder_id: int
+    holder_id: Optional[int]
 
 class TranferBase(BaseModel):
     picked_at: Optional[int]
