@@ -27,11 +27,6 @@ class RevokedToken(BaseMixin, Base):
 @event.listens_for(EmailVerificationCode, 'before_insert')
 def delete_existing_value(mapper, connection, target):
     with connection.begin():
-        # connection.execute("""DELETE FROM email_verication_codes WHERE email=:email""",{'email':target.email})
-
-        # d = addresses_table.delete().where(addresses_table.c.retired == 1)
-# d.execute()
-
         connection.execute(
             EmailVerificationCode.__table__.delete().where(EmailVerificationCode.__table__.c.email == target.email)
         )
