@@ -56,13 +56,10 @@ async def revoke_token(payload:Union[schemas.Logout, str], db:Session):
         print(e)
 
 def del_code(email, db:Session=SessionLocal()):
-    obj = db.query(models.EmailVerificationCode).filter_by(email=email).delete()
-    # User.query.filter(User.id == 123).delete()
-    # .get(email)
-    # 
-    # if obj:
-    #     db.delete(obj)
-    db.commit()
+    obj = db.query(models.EmailVerificationCode).get(email)
+    if obj:
+        db.delete(obj)
+        db.commit()
     return True
 
 def schedule_del_code(email):
