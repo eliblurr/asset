@@ -55,9 +55,10 @@ def get_current_user(data:str=Depends(validate_bearer), db:Session=Depends(get_d
 
 @router.post("/send-email-verification-code", name='Request Email verification code')
 async def request_email_verification_code(request:Request, payload:schemas.EmailBase, account:schemas.Account, db:Session=Depends(get_db)):
-    obj = await crud.add_email_verification_code(payload.email, account, db)
-    crud.schedule_del_code(obj.email)
+   
     try:
+        obj = await crud.add_email_verification_code(payload.email, account, db)
+        crud.schedule_del_code(obj.email)
         if async_send_email(mail={
             "subject":"Email Verification",
             "recipients":[obj.email],
@@ -65,6 +66,7 @@ async def request_email_verification_code(request:Request, payload:schemas.Email
             "template_name":"verification-code.html"
         }):return 'you will receive code shortly'
     except Exception as e:
+        print(e)
         logger(__name__, e, 'critical')
     raise HTTPException(status_code=417)
 
