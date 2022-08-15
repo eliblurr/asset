@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     VERSION: str = '2.0.0'
     BASE_URL: str = 'http://localhost'
+    CLIENT_BASE_URL: str = 'http://localhost'
     ADMIN_EMAIL: str = 'admin@admin.com'
     NAME: str = "e-Asset Management API Service"
     DESCRIPTION: str = "API documentation for eAsset Management API service"
