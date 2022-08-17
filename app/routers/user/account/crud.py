@@ -21,8 +21,8 @@ async def decode_token(token:str, db:Session=Depends(get_db)):
     except Exception as e:
         raise HTTPException(
             status_code=401,
-            detail=raise_exc(loc="Bearer <token>", msg=f"{e}", type=f"{e.__class__}"), 
-            headers={"WWW-Authenticate": "Bearer"})
+            detail=raise_exc(loc="<token>", msg=f"{e}", type=f"{e.__class__}"), 
+            headers={"WWW-Authenticate": "token"})
     else:
         if obj.get('revoke_after', False):
             await revoke_token(token, db)
