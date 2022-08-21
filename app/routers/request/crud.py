@@ -51,9 +51,12 @@ def expire(id:int, db=SessionLocal()):
 asset_request = CRUD(models.AssetRequest)
 consumable_request = CRUD(models.ConsumableRequest)
 
-async def transfer(request_id:int, payload:Union[schemas.AssetTransfer, schemas.ConsumableTransfer], db:Session):
+async def transfer(request_id:int, payload:Union[schemas.AssetTransfer, schemas.ConsumableTransfer], db:Session, activity=[]):
 
     req = db.query(models.Request).filter_by(id=request_id).first()
+
+    # add holder to payload
+    payload.holder_id = req.author_id
 
     if payload.action=='ready' and req.status!='accepted':
         raise HTTPException(status_code=400, detail='transfer can only occur when request has been accepted')
@@ -62,10 +65,13 @@ async def transfer(request_id:int, payload:Union[schemas.AssetTransfer, schemas.
         if not isinstance(payload, schemas.AssetTransfer):
             raise HTTPException(status_code=400, detail="payload mismatch with request tag")
 
-        return await asset_request.update_2({'request_id':request_id}, payload, db)
+        return await asset_request.update_2({'request_id':request_id}, payload, db, activity=activity)
 
     if req.tag.value=='consumable':
         if not isinstance(payload, schemas.ConsumableTransfer):
             raise HTTPException(status_code=400, detail="payload mismatch with request tag")
         
-        return await consumable_request.update_2({'request_id':request_id}, payload, db)
+        return await consumable_request.update_2({'request_id':request_id}, payload, db, activity=activity)
+
+async def swap_holder(request_id:int, payload:schemas.SwapHolder, db:Session):
+    return await request.update_2(request_id, payload, db)

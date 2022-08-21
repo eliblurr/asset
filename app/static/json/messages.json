@@ -1,43 +1,46 @@
 {
-    "asset":{
-        "delivery":"delivered to {user} on {datetime}",
-        "update":"updated by {user} on {datetime}",
-        "pick":"picked by {user} on {datetime}",
-        "return":"returned by {user} and is available in store",
-        "transfer_inv":"transferred to {inventory}[inventory]",
-        "transfer_brnch":"transferred by {user} from %s to %s on {datetime}",
-        "decommission":"decommissioned by {user} on {datetime}",
-        "transfer_usr":"transferred by {user} from %s to %s on {datetime}",
-        "assign":"currently assigned to {user}"
+    "asset": {
+        "delivery": "delivered to {user} on {datetime}",
+        "update": "updated by {user} on {datetime}",
+        "pick": "picked by {user} on {datetime}",
+        "return": "returned by {user} and is available in store",
+        "transfer_inv": "transferred to {inventory}[inventory]",
+        "transfer_brnch": "transferred by {user} from %s to %s on {datetime}",
+        "decommission": "decommissioned by {user} on {datetime}",
+        "transfer_usr": "transferred by {user} from %s to %s on {datetime}",
+        "assign": "currently assigned to {user}",
+        "transfer": "asset assigned to {holder} on {datetime}",
+        "swap": "asset assigned to {holder} on {datetime}"
     },
-    "request":{
-        "created":"created by {author} for {asset} to {target}",
-        "approve":"approved by {user} on {datetime}",
-        "decline":"declined by {user} on {datetime}",
-        "expire":"expired on {datetime}",
-        "return":"",
-        "complete":"",
-        "ready":"",
-        "expires":"request with code {code} expires {datetime}",
-        "accepted":"request with code {code} made for {name} by {author} has been approved by {hod}",
-        "inventory":"request with code {code} made for {name} by {author}",
-        "department":"request with code {code} made for {type}: {name} by {author}"
+    "request": {
+        "created": "created by {author} for {asset} to {target}",
+        "approve": "approved on {datetime}",
+        "decline": "declined on {datetime}",
+        "accept": "accepted on {datetime}",
+        "expire": "expired on {datetime}",
+        "return": "",
+        "complete": "",
+        "ready": "",
+        "expires": "request with code {code} expires {datetime}",
+        "accepted": "request with code {code} made for {name} by {author} has been approved by {hod}",
+        "inventory": "request with code {code} made for {name} by {author}",
+        "department": "request with code {code} made for {type}: {name} by {author}"
     },
-    "proposal":{
-        "create":"created by {user} on {datetime}",
-        "accept":"accepted by {user} on {datetime}",
-        "decline":"declined by {user} on {datetime}",
-        "deliver":"asset {asset} delivered to {user} on {datetime}",
-        "procured":"asset has been procured to {inventory}",
-        "transfer":"proposal operations has been transfered to you"
-    }, 
-    "inventory":{
-        "update_manager":"inventory assigned to {manager} on {datetime}"
+    "proposal": {
+        "create": "created on {datetime}",
+        "accept": "accepted on {datetime}",
+        "decline": "declined on {datetime}",
+        "deliver": "asset {asset} delivered to {user} on {datetime}",
+        "procured": "asset has been procured to {inventory}",
+        "transfer": "proposal operations has been transfered to you"
     },
-    "department":{
-        "update_manager":"department assigned to {head_of_department} on {datetime}"
+    "inventory": {
+        "update_manager": "inventory assigned to {manager} on {datetime}"
     },
-    "consumable":{
-        "transfer":"consumable item moved to {inventory} on {datetime}"
+    "department": {
+        "update_manager": "department assigned to {head_of_department} on {datetime}"
+    },
+    "consumable": {
+        "transfer": "consumable item moved to {inventory} on {datetime}"
     }
 }

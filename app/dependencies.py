@@ -48,6 +48,6 @@ async def validate_bearer(token:str=Depends(oauth2_scheme), db=Depends(get_db)):
     except Exception as e:
         raise HTTPException(
             status_code=401 if isinstance(e, ExpiredSignatureError) else 500, 
-            detail=raise_exc(loc="Bearer <token>", msg=f"{e}", type=f"{e.__class__}"), 
+            detail=raise_exc(loc="Bearer <token>[validate_bearer]", msg=f"{e}", type=f"{e.__class__}"), 
             headers={"WWW-Authenticate": "Bearer"}
         )

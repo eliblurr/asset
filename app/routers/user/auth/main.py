@@ -87,7 +87,7 @@ async def get_activation_link(request:Request, email, account:schemas.Account, d
         async_send_email(mail={
             "subject":"Account Activation",
             "recipients":[user.email],
-            "body": {'verification_link': f'{urljoin(settings.BASE_URL, settings.VERIFICATION_PATH)}?token={token}', 'base_url':request.base_url},            
+            "body": {'verification_link': f'{urljoin(settings.CLIENT_BASE_URL, settings.VERIFICATION_PATH)}?token={token}', 'base_url':request.base_url},            
             "template_name":"account-activation.html"
         })
     except Exception as e:
@@ -104,7 +104,7 @@ async def forgot_password(request:Request, payload:schemas.EmailBase, account:sc
             if async_send_email(mail={
                 "subject":"Forgot Password",
                 "recipients":[user.email],
-                "body": {'verification_link': f'{urljoin(settings.BASE_URL, settings.PASSWORD_RESET)}?token={token}', 'base_url':request.base_url},            
+                "body": {'verification_link': f'{urljoin(settings.CLIENT_BASE_URL, settings.PASSWORD_RESET)}?token={token}', 'base_url':request.base_url},            
                 "template_name":"password-reset.html"
             }):return 'you will receive link shortly'
         except Exception as e:

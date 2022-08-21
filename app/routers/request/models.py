@@ -48,12 +48,14 @@ class Request(BaseMixin, Base):
     inventory_id = Column(Integer, ForeignKey("inventories.id"), nullable=True)
     priority_id = Column(Integer, ForeignKey('priorities.id'), nullable=False)
     author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    holder_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     departments = relationship("Department", back_populates="requests")
     inventory = relationship("Inventory", back_populates="requests")
-    author = relationship("User", back_populates="requests")
+    author = relationship("User", back_populates="requests", foreign_keys=[author_id])
     consumable_rq = relationship("ConsumableRequest", uselist=False, back_populates='request')
     asset_rq = relationship("AssetRequest", uselist=False, back_populates='request')
+    holder = relationship("User", foreign_keys=[holder_id])
     priority = relationship("Priority")
 
     tag = Column(Enum(Tag), nullable=False)

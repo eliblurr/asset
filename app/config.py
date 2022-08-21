@@ -54,11 +54,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     VERSION: str = '2.0.0'
     BASE_URL: str = 'http://localhost'
+    CLIENT_BASE_URL: str = 'http://localhost'
     ADMIN_EMAIL: str = 'admin@admin.com'
     NAME: str = "e-Asset Management API Service"
     DESCRIPTION: str = "API documentation for eAsset Management API service"
     APIKEY: str = '_7f$2uF9CArFq7LtmQqBNuQdTa@KLt@*Y%M24Ry=eUd%R6QsXW3=Z-g!!Rvu#srJ5*#PhbV'
     SECRET: str = "khgdcvgbh"
+    PRIVATE: str = 'juSgo8OI50Ed-_s5D62bSPnw_Zp8ogaA-dpFEXuRxOA'
+    PUBLIC: str = 'BFvmxQwmP2eGYWIFYipT9i27neGXXnZLYL4GrPry4W88WBd-xo4Q9sDqswuDE3DKdcamNkomDu4TAuru1JEmEG0'
         
     VERIFICATION_PATH: str = "accounts/activate-account/" 
     PASSWORD_RESET: str = "reset-password/" 

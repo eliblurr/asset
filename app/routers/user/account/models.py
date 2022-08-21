@@ -27,7 +27,7 @@ class User(BaseMixin, HashMethodMixin, Base):
     department_id = Column(Integer, ForeignKey('departments.id', use_alter=True))
     department = relationship("Department", back_populates="staff", foreign_keys="User.department_id")
     proposals = relationship("Proposal", back_populates="author")
-    requests = relationship("Request", back_populates="author")    
+    requests = relationship("Request", back_populates="author", foreign_keys="[Request.author_id]")    
 
     @validates('password', include_removes=True)
     def validate_password(self, key, value, is_remove):

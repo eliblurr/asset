@@ -83,15 +83,25 @@ async def read(db:Session=Depends(get_db), **params):
 async def read_by_id(id:int, fields:List[str]=r_fields(crud.request.model), db:Session=Depends(get_db)):
     return await crud.request.read_by_id(id, db, fields)
 
+from routers.activity.crud import add_activity
+
 @router.patch('/{id}/transfer', name='Transfer') # , response_model=schemas.Request
 async def transfer_(id:int, payload:Union[schemas.AssetTransfer, schemas.ConsumableTransfer], db:Session=Depends(get_db)):
-    # activities here
+    activity = [{'func': add_activity, 'args': ('asset.transfer', {'holder':['holder.first_name', 'holder.last_name'], 'datetime':'updated'})}]
     return await crud.transfer(id, payload, db)
+
+@router.patch('/{id}/swap-holder', name='Change current holder')
+async def swap_holder(id:int, payload:schemas.SwapHolder, db:Session=Depends(get_db)):
+    activity = [{'func': add_activity, 'args': ('asset.swap', {'holder':['holder.first_name', 'holder.last_name'], 'datetime':'updated'})}]
+    return await crud.request.update_2(request_id, payload, db, activity=activity)
 
 @router.patch('/{id}', response_model=schemas.Request, name='Request')
 async def update_request(id:int, payload:schemas.UpdateRequest, db:Session=Depends(get_db)):
-    # activities here
-    return await crud.request.update_2(id, payload, db)
+    activity = []
+    if payload.status:
+        if payload.status.value=='accepted':activity.append({'func': add_activity, 'args':('request.accept', {'datetime':'updated'})})
+        elif payload.status.value=='declined':activity.append({'func': add_activity, 'args':('request.decline', {'datetime':'updated'})})
+    return await crud.request.update_2(id, payload, db, activity=activity)
 
 @router.delete('/{id}', name='Request', status_code=204)
 async def delete(id:int, db:Session=Depends(get_db)):

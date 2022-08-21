@@ -26,7 +26,6 @@ async def read_by_id(id:int, fields:List[str]=r_fields(crud.asset.model), db:Ses
 @router.patch('/{id}', response_model=schemas.Asset, name='Asset')
 async def update(id:int, payload:schemas.UpdateAsset, db:Session=Depends(get_db)):
     return await crud.asset.update_2(id, payload, db)
-    # add activities here
 
 @router.delete('/{id}', name='Asset', status_code=204)
 async def delete(id:int, db:Session=Depends(get_db)):

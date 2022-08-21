@@ -13,7 +13,9 @@ COPY . $APP_HOME
 RUN python3 -m pip install -r $APP_HOME/requirements.txt
 EXPOSE 80
 
-# CMD [ "gunicorn", "main:app", "--workers" , "4", "--user=root", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:80" ]
+CMD [ "gunicorn", "main:app", "--workers" , "6", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:80" ]
+# CMD [ "gunicorn", "main:app", "--workers" , "6", "--user=root", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:80" ]
+# CMD ["DEBUG=0", "gunicorn", "main:api", "-w", "4", "-k", "uvicorn.workers.UvicornWorker"]
+# CMD ["gunicorn", "-b" , "0.0.0.0:80", "main:api", "-w", "8", "-k", "uvicorn.workers.UvicornWorker"]
 # gunicorn --user=nii --workers=4 msmes.wsgi --daemon
-
-CMD [ "uvicorn", "main:app", "--workers" ,"4","--host", "0.0.0.0", "--port", "80"]
+# CMD [ "uvicorn", "main:app", "--workers" ,"4","--host", "0.0.0.0", "--port", "80"]

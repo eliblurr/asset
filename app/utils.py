@@ -72,7 +72,7 @@ def create_jwt(data:dict, exp:timedelta=None):
     return jwt.encode(data, config.settings.SECRET, algorithm=JWT_ALGORITHM)
 
 def decode_jwt(token):
-    return jwt.decode(token, config.settings.SECRET, JWT_ALGORITHM)
+    return jwt.decode(token, config.settings.SECRET, algorithms=[JWT_ALGORITHM])
 
 def gen_code(nbytes=8):
     return token_urlsafe(nbytes)

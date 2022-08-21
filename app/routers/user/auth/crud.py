@@ -63,11 +63,12 @@ def del_code(email, db:Session=SessionLocal()):
     return True
 
 def schedule_del_code(email):
+    from config import settings
     return scheduler.add_job(
         del_code,
         trigger='date',
-        kwargs={'email':obj.email},
-        id=f'ID-{obj.email}',
+        kwargs={'email':email},
+        id=f'ID-{email}',
         replace_existing=True,
         run_date=datetime.utcnow() + timedelta(minutes=settings.EMAIL_CODE_DURATION_IN_MINUTES)
     )

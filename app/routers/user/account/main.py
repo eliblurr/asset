@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from dependencies import get_db, validate_bearer
 from utils import r_fields, urljoin, logger
+from typing import Union, List, Optional
 from rds.tasks import async_send_email
 from cls import ContentQueryChecker
 from sqlalchemy.orm import Session
-from typing import Union, List
 from config import settings
 from . import crud, schemas
 import re
@@ -76,19 +76,23 @@ async def update(id:int, account:schemas.Account, payload:schemas.UpdateUser, db
 
 @router.patch('/update-password', name='User Account')
 @router.patch('/activate-account', name='Activate/Verify Account')
-async def update(request:Request, payload:schemas.PasswordBase, data=Depends(crud.decode_token), db:Session=Depends(get_db)):
+async def update(request:Request, payload:Optional[schemas.PasswordBase], data=Depends(crud.decode_token), db:Session=Depends(get_db)):
 
     c = crud.administrator if data['account']=="administrators" else crud.user
     obj = await c.read_by_id(data['id'], db)
 
     if not obj:
         raise HTTPException(status_code=404, detail='account no longer exits')
+    
+    if re.search('(update-password)', request.url.path) and not payload:
+        raise HTTPException(status_code=400, detail='password required')
+    else:
+        obj.password = payload.password
 
-    obj.password = payload.password
     if re.search('(activate-account)', request.url.path):
         obj.is_active, obj.is_verified = True, True
     db.commit()
-    return 'password updated'
+    return 'operation successful'
 
 @router.delete('/{account}/{id}', name='User/Administrator', status_code=204)
 async def delete(id:int, account:schemas.Account, db:Session=Depends(get_db), is_validated=Depends(validate_bearer)):
