@@ -46,6 +46,7 @@ async def validate_bearer(token:str=Depends(oauth2_scheme), db=Depends(get_db)):
             raise BlacklistedToken('token blacklisted')  
         return decode_jwt(token)
     except Exception as e:
+        print(e)
         raise HTTPException(
             status_code=401 if isinstance(e, ExpiredSignatureError) else 500, 
             detail=raise_exc(loc="Bearer <token>", msg=f"{e}", type=f"{e.__class__}"), 
