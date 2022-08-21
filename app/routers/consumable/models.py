@@ -3,11 +3,13 @@ from rds.tasks import async_send_email, async_send_message
 from utils import today_str, gen_code, instance_changes
 from routers.inventory.models import Inventory
 from routers.user.account.models import User
+from exceptions import OperationNotAllowed
 from sqlalchemy.orm import relationship
 from config import THUMBNAIL
 from mixins import BaseMixin
 from database import Base
 from ctypes import File
+
 
 class Consumable(BaseMixin, Base):
     '''Consumable Model'''
