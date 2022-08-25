@@ -26,8 +26,9 @@ def verify_payload(payload:schemas.CreateRequest, item:schemas.Items):
 
 @router.post('/{item}', response_model=schemas.Request, status_code=201, name='Request')
 async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
+    meta = {}
     try:
-        payload, item, meta, tmp_kw = payload['payload'], payload['item'], {}, {}              
+        payload, item, tmp_kw = payload['payload'], payload['item'], {}              
         recipient, kw = await crud.validate_author(payload.author_id, db) # if recipient send request to inventory manager for operation
         await crud.validate_priority(payload.priority_id, db)        
         
