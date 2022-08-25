@@ -130,6 +130,10 @@ def cancel_all_other_active_request_for_obj(mapper, connection, target):
                 "body":{'title': f'{target.asset_rq.asset.title}', 'code':target.code, 'item_code':target.asset_rq.asset.code, 'base_url':config.settings.BASE_URL, 'status':'DECLINED'},
             })
 
+            print(
+                123
+            )
+
 @event.listens_for(AssetRequest.action, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
