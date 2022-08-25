@@ -223,6 +223,7 @@ def update_handler(mapper, connection, target):
                     print('here')
                     stmt = Asset.__table__.update().where(Asset.id==data['id']).values(available=False)
                     connection.execute(stmt)
+                    print('here 2')
                 except Exception as e:
                     print(e)
 
