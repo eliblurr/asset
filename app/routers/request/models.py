@@ -52,10 +52,10 @@ class Request(BaseMixin, Base):
 
     departments = relationship("Department", back_populates="requests")
     inventory = relationship("Inventory", back_populates="requests")
-    author = relationship("User", back_populates="requests", foreign_keys="[Request.author_id]")
+    author = relationship("User", back_populates="requests", foreign_keys="[Request.author_id]", primaryjoin="User.id==Request.author_id")
     consumable_rq = relationship("ConsumableRequest", uselist=False, back_populates='request')
     asset_rq = relationship("AssetRequest", uselist=False, back_populates='request')
-    holder = relationship("User", foreign_keys="[Request.holder_id]") # foreign_keys="[Request.holder_id]" / foreign_keys=[holder_id]
+    holder = relationship("User", foreign_keys="[Request.holder_id]", primaryjoin="Request.holder_id==User.id") # foreign_keys="[Request.holder_id]" / foreign_keys=[holder_id]
     priority = relationship("Priority")
 
     tag = Column(Enum(Tag), nullable=False)
