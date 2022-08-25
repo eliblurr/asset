@@ -52,14 +52,11 @@ class Request(BaseMixin, Base):
 
     departments = relationship("Department", back_populates="requests")
     inventory = relationship("Inventory", back_populates="requests")
-    author = relationship("User", back_populates="requests", foreign_keys="Request.author_id")
+    author = relationship("User", back_populates="requests", foreign_keys=[author_id])
     consumable_rq = relationship("ConsumableRequest", uselist=False, back_populates='request')
     asset_rq = relationship("AssetRequest", uselist=False, back_populates='request')
-    holder = relationship("User", foreign_keys="Request.holder_id") # foreign_keys="[Request.holder_id]" / foreign_keys=[holder_id]
+    holder = relationship("User", foreign_keys=[holder_id]) # foreign_keys="[Request.holder_id]" / foreign_keys=[holder_id]
     priority = relationship("Priority")
-
-    # head_of_department = relationship('User', foreign_keys="Department.head_of_department_id")
-
 
     tag = Column(Enum(Tag), nullable=False)
 
@@ -119,7 +116,7 @@ def cancel_all_other_active_request_for_obj(mapper, connection, target):
             )
             
             u_stmt = Request.__table__.update().where(*filters).values(status=RequestStatus.declined)
-            s_stmt = select(User.email).join(Request).where(Request.id != target.id, Request.author_id==target.author_id, Request.status==RequestStatus.active, ).join(*join).where(*filters)
+            s_stmt = select(User.email).join(Request, Request.author_id==User.id).where(Request.id != target.id, Request.author_id==target.author_id, Request.status==RequestStatus.active, ).join(*join).where(*filters)
             
             connection.execute(u_stmt)
             res = connection.execute(s_stmt)
