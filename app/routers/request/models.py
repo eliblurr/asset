@@ -130,10 +130,6 @@ def cancel_all_other_active_request_for_obj(mapper, connection, target):
                 "body":{'title': f'{target.asset_rq.asset.title}', 'code':target.code, 'item_code':target.asset_rq.asset.code, 'base_url':config.settings.BASE_URL, 'status':'DECLINED'},
             })
 
-            print(
-                123
-            )
-
 @event.listens_for(AssetRequest.action, 'set', propagate=True)
 def receive_set(target, value, oldvalue, initiator):
     if value != oldvalue:
@@ -223,13 +219,8 @@ def update_handler(mapper, connection, target):
             data = dict(data.mappings().first())
 
             if status[0].value=='accepted':
-                try:
-                    print('here')
-                    stmt = Asset.__table__.update().where(Asset.id==data['id']).values(available=False)
-                    connection.execute(stmt)
-                    print('here 2')
-                except Exception as e:
-                    print(e)
+                stmt = Asset.__table__.update().where(Asset.id==data['id']).values(available=False)
+                connection.execute(stmt)
 
             stmt = Request.__table__.update().where(Request.id==target.id).values(inventory_id=data['inventory_id'])
             connection.execute(stmt)

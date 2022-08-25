@@ -129,38 +129,38 @@ def emit_action(request, obj, op, *args, **kwargs):
                     }
                 )
 
-    if op=='accepted':
-        terminate_reminder(request.id, 'expire-request')
-        terminate_reminder(request.id, 'expiry-notify-reminder')
+    # if op=='accepted':
+    #     terminate_reminder(request.id, 'expire-request')
+    #     terminate_reminder(request.id, 'expiry-notify-reminder')
         
-        send_mail(
-            kwargs={
-                'request_code':request.code, 
-                'subject':f'Asset request has been accepted',
-                'template_name':'request.html',
-                'recipients':[request.author.email],
-                'body':{
-                    'title':obj.title, 
-                    'code':obj.code 
-                },
-            }
-        )
+    #     send_mail(
+    #         kwargs={
+    #             'request_code':request.code, 
+    #             'subject':f'Asset request has been accepted',
+    #             'template_name':'request.html',
+    #             'recipients':[request.author.email],
+    #             'body':{
+    #                 'title':obj.title, 
+    #                 'code':obj.code 
+    #             },
+    #         }
+    #     )
 
-        notify(
-            kwargs.get('push_id'),
-            message={
-                'key':'request',
-                'message': messages()['request']['accepted'],
-                'meta': {
-                    'id':request.id, 
-                    'type':request.tag, 
-                    'request_code':request.code, 
-                    'title':obj.title, 'id':obj.id, 
-                    'author_id':request.author.id, 
-                    'author':f'{request.author.full_name()}'
-                }
-            }
-        )
+    #     notify(
+    #         kwargs.get('push_id'),
+    #         message={
+    #             'key':'request',
+    #             'message': messages()['request']['accepted'],
+    #             'meta': {
+    #                 'id':request.id, 
+    #                 'type':request.tag, 
+    #                 'request_code':request.code, 
+    #                 'title':obj.title, 'id':obj.id, 
+    #                 'author_id':request.author.id, 
+    #                 'author':f'{request.author.full_name()}'
+    #             }
+    #         }
+    #     )
 
     if op=='declined':
         terminate_reminders(request.id)
