@@ -60,7 +60,7 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
         try:
             _messages = messages()
             notify(push_id=recipient.push_id, message = {'key':'request', 'message': _messages['request']['department'],'meta':meta})
-            notify_reminder(id=req.id, date=payload.start_date-timedelta(days=1), name='expiry-notify-reminder', push_id=recipient.push_id, message={'key':'request', 'message': _messages['request']['expires'], 'meta':meta.update({'datetime':payload.start_date})})
+            notify_reminder(id=req.id, date=payload.obj.start_date-timedelta(days=1), name='expiry-notify-reminder', push_id=recipient.push_id, message={'key':'request', 'message': _messages['request']['expires'], 'meta':meta.update({'datetime':payload.obj.start_date})})
             scheduler.add_job( 
                 crud.expire,
                 id=f'{req.id}_ID{gen_code(10)}',
