@@ -103,9 +103,7 @@ async def update_request(id:int, payload:schemas.UpdateRequest, db:Session=Depen
     if payload.status:
         if payload.status.value=='accepted':activity.append({'func': add_activity, 'args':('request.accept', {'datetime':'updated'})})
         elif payload.status.value=='declined':activity.append({'func': add_activity, 'args':('request.decline', {'datetime':'updated'})})
-    val = await crud.request.update_2(id, payload, db, activity=activity)
-    print(val)
-    return val
+    return await crud.request.update_2(id, payload, db, activity=activity)
 
 @router.delete('/{id}', name='Request', status_code=204)
 async def delete(id:int, db:Session=Depends(get_db)):
