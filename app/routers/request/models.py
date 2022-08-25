@@ -257,6 +257,8 @@ def update_handler(mapper, connection, target):
     
     if department[0]:
 
+        print(9)
+
         args = (Request.code, Request.id.label('request_id'), author.first_name, author.last_name, author.id.label('author_id'), manager.push_id) 
 
         if asset_case:
@@ -265,12 +267,17 @@ def update_handler(mapper, connection, target):
         if consumable_case:
             stmt = select(*args, Asset.title, Consumable.id.label('consumable_id')).join(Request, Request.author_id==author.id).join(Department, author.department_id==Department.id).join(manager, manager.id==Department.head_of_department_id).join(ConsumableRequest, Request.id==ConsumableRequest.request_id).join(Consumable, ConsumableRequest.consumable_id==Consumable.id)
 
+        print(10)
+
         with connection.begin():
             data = connection.execute(stmt)
             if data.rowcount:
                 data = dict(data.mappings().first())
             else:
                 data = None
+
+        print(11)
+
         if data:
             push_id = data.pop('push_id', None)
 
@@ -286,23 +293,27 @@ def update_handler(mapper, connection, target):
             except:
                 pass
 
+        print(12)
+
     if inventory[0]:
+
+        print(13)
         
         args = (Request.code, Request.id.label('request_id'), author.first_name, author.last_name, author.id.label('author_id'), manager.push_id)
-
+        print(14)
         if asset_case:
             stmt = select(*args, Asset.title, Asset.id.label('asset_id')).join(Request, Request.author_id==author.id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
 
         if consumable_case:
             stmt = select(*args, Consumable.title,  Consumable.id.label('consumable_id')).join(Request, Request.author_id==author.id).join(AssetRequest, Request.id==AssetRequest.request_id).join(Asset, AssetRequest.asset_id==Asset.id).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id)
-
+        print(15)
         with connection.begin():
             data = connection.execute(stmt)
             if data.rowcount:
                 data = dict(data.mappings().first())
             else:
                 data = None
-
+        print(16)
         if data:
             push_id = data.pop('push_id', None)
             try:
@@ -316,3 +327,5 @@ def update_handler(mapper, connection, target):
                 )
             except:
                 pass
+
+        print(17)
