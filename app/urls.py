@@ -35,7 +35,7 @@ app.include_router(proposal, tags=['Proposals'], prefix='/proposals', dependenci
 app.include_router(report, tags=['Analytics'], prefix='/reports', dependencies=[Depends(validate_bearer)])
 app.include_router(branch, tags=['Branches'], prefix='/branches', dependencies=[Depends(validate_bearer)])
 app.include_router(policy, tags=['Policies'], prefix='/policies', dependencies=[Depends(validate_bearer)])
-app.include_router(request, tags=['Requests'], prefix='/request', dependencies=[Depends(validate_bearer)])
+app.include_router(request, tags=['Requests'], prefix='/request') # , dependencies=[Depends(validate_bearer)]
 app.include_router(logs, tags=['Logs'], prefix='/system-logs', dependencies=[Depends(validate_bearer)])
 app.include_router(vendor, tags=['Vendor'], prefix='/vendors', dependencies=[Depends(validate_bearer)])
 app.include_router(asset, tags=['Asset'], prefix='/assets', dependencies=[Depends(validate_bearer)])
