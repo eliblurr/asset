@@ -26,9 +26,8 @@ def verify_payload(payload:schemas.CreateRequest, item:schemas.Items):
 
 @router.post('/{item}', response_model=schemas.Request, status_code=201, name='Request')
 async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
-    meta = {}
     try:
-        payload, item, tmp_kw = payload['payload'], payload['item'], {}              
+        payload, item, meta, tmp_kw = payload['payload'], payload['item'], {}, {}             
         recipient, kw = await crud.validate_author(payload.author_id, db) # if recipient send request to inventory manager for operation
         await crud.validate_priority(payload.priority_id, db)        
         
@@ -56,13 +55,13 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
     req = await crud.request.create(payload.copy(exclude={'obj'}), db, **kw) # activities here
         
     if req: 
-        meta = meta.update({'id':req.id})
+        meta = meta.update({'id':req.id, 'datetime':payload.obj.start_date})
         recipient = recipient if not recipient else manager
 
         try:
             _messages = messages()
             notify(push_id=recipient.push_id, message = {'key':'request', 'message': _messages['request']['department'],'meta':meta})
-            meta.update({'datetime':payload.obj.start_date})
+            # meta.update({'datetime':payload.obj.start_date})
             notify_reminder(id=req.id, date=payload.obj.start_date-timedelta(days=1), name='expiry-notify-reminder', push_id=recipient.push_id, message={'key':'request', 'message': _messages['request']['expires'], 'meta':meta})
             scheduler.add_job( 
                 crud.expire,
