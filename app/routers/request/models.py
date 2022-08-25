@@ -194,10 +194,14 @@ def update_handler(mapper, connection, target):
     hod = aliased(User)
     author = aliased(User)
     manager = aliased(User)
+
+    print(1)
     
     _messages, stmt = messages(), ''
     changes = instance_changes(target)
     inventory, department, status = changes.get('inventory_id', [None]), changes.get('department_id', [None]), changes.get('status', [None])
+
+    print(2)
 
     if isinstance(target.tag, str):
         asset_case = target.tag==Tag.asset.value
@@ -206,13 +210,19 @@ def update_handler(mapper, connection, target):
         asset_case = target.tag==Tag.asset
         consumable_case = target.tag==Tag.consumable
 
+    print(3)
+
     if status[0]:
+
+        print(4)
 
         if asset_case:
             stmt = select(Asset, manager.push_id.label('push_id')).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id).join(AssetRequest, AssetRequest.asset_id==Asset.id).join(Request, Request.id==AssetRequest.request_id)
         
         if consumable_case:
             stmt = select(Consumable).join(ConsumableRequest, ConsumableRequest.consumable_id==Consumable.id).join(Request, Request.id==ConsumableRequest.request_id)
+
+        print(5)
         
         with connection.begin():
             data = connection.execute(stmt)
@@ -225,6 +235,8 @@ def update_handler(mapper, connection, target):
             stmt = Request.__table__.update().where(Request.id==target.id).values(inventory_id=data['inventory_id'])
             connection.execute(stmt)
 
+        print(6)
+
         push_id = data.pop('push_id', None)
 
         if asset_case:
@@ -233,11 +245,15 @@ def update_handler(mapper, connection, target):
             except Exception as e:
                 raise ArgumentError('ArgumentError', f'{status[0].value}', 'something went wrong in emit_action for status. see LN220')
 
+        print(7)
+
         if consumable_case:
             try:
                 emit_action(target, Consumable(**data), status[0].value, push_id=push_id)
             except Exception as e:
                 raise ArgumentError('ArgumentError', f'{status[0].value}', 'something went wrong in emit_action for status. see LN227')
+
+        print(8)
     
     if department[0]:
 
