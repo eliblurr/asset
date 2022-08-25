@@ -101,8 +101,9 @@ async def swap_holder(id:int, payload:schemas.SwapHolder, db:Session=Depends(get
 async def update_request(id:int, payload:schemas.UpdateRequest, db:Session=Depends(get_db)):
     activity = []
     if payload.status:
-        if payload.status.value=='accepted':activity.append({'func': add_activity, 'args':('request.accept', {'datetime':'updated'})})
-        elif payload.status.value=='declined':activity.append({'func': add_activity, 'args':('request.decline', {'datetime':'updated'})})
+        # if payload.status.value=='accepted':activity.append({'func': add_activity, 'args':('request.accept', {'datetime':'updated'})})
+        # elif 
+        if payload.status.value=='declined':activity.append({'func': add_activity, 'args':('request.decline', {'datetime':'updated'})})
     val = await crud.request.update_2(id, payload, db, activity=activity)
     print(val)
     return val
