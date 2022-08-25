@@ -208,40 +208,36 @@ def update_handler(mapper, connection, target):
 
     if status[0]:
 
-        try:
+        if asset_case:
+            stmt = select(Asset, manager.push_id.label('push_id')).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id).join(AssetRequest, AssetRequest.asset_id==Asset.id).join(Request, Request.id==AssetRequest.request_id)
+        
+        if consumable_case:
+            stmt = select(Consumable).join(ConsumableRequest, ConsumableRequest.consumable_id==Consumable.id).join(Request, Request.id==ConsumableRequest.request_id)
+        
+        with connection.begin():
+            data = connection.execute(stmt)
+            data = dict(data.mappings().first())
 
-            if asset_case:
-                stmt = select(Asset, manager.push_id.label('push_id')).join(Inventory, Asset.inventory_id==Inventory.id).join(manager, manager.id==Inventory.manager_id).join(AssetRequest, AssetRequest.asset_id==Asset.id).join(Request, Request.id==AssetRequest.request_id)
-            
-            if consumable_case:
-                stmt = select(Consumable).join(ConsumableRequest, ConsumableRequest.consumable_id==Consumable.id).join(Request, Request.id==ConsumableRequest.request_id)
-            
-            with connection.begin():
-                data = connection.execute(stmt)
-                data = dict(data.mappings().first())
-
-                if status[0].value=='accepted':
-                    stmt = Asset.__table__.update().where(Asset.id==data['id']).values(available=False)
-                    connection.execute(stmt)
-
-                stmt = Request.__table__.update().where(Request.id==target.id).values(inventory_id=data['inventory_id'])
+            if status[0].value=='accepted':
+                stmt = Asset.__table__.update().where(Asset.id==data['id']).values(available=False)
                 connection.execute(stmt)
 
-            push_id = data.pop('push_id', None)
+            stmt = Request.__table__.update().where(Request.id==target.id).values(inventory_id=data['inventory_id'])
+            connection.execute(stmt)
 
-            if asset_case:
-                try:
-                    emit_action(target, Asset(**data), status[0].value, push_id=push_id)
-                except Exception as e:
-                    raise ArgumentError('ArgumentError', f'{status[0].value}', 'something went wrong in emit_action for status. see LN220')
+        push_id = data.pop('push_id', None)
 
-            if consumable_case:
-                try:
-                    emit_action(target, Consumable(**data), status[0].value, push_id=push_id)
-                except Exception as e:
-                    raise ArgumentError('ArgumentError', f'{status[0].value}', 'something went wrong in emit_action for status. see LN227')
-        except Exception as e:
-            print(e)
+        if asset_case:
+            try:
+                emit_action(target, Asset(**data), status[0].value, push_id=push_id)
+            except Exception as e:
+                raise ArgumentError('ArgumentError', f'{status[0].value}', 'something went wrong in emit_action for status. see LN220')
+
+        if consumable_case:
+            try:
+                emit_action(target, Consumable(**data), status[0].value, push_id=push_id)
+            except Exception as e:
+                raise ArgumentError('ArgumentError', f'{status[0].value}', 'something went wrong in emit_action for status. see LN227')
     
     if department[0]:
 
