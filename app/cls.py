@@ -235,7 +235,7 @@ class CRUD:
             db.refresh(obj)  
         
         except Exception as e:
-           
+            print(e)
             status_code, msg, class_name = 500, f'{e}' , f"{e.__class__.__name__}"
             if isinstance(e, DBAPIError):
                 status_code = 409 if isinstance(e, IntegrityError) else 400 if isinstance(e.orig, UndefinedTable) else 500
