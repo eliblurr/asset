@@ -219,8 +219,12 @@ def update_handler(mapper, connection, target):
             data = dict(data.mappings().first())
 
             if status[0].value=='accepted':
-                stmt = Asset.__table__.update().where(Asset.id==data['id']).values(available=False)
-                connection.execute(stmt)
+                try:
+                    print('here')
+                    stmt = Asset.__table__.update().where(Asset.id==data['id']).values(available=False)
+                    connection.execute(stmt)
+                except Exception as e:
+                    print(e)
 
             stmt = Request.__table__.update().where(Request.id==target.id).values(inventory_id=data['inventory_id'])
             connection.execute(stmt)
