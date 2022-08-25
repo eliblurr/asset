@@ -231,14 +231,12 @@ def update_handler(mapper, connection, target):
             try:
                 emit_action(target, Asset(**data), status[0].value, push_id=push_id)
             except Exception as e:
-                print(e)
                 raise ArgumentError('ArgumentError', f'{status[0].value}', 'something went wrong in emit_action for status. see LN220')
 
         if consumable_case:
             try:
                 emit_action(target, Consumable(**data), status[0].value, push_id=push_id)
             except Exception as e:
-                print(e)
                 raise ArgumentError('ArgumentError', f'{status[0].value}', 'something went wrong in emit_action for status. see LN227')
     
     if department[0]:

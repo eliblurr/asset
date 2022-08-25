@@ -97,7 +97,7 @@ async def swap_holder(id:int, payload:schemas.SwapHolder, db:Session=Depends(get
     activity = [{'func': add_activity, 'args': ('asset.swap', {'holder':['holder.first_name', 'holder.last_name'], 'datetime':'updated'})}]
     return await crud.request.update_2(request_id, payload, db, activity=activity)
 
-@router.patch('/{id}', name='Request') # , response_model=schemas.Request
+@router.patch('/{id}', response_model=schemas.Request, name='Request')
 async def update_request(id:int, payload:schemas.UpdateRequest, db:Session=Depends(get_db)):
     activity = []
     if payload.status:
