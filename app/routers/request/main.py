@@ -67,7 +67,7 @@ async def create(payload=Depends(verify_payload), db:Session=Depends(get_db)):
                 crud.expire,
                 id=f'{req.id}_ID{gen_code(10)}',
                 name='expire-request', 
-                run_date=payload.start_date, 
+                run_date=payload.obj.start_date, 
                 trigger='date',
                 kwargs={'id':req.id}
             )
