@@ -9,7 +9,7 @@ services:
       dockerfile: dockerfile
     image: master-image
     restart: always
-    container_name: asset-app
+    container_name: ${INSTANCE_NAME:-main}-asset-app
     expose: 
       - 80
     networks:
@@ -32,7 +32,7 @@ services:
     build:
       context: ./pgadmin
       dockerfile: dockerfile
-    container_name: asset-pgadmin
+    container_name: ${INSTANCE_NAME:-main}-asset-pgadmin
     restart: always
     expose:
       - 80
@@ -48,7 +48,7 @@ services:
 
   postgres:
     image: postgis/postgis:12-master
-    container_name: asset-postgres
+    container_name: ${INSTANCE_NAME:-main}-asset-postgres
     restart: always
     networks: 
       - asset-network
@@ -64,7 +64,7 @@ services:
   redis:
     restart: always
     image: redis:latest
-    container_name: asset-redis-server
+    container_name: ${INSTANCE_NAME:-main}-asset-redis-server
     command: redis-server --save 60 1 --loglevel warning
     privileged: true
     expose:
@@ -80,7 +80,7 @@ services:
 
   worker:
     image: master-image
-    container_name: asset-redis-worker
+    container_name: ${INSTANCE_NAME:-main}-asset-redis-worker
     depends_on:
       - redis
       - app
@@ -103,6 +103,7 @@ services:
       context: ./nginx
       dockerfile: dockerfile
     restart: always
+    container_name: ${INSTANCE_NAME:-main}-asset-nginx
     ports:
       - ${WEB_PORT}:2000
       - ${REDIS_PORT}:2001
